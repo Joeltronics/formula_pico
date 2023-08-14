@@ -5,6 +5,9 @@ __lua__
 -- by Joel Geddert
 -- License: CC BY-NC-SA 4.0
 
+debug = true
+enable_sound = true
+
 --[[
 Colors:
 	0 black
@@ -205,11 +208,17 @@ tracks = {
 	minimap_y = -20,
 	finish_seg = 5,
 	{length=20},
+	{length=20, gndcol=8},
 	{length=20, pitch=1, gndcol=8},
+	{length=20, pitch=1, gndcol=8},
+	-- {length=20, pitch=1, gndcol=8},
 	{length=20},
 	{length=12, angle=0.5},
 	{length=20},
+	{length=20, gndcol=1},
 	{length=20, pitch=-1, gndcol=1},
+	{length=20, pitch=-1, gndcol=1},
+	-- {length=20, pitch=-1, gndcol=1},
 	{length=20},
 	{length=12, angle=0.5},
 }
@@ -226,11 +235,17 @@ speed_scale = 1
 -- speed_scale = 0.125
 -- speed_scale = 0.0625
 
-length_scale = 1
--- length_scale = 2
+-- length_scale = 1
+length_scale = 2
 
--- Acceleration by speed, in 4 quadrants of speed 0.25
-accel = {8/1024, 6/1024, 3/1024, 1/1024}
+-- Acceleration, by gear
+accel = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
+
+coast_decel_rel = 255/256
+coast_decel_abs = 1/2048
+brake_decel = 1/128
+
+grass_max_speed = 0.125
 
 speed_to_kph = 350
 
@@ -240,59 +255,88 @@ cam_height = 2
 
 road_width = 3
 -- road_width = 4
-center_line_width = 3/32
--- center_line_width = 0
+-- center_line_width = 3/32
+center_line_width = 0
 shoulder_width = 1/8
 
 start_angle = 0.25
+
+-- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
+draw_distance = 90
+road_draw_distance = 90
+road_detail_draw_distance = 30
+-- road_detail_draw_distance = 45
+-- road_detail_draw_distance = 60
+-- road_detail_draw_distance = 75
+sprite_draw_distance = 45
 
 --
 -- runtime vars
 --
 
 camcnr, camseg, camtotseg = 1, 1, 1
-car_x, subseg_z = 0, 0
+car_x, cam_x, cam_z = 0, 0, 0
 angle = start_angle
 sun_x = 64
 curr_speed = 0
+gear = 1
+car_sprite_turn = 0
 
 --
 -- stuff at init
 --
 
 minimap = {}
+minimap_step = 1
 sumct = 0
 
 function _init()
 	cls()
+	-- prevent printing at bottom of screen from triggering scroll
+	poke(0x5f36, 0x40)
+	init_corners()
+	init_minimap()
+end
 
-	local x, y, dx, dy, curr_angle = 0, 0, 0, -1, start_angle
+function init_corners()
 
 	for corner in all(road) do
 		corner.length *= length_scale
-		-- Pitch is defined backwards - TODO: negate this where it's used instead
-		corner.pitch = -(corner.pitch or 0)
+		corner.pitch = corner.pitch or 0
 		corner.angle = corner.angle or 0
-	end
 
-	local minimap_scale = road.minimap_scale / length_scale
-	-- local minimap_scale = road.minimap_scale
-
-	local tu_angle_scale = 16 * length_scale
-
-	for corner_idx = 1, #road do
-		local corner = road[corner_idx]
-		local next_corner = road[corner_idx % #road + 1]
-
-		corner.angle_per_seg= corner.angle / corner.length
-		corner.tu = tu_angle_scale * corner.angle_per_seg
-
-		corner.dpitch = (next_corner.pitch - corner.pitch) / corner.length
+		corner.angle_per_seg = corner.angle / corner.length
+		corner.tu = 16 * corner.angle_per_seg
 
 		corner.sumct = sumct
 		sumct += corner.length
 
+		-- TODO: adjust max speed for pitch (also acceleration?)
+		local max_speed = min(1.25 - (corner.tu * length_scale), 1)
+		max_speed *= max_speed
+		corner.max_speed = max_speed
+
+		-- TODO: calculate racing line - entrance X, apex X & segment index, exit X, braking point for corner ahead
+	end
+
+	for corner_idx = 1, #road do
+		local corner = road[corner_idx]
+		local next_corner = road[corner_idx % #road + 1]
+		corner.dpitch = (next_corner.pitch - corner.pitch) / corner.length
+		-- corner.next_max_speed = next_corner.max_speed
+	end
+end
+
+function init_minimap()
+
+	local minimap_scale = road.minimap_scale / length_scale
+	minimap_step = max(1, round(length_scale / road.minimap_scale))
+
+	local count, x, y, dx, dy, curr_angle = 0, 0, 0, 0, -1, start_angle
+	for corner in all(road) do
 		for n = 1, corner.length do
+
+			if (count % minimap_step == 0) add(minimap, {x, y})
 
 			curr_angle -= corner.angle_per_seg
 			curr_angle %= 1.0
@@ -302,8 +346,7 @@ function _init()
 
 			x += dx
 			y += dy
-
-			add(minimap, {x, y})
+			count += 1
 		end
 	end
 end
@@ -322,10 +365,6 @@ end
 
 function skew(x, y, z, xd, yd)
 	return x + z*xd, y + z*yd, z
-end
-
-function camx()
-	return car_x / 4
 end
 
 function advance(cnr, seg)
@@ -352,96 +391,214 @@ end
 -->8
 -- Game logic
 
-step_handled = false
-reverse_handled = false
-
 function _update60()
 
-	-- Left & Right
+	local steering, accel_brake = 0, 0
+	if (btn(0)) steering -= 1
+	if (btn(1)) steering += 1
+	if (btn(2)) accel_brake += 1
+	if (btn(3)) accel_brake -= 1
 
-	-- TODO: don't turn left/right while stopped
+	local debug_buttons = debug and btn(4) and btn(5)
 
-	if btn(0) then
-		car_x -= 0.5
+	if debug_buttons and btnp(3) then
+		camcnr, camseg = reverse(camcnr, camseg)
+		camtotseg -= 1
+		if (camtotseg == 0) camtotseg = sumct
 	end
 
-	if btn(1) then
-		car_x += 0.5
-	end
-
-	-- debug: down to reverse
-
-	if btn(3) then
-		if not reverse_handled then
-			camcnr, camseg = reverse(camcnr, camseg)
-			camtotseg -= 1
-			if (camtotseg == 0) camtotseg = sumct
-			reverse_handled = true
-		end
-	else
-		reverse_handled = false
-	end
-
-	-- Only advance while holding up
-
-	if (not btn(2)) then
-		curr_speed = 0
-		return
-	end
-
-	-- Or, only 1 step at a time
-	-- if btn(2) then
-	-- 	if (step_handled) return
-	-- 	step_handled = true
-	-- else
-	-- 	step_handled = false
-	-- 	return
-	-- end
-
-	forward()
-end
-
-function forward()
-	-- max speed
-	-- TODO: look ahead for braking point, slow down
+	-- Determine acceleration & speed
+	-- TODO: look ahead for braking point, slow down; can also speed up after apex
 	-- TODO: slow down on curb & grass
-
-	local tu = road[camcnr].tu
-	local max_speed = min(1.25 - tu, 1)
-	max_speed *= max_speed
-
-	-- accelerate
 	-- TODO: also factor in slope
 
-	local a = accel[flr(min(curr_speed, 0.99) * 4) + 1]
+	local tu = road[camcnr].tu
+	local corner_max_speed = road[camcnr].max_speed
 
-	curr_speed = min(curr_speed + a, max_speed)
+	local accelerating = false
 
-	-- TODO: sound from speed
+	if abs(car_x) >= 1 then
+		-- On grass
+		-- Decrease max speed significantly
+		-- Slower acceleration
+		-- Slower braking
+		-- Increase coasting deceleration
+		corner_max_speed = min(corner_max_speed, grass_max_speed)
+		-- TODO
+	elseif abs(car_x) >= 0.75 then
+		-- On curb
+		-- Max speed unaffected
+		-- Decrease acceleration
+		-- Decrease braking
+		-- Increase coasting deceleration
+		-- TODO
+	end
 
-	-- update position
+	if curr_speed > corner_max_speed then
+		-- Brake (to corner speed)
+		curr_speed = max(curr_speed - brake_decel, corner_max_speed)
 
-	-- TODO: adjust relative to tu and x position, i.e. inside of corner is faster, outside is slower
+	elseif accel_brake > 0 then
+		-- Accelerate
+		-- gear = min(curr_speed, 0.99) * #accel + 1
+		local a = accel[flr(gear)]
+		curr_speed = min(curr_speed + a, corner_max_speed)
+		accelerating = true
+
+	elseif accel_brake < 0 then
+		-- Brake (to zero)
+		curr_speed = max(curr_speed - brake_decel, 0)
+	else
+		-- Coast
+		-- TODO: this should be affected by slope even more than regular acceleration is
+		curr_speed = max(curr_speed*coast_decel_rel - coast_decel_abs, 0)
+	end
+
+	gear = min(curr_speed, 0.99) * #accel + 1
+
+	-- Steering & corners
+
+	-- Steering: only when moving (or going up)
+	-- TODO: compensate for corners, i.e. push toward outside of corners
+	local car_x_prev = car_x
+	if steering ~= 0 then
+		if curr_speed > 0 then
+			car_x += steering * min(8*curr_speed, 1) / 64
+		elseif debug_buttons then
+			car_x += steering / 64
+		end
+		car_x = max(-1.5, min(1.5, car_x))
+		cam_x = 0.75 * car_x
+	end
+
+	-- Car direction to draw
+	-- Based on:
+	--    - Did we move left/right
+	--    - Is road turning
+	--    - Are we near edge of screen
+
+	car_sprite_turn = car_x - car_x_prev
+	if (car_sprite_turn ~= 0) car_sprite_turn = sgn(car_sprite_turn)
+	if (abs(tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
+	-- TODO: look at car_x relative to cam_x
+	if (abs(car_x) > 0.5) car_sprite_turn -= sgn(car_x)
+
+	-- Move forward
+
+	-- TODO:
+	--   - Adjust relative to tu and x position, i.e. inside of corner is faster, outside is slower
+	--   - Increment slightly less while steering, but compensated for tu
+	--   - Faster while turning into corner
 	local dz = 0.5 * speed_scale * curr_speed
 
-	subseg_z += dz
-	if subseg_z > 1 then
-		subseg_z -= 1
+	cam_z += dz
+	if cam_z > 1 then
+		cam_z -= 1
 		camcnr, camseg = advance(camcnr, camseg)
 		camtotseg += 1
 		if (camcnr == 1 and camseg == 1) camtotseg = 1
 	end
 
-	-- angle & sun coordinate
+	-- Update angle & sun coordinate
 
-	-- TODO: should this be before updating?
 	angle -= road[camcnr].angle_per_seg * dz
 	angle %= 1.0
-	-- This has slight error due to fixed-point precision
-	-- TODO: Calculate properly instead of this hack
+	-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
 	if (camcnr == 1 and camseg == 1) angle = start_angle
 
 	sun_x = (angle * 512 + 192) % 512 - 256
+
+	-- Sound
+
+	update_sound(accelerating)
+end
+
+function update_sound(accelerating)
+
+	if (not enable_sound) return
+
+	if curr_speed == 0 then
+		-- TODO: special idling sound effect
+	end
+
+	if abs(car_x) >= 1 then
+		-- TODO: special sound effect on grass
+	end
+
+	-- TODO: scale linearly by frequency, not pitch (need to take log - or use lookup table)
+	local fundamental = flr((gear % 1) * 36) + flr(gear) - 1
+
+	-- local harmonic = fundamental + 7 -- V6
+	-- local harmonic = fundamental + 12 -- V8
+	local harmonic = fundamental + 16 -- V10
+	-- local harmonic = fundamental + 19 -- V12
+
+	play_sound(0, 2, fundamental, 5)
+
+	if curr_speed == 0 then
+		sfx(-1, 1)
+	elseif accelerating then
+		play_sound(1, 4, harmonic, 1)
+	else
+		play_sound(1, 1, harmonic, 1)
+	end
+end
+
+-- Sound code based on a mix of:
+-- https://www.lexaloffle.com/bbs/?tid=2341
+-- https://pico-8.fandom.com/wiki/Memory#Sound_effects
+-- https://www.lexaloffle.com/bbs/?tid=29382
+
+function play_sound(ch, waveform, pitch, vol, n)
+
+	n = n or 63 - ch
+	vol = vol or 5
+
+	-- TODO: get pitch slide (effect #1) working
+	local effect = 0
+
+	note = make_note(pitch, waveform, vol or 5, effect)
+	set_note(n, 0, note)
+	set_speed(n, 1)
+	set_loop(n, 0, 1)
+	sfx(n, ch)
+end
+
+function make_note(pitch, instr, vol, effect)
+	-- | C E E E | V V V W | W W P P | P P P P |
+	return shl(band(effect, 7), 12) + shl(band(vol, 7), 9) + shl(band(instr, 7), 6) + band(pitch, 63) 
+end
+
+function get_note(sfx, time)
+	local addr = 0x3200 + 68*sfx + 2*time
+	return peek2(addr)
+end
+
+function set_note(sfx, time, note)
+	local addr = 0x3200 + 68*sfx + 2*time
+	poke2(addr, note)
+end
+
+function get_speed(sfx)
+	return peek(0x3200 + 68*sfx + 65)
+end
+
+function set_speed(sfx, speed)
+	poke(0x3200 + 68*sfx + 65, speed)
+end
+
+function get_loop_start(sfx)
+	return peek(0x3200 + 68*sfx + 66)
+end
+
+function get_loop_end(sfx)
+	return peek(0x3200 + 68*sfx + 67)
+end
+
+function set_loop(sfx, loop_start, loop_end)
+	local addr = 0x3200 + 68*sfx
+	poke(addr + 66, loop_start)
+	poke(addr + 67, loop_end)
 end
 
 -->8
@@ -473,9 +630,13 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
 	end
 end
 
-function draw_segment(sumct, x1, y1, scale1, x2, y2, scale2, gndcol)
+function draw_segment(sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
 
-	if (flr(y2) < ceil(y1)) return
+	detail = distance <= road_detail_draw_distance
+
+	y1, yt = ceil(y1), flr(y2)
+
+	if (y2 < y1) return
 
 	local w1 = road_width*scale1
 	local w2 = road_width*scale2
@@ -488,33 +649,54 @@ function draw_segment(sumct, x1, y1, scale1, x2, y2, scale2, gndcol)
 	end
 	rectfill(0, y1, 128, y2, gndcol)
 
+	if (distance > road_draw_distance) return
+
 	-- Road
 
 	filltrapz(x1, y1, w1, x2, y2, w2, 5)
 
 	-- Start/finish line
 
+	if (not detail) fillp(0b0101101001011010)
+
 	if sumct == road.finish_seg then
-		fillp(0b0011001111001100)
-		filltrapz(x1, y1, w1, x2, y2, w2, 0x07)
+		if detail then
+			fillp(0b0011001111001100)
+			-- Just fill 1st 50% of segment
+			filltrapz(
+				x1, flr(y1 + 0.5*(y2 - y1)), w1,
+				x2, ceil(y2), w2,
+				0x07)
+			fillp()
+		else
+			filltrapz(x1, y1, w1, x2, y2, w2, 0x07)
+		end
+	end
+
+	-- Shoulders
+
+	if detail then
+		local linecol = 7
+		if (sumct % 2 == 0) linecol = 8
+		local sw1, sw2 = shoulder_width*scale1, shoulder_width*scale2
+		filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
+		filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
+	else
+		line(x1-w1, y1, x2-w2, y2, 0x6e)
+		line(x1+w1, y1, x2+w2, y2, 0x6e)
 		fillp()
 	end
 
 	-- Center line
 
 	if center_line_width > 0 and (sumct % 4) == 0 then
-		local cw1, cw2 = center_line_width*scale1, center_line_width*scale2
-		filltrapz(x1, y1, cw1, x2, y2, cw2, 7)
+		if detail then
+			local cw1, cw2 = center_line_width*scale1, center_line_width*scale2
+			filltrapz(x1, y1, cw1, x2, y2, cw2, 7)
+		else
+			line(x1, ceil(y1), x2, y2, 6)
+		end
 	end
-
-	-- Shoulders
-
-	local linecol = 7
-	if (sumct % 2 == 0) linecol = 8
-
-	local sw1, sw2 = shoulder_width*scale1, shoulder_width*scale2
-	filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
-	filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
 
 	-- TODO: racing line
 end
@@ -523,7 +705,8 @@ function setclip(clp)
 	clip(clp[1], clp[2], clp[3]-clp[1], clp[4]-clp[2])
 end
 
-function add_bg_sprite(sp, sumct, seg, bg, side, px, py, scale, clp)
+function add_bg_sprite(
+	sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 
 	if (not bg) return
 
@@ -542,7 +725,7 @@ function add_bg_sprite(sp, sumct, seg, bg, side, px, py, scale, clp)
 
 	local w, h = bg.siz[1]*scale, bg.siz[2]*scale
 
-	add(sp, {
+	add(sprite_list, {
 		x=px,
 		y=py,
 		w=w,
@@ -569,15 +752,8 @@ function draw_bg_sprite(s)
 	local y2=ceil(s.y)
 
 	sspr(
-
 		s.img[1], s.img[2], s.img[3], s.img[4], -- sx, sy, sw, wh
-
-		x1, y1, x2-x1, y2-y1,
-
-		-- s.x - s.w/2,  -- dx
-		-- s.y - s.h,  -- dy
-		-- s.w,  -- dw
-		-- s.h,  -- dh
+		x1, y1, x2-x1, y2-y1, -- dx, dy, dw, dh
 		s.flip_x  -- flip_x
 	)
 
@@ -595,20 +771,29 @@ function draw_road()
 
 	-- direction
 	-- TODO: look ahead a bit more than this to determine camera
-	local camang = subseg_z * corner.tu
-	-- local camang = subseg_z * corner.tu + subseg_z*road[nextcnr].tu -- DEBUG
+	local camang = cam_z * corner.tu
 	local xd = -camang
-	local yd = corner.pitch + corner.dpitch*(camseg - 1)
+	local yd = -(corner.pitch + corner.dpitch*(camseg - 1))
 	local zd = 1
 
 	-- Starting coords
 
-	local cx, cy, cz = skew(camx(), 0, subseg_z, xd, yd)
-	local x, y, z = -cx, -cy + cam_height, -cz + cam_height
+	-- TODO: figure out which is the better way to do this
+	-- Option 1
+	-- local cx, cy, cz = skew(road_width*cam_x, 0, cam_z, xd, yd)
+	-- local x, y, z = -cx, -cy + cam_height, -cz + cam_height
+	-- Option 2
+	local cx, cy, cz = skew(0, 0, cam_z, xd, yd)
+	local x, y, z = -cx - road_width*cam_x, -cy + cam_height, -cz + cam_height
 
+	-- Car draw coords
+	car_screen_x, car_screen_y, _ = project(car_x, cam_height, cam_height)
+
+	-- sprites
 	local sp = {}
 
 	-- current clip region
+	-- TODO: only last value is ever used, can just store that one
 	local clp={0, 0, 128, 128}
 	clip()
 
@@ -616,36 +801,37 @@ function draw_road()
 
 	local x1, y1, scale1 = project(x, y, z)
 
-	-- for i = 1, 30 do
-	for i = 1, 60 do
-
-		local x2, y2, scale2 = project(x, y, z)
-
-		local sumct = road[cnr].sumct + seg
+	for i = 1, draw_distance do
 
 		x += xd
 		y += yd
 		z += zd
 
-		draw_segment(sumct, x2, y2, scale2, x1, y1, scale1, road[cnr].gndcol)
+		local x2, y2, scale2 = project(x, y, z)
 
-		if sumct == road.finish_seg then
-			add_bg_sprite(sp, sumct, seg, bg_finishline, -1, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, bg_finishline,  1, x2, y2, scale2, clp)
+		local sumct = road[cnr].sumct + seg
+
+		draw_segment(sumct, x2, y2, scale2, x1, y1, scale1, road[cnr].gndcol, i)
+
+		if i < sprite_draw_distance then
+
+			if sumct == road.finish_seg then
+				add_bg_sprite(sp, sumct, seg, bg_finishline, -1, x2, y2, scale2, clp)
+				add_bg_sprite(sp, sumct, seg, bg_finishline,  1, x2, y2, scale2, clp)
+			end
+
+			add_bg_sprite(sp, sumct, seg, road[cnr].bgl, -1, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, road[cnr].bgc,  0, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, road[cnr].bgr,  1, x2, y2, scale2, clp)
 		end
 
-		add_bg_sprite(sp, sumct, seg, road[cnr].bgl, -1, x2, y2, scale2, clp)
-		add_bg_sprite(sp, sumct, seg, road[cnr].bgc,  0, x2, y2, scale2, clp)
-		add_bg_sprite(sp, sumct, seg, road[cnr].bgr,  1, x2, y2, scale2, clp)
-
-		-- reduce clip region
+		-- Reduce clip region
 		clp[4] = min(clp[4], ceil(y2))
 		setclip(clp)
 
 		-- Advance
 		xd += road[cnr].tu
-		yd += road[cnr].dpitch
-		-- yd += road[cnr].pitch -- DEBUG
+		yd -= road[cnr].dpitch
 		cnr, seg = advance(cnr, seg)
 		x1, y1, scale1 = x2, y2, scale2
 	end
@@ -657,6 +843,8 @@ function draw_road()
 	end
 
 	clip()
+
+	return car_screen_x, car_screen_y
 end
 
 -->8
@@ -805,6 +993,9 @@ function draw_bg()
 end
 
 function draw_minimap()
+
+	-- TODO: use a sprite or BG or something for this
+
 	camera(-128 + road.minimap_x, -64 + road.minimap_y)
 
 	-- map
@@ -814,59 +1005,59 @@ function draw_minimap()
 	end
 
 	-- finish line
-	-- TODO: it's actually at road.finish_seg
-	line(0, 0, 0, 0, 0)
+	-- local x, y = minimap[road.finish_seg]
+	local x, y = minimap[flr((road.finish_seg - 1) / minimap_step) + 1]
+	line(x, y, x, y, 0)
 
 	-- current position
-	local pos = minimap[camtotseg]
+	-- local pos = minimap[camtotseg]
+	local pos = minimap[flr((camtotseg - 1) / minimap_step) + 1]
 	line(pos[1], pos[2], pos[1], pos[2], 8)
 
 	camera()
 end
 
 function draw_hud()
-	cursor(112, 112, 7)
-	local print_speed = round(curr_speed * speed_to_kph)
-	print(print_speed)
-	print('kph')
+	-- cursor(112, 110, 7)
+	cursor(116, 116, 7)
+
+	local speed_print = '' .. round(curr_speed * speed_to_kph)
+	if (#speed_print == 1) speed_print = ' ' .. speed_print
+	if (#speed_print == 2) speed_print = ' ' .. speed_print
+	print(speed_print .. '\nkph')
+
+	-- cursor(104, 112)
+	cursor(108, 118)
+	print(flr(gear))
 end
 
-function draw_car()
+function draw_car(x, y)
 	palt(0, false)
 	palt(11, true)
 
-	local carx_display = car_x - camx()
+	-- TODO: extra sprites for braking or on grass
 
-	-- center 64
-	-- car sprite 24 pix wide, half is 12
-	camera(-64 + 12 - road_width*carx_display, -128 + 24 + 2)
+	if abs(car_x) >= 1 then
+		-- On grass; bumpy
+		y -= flr(rnd(2))
+	end
 
-	local tu = road[camcnr].tu
-	local left = btn(0)
-	local right = btn(1)
+	-- Car sprite is 24x24, x & y define bottom center
+	camera(-x + 12, -y + 24)
 
-	-- TODO: optimize this - have left/right add an amount to tu (below)
-	-- want logic to be a bit smarter than that though
-	if (tu < -0.49 and right) or (tu > 0.49 and left) then
-		spr(0, 0, 0, 3, 3)
-	elseif (left or tu < 0) and not right then
+	if car_sprite_turn < -1 then
+		-- TODO: sprite for this
 		spr(3, 1, 0, 3, 3)
-	elseif (right or tu > 0) and not left then
+	elseif car_sprite_turn < 0 then
+		spr(3, 1, 0, 3, 3)
+	elseif car_sprite_turn > 1 then
+		-- TODO: sprite for this
+		spr(6, -1, 0, 3, 3)
+	elseif car_sprite_turn > 0 then
 		spr(6, -1, 0, 3, 3)
 	else
 		spr(0, 0, 0, 3, 3)
 	end
-
-	-- if (btn(0)) tu -= 0.75
-	-- if (btn(1)) tu += 0.75
-
-	-- if tu < -0.05 then
-	-- 	spr(3, 1, 0, 3, 3)
-	-- elseif tu > 0.05 then
-	-- 	spr(6, -1, 0, 3, 3)
-	-- else
-	-- 	spr(0, 0, 0, 3, 3)
-	-- end
 
 	camera()
 	palt()
@@ -875,24 +1066,19 @@ end
 function draw_debug_overlay()
 	-- cursor(0, 0, 7)
 	-- cursor(0, 128-16, 7)
-	cursor(92, 0, 7)
+	cursor(88, 0, 7)
 	local cpu = round(stat(1) * 100)
 	print("cpu:" .. cpu)
-	print("pos:" .. camcnr .. "," .. camseg)
+	print(camcnr .. "," .. camseg .. ',' .. cam_z)
 
 	local corner = road[camcnr]
 
-	print('car_x:' .. car_x)
-	print('sub_z:' .. subseg_z)
-	print('tu:' .. corner.tu)
-	print('a:' .. angle)
-	print('p:' .. corner.pitch)
-	print('dp:' .. corner.dpitch)
-
-	-- cursor(48, 0)
-	-- print("camx:" .. camx)
-	-- print("camy:" .. camy)
-	-- print("subseg_z:" .. subseg_z)
+	print('carx:' .. car_x)
+	print("camx:" .. cam_x)
+	-- print('tu:' .. corner.tu)
+	-- print('a:' .. angle)
+	-- print('p:' .. corner.pitch)
+	-- print('dp:' .. corner.dpitch)
 
 	-- cursor(92, 0)
 	-- print("ca:" .. camang)
@@ -903,11 +1089,11 @@ end
 
 function _draw()
 	draw_bg()
-	draw_road()
-	draw_car()
+	car_screen_x, car_screen_y = draw_road()
+	draw_car(car_screen_x, car_screen_y)
 	draw_minimap()
 	draw_hud()
-	draw_debug_overlay()
+	if (debug) draw_debug_overlay()
 end
 
 __gfx__
