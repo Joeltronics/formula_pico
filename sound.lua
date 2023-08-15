@@ -40,12 +40,27 @@ function set_loop(sfx, loop_start, loop_end)
 	poke(addr + 67, loop_end)
 end
 
+function init_sound()
+	-- TODO: can set these in sfx data, don't need to init this way
+	-- TODO: also may want to set buzz/filter?
+	for n = 60,61 do
+		set_speed(n, 2)
+		set_loop(n, 1, 2)
+	end
+end
+
+harmonic_prev = 0
+fundamental_prev = 0
+
 function update_sound()
 
 	if (not enable_sound) return
 
 	if curr_speed == 0 then
-		-- TODO: special idling sound effect
+		-- Idling
+		sfx(0, 0)
+		sfx(-1, 1)
+		return
 	end
 
 	if abs(car_x) >= 1 then
@@ -60,28 +75,26 @@ function update_sound()
 	local harmonic = fundamental + 16 -- V10
 	-- local harmonic = fundamental + 19 -- V12
 
-	play_sound(0, 2, fundamental, 5)
+	-- TODO: there's still some audible stepping at high RPMs, due to limited pitch resolution. Could come up with a
+	-- hack of changing the sfx speed for this (and then not retriggering every update)
+	local note1 = make_note(fundamental_prev, 2, 5, 0)
+	local note2 = make_note(fundamental, 2, 5, 1)
+	set_note(60, 0, note1)
+	set_note(60, 1, note2)
+	sfx(60, 0)
 
 	if curr_speed == 0 then
 		sfx(-1, 1)
-	elseif accelerating then
-		play_sound(1, 4, harmonic, 1)
 	else
-		play_sound(1, 1, harmonic, 1)
+		local instr = 1
+		if (accelerating) instr = 4
+		note1 = make_note(harmonic_prev, instr, 1, 0)
+		note2 = make_note(harmonic, instr, 1, 1)
+		set_note(61, 0, note1)
+		set_note(61, 1, note2)
+		sfx(61, 1)
 	end
-end
 
-function play_sound(ch, waveform, pitch, vol, n)
-
-	n = n or 63 - ch
-	vol = vol or 5
-
-	-- TODO: get pitch slide (effect #1) working
-	local effect = 0
-
-	note = make_note(pitch, waveform, vol or 5, effect)
-	set_note(n, 0, note)
-	set_speed(n, 1)
-	set_loop(n, 0, 1)
-	sfx(n, ch)
+	fundamental_prev = fundamental
+	harmonic_prev = harmonic
 end
