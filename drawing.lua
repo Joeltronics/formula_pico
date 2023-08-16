@@ -196,13 +196,13 @@ function draw_road()
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
 	-- local cx, cy, cz = skew(road_width*cam_x, 0, cam_z, xd, yd)
-	-- local x, y, z = -cx, -cy + cam_height, -cz + cam_height
+	-- local x, y, z = -cx, -cy + cam_dy, -cz + cam_dz
 	-- Option 2
 	local cx, cy, cz = skew(0, 0, cam_z, xd, yd)
-	local x, y, z = -cx - road_width*cam_x, -cy + cam_height, -cz + cam_height
+	local x, y, z = -cx - road_width*cam_x, -cy + cam_dy, -cz + cam_dz
 
 	-- Car draw coords
-	car_screen_x, car_screen_y, _ = project(car_x, cam_height, cam_height)
+	local car_screen_x, car_screen_y, car_scale = project(car_x, cam_dy, cam_dz)
 
 	-- sprites
 	local sp = {}
@@ -247,7 +247,7 @@ function draw_road()
 		-- Advance
 		xd += road[cnr].tu
 		yd -= road[cnr].dpitch
-		cnr, seg = advance(cnr, seg)
+		cnr, seg, _ = advance(cnr, seg)
 		x1, y1, scale1 = x2, y2, scale2
 	end
 
@@ -259,7 +259,7 @@ function draw_road()
 
 	clip()
 
-	return car_screen_x, car_screen_y
+	return car_screen_x, car_screen_y, car_scale
 end
 
 function draw_sunset_sky()
@@ -418,35 +418,44 @@ function draw_hud()
 	print(flr(gear))
 end
 
-function draw_car(x, y)
+function draw_car(x, y, scale)
 	palt(0, false)
 	palt(11, true)
 
 	-- TODO: extra sprites for braking or on grass
 
-	if abs(car_x) >= 1 then
+	if abs(car_x) >= 1 and curr_speed > 0 then
 		-- On grass; bumpy
 		y -= flr(rnd(2))
 	end
 
-	-- Car sprite is 24x24, x & y define bottom center
-	camera(-x + 12, -y + 24)
+	-- DEBUG
+	local use_scale = false
+	-- local use_scale = (scale ~= 32)
 
-	if car_sprite_turn < -1 then
-		-- TODO: sprite for this
-		spr(3, 1, 0, 3, 3)
-	elseif car_sprite_turn < 0 then
-		spr(3, 1, 0, 3, 3)
-	elseif car_sprite_turn > 1 then
-		-- TODO: sprite for this
-		spr(6, -1, 0, 3, 3)
-	elseif car_sprite_turn > 0 then
-		spr(6, -1, 0, 3, 3)
+	if use_scale then
+		camera()
+		local size = scale * 24 / 32
+		sspr(0, 0, 24, 24, x - size/2, y - size, size, size)
 	else
-		spr(0, 0, 0, 3, 3)
+		-- Car sprite is 24x24, x & y define bottom center
+		camera(-x + 12, -y + 24)
+		if car_sprite_turn < -1 then
+			-- TODO: sprite for this
+			spr(3, 1, 0, 3, 3)
+		elseif car_sprite_turn < 0 then
+			spr(3, 1, 0, 3, 3)
+		elseif car_sprite_turn > 1 then
+			-- TODO: sprite for this
+			spr(6, -1, 0, 3, 3)
+		elseif car_sprite_turn > 0 then
+			spr(6, -1, 0, 3, 3)
+		else
+			spr(0, 0, 0, 3, 3)
+		end
+		camera()
 	end
 
-	camera()
 	palt()
 end
 
@@ -461,11 +470,17 @@ function draw_debug_overlay()
 	local corner = road[camcnr]
 
 	print('carx:' .. car_x)
-	print("camx:" .. cam_x)
+	-- print("camx:" .. cam_x)
 	-- print('tu:' .. corner.tu)
 	-- print('a:' .. angle)
 	-- print('p:' .. corner.pitch)
 	-- print('dp:' .. corner.dpitch)
+
+	if cam_dy ~= 2 or cam_dz ~= 2 then
+		print('cam:' .. cam_x .. ',' .. cam_dy .. ',' .. cam_dz)
+	else
+		print('cam:' .. cam_x)
+	end
 
 	-- cursor(92, 0)
 	-- print("ca:" .. camang)

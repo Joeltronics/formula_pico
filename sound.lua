@@ -3,6 +3,13 @@
 -- https://pico-8.fandom.com/wiki/Memory#Sound_effects
 -- https://www.lexaloffle.com/bbs/?tid=29382
 
+-- engine_harmonic_interval = 7  -- V6
+-- engine_harmonic_interval = 12  -- V8
+engine_harmonic_interval = 16  -- V10
+-- engine_harmonic_interval = 19  -- V12
+
+fundamental_prev = 0
+
 function make_note(pitch, instr, vol, effect)
 	-- | C E E E | V V V W | W W P P | P P P P |
 	return shl(band(effect, 7), 12) + shl(band(vol, 7), 9) + shl(band(instr, 7), 6) + band(pitch, 63) 
@@ -49,9 +56,6 @@ function init_sound()
 	end
 end
 
-harmonic_prev = 0
-fundamental_prev = 0
-
 function update_sound()
 
 	if (not enable_sound) return
@@ -60,6 +64,7 @@ function update_sound()
 		-- Idling
 		sfx(0, 0)
 		sfx(-1, 1)
+		fundamental_prev = 0
 		return
 	end
 
@@ -69,11 +74,8 @@ function update_sound()
 
 	-- TODO: scale linearly by frequency, not pitch (need to take log - or use lookup table)
 	local fundamental = flr((gear % 1) * 36) + flr(gear) - 1
-
-	-- local harmonic = fundamental + 7 -- V6
-	-- local harmonic = fundamental + 12 -- V8
-	local harmonic = fundamental + 16 -- V10
-	-- local harmonic = fundamental + 19 -- V12
+	local harmonic = fundamental + engine_harmonic_interval
+	local harmonic_prev = fundamental_prev + engine_harmonic_interval
 
 	-- TODO: there's still some audible stepping at high RPMs, due to limited pitch resolution. Could come up with a
 	-- hack of changing the sfx speed for this (and then not retriggering every update)
@@ -83,18 +85,13 @@ function update_sound()
 	set_note(60, 1, note2)
 	sfx(60, 0)
 
-	if curr_speed == 0 then
-		sfx(-1, 1)
-	else
-		local instr = 1
-		if (accelerating) instr = 4
-		note1 = make_note(harmonic_prev, instr, 1, 0)
-		note2 = make_note(harmonic, instr, 1, 1)
-		set_note(61, 0, note1)
-		set_note(61, 1, note2)
-		sfx(61, 1)
-	end
+	local harm_instr = 1
+	if (accelerating) harm_instr = 4
+	note1 = make_note(harmonic_prev, harm_instr, 1, 0)
+	note2 = make_note(harmonic, harm_instr, 1, 1)
+	set_note(61, 0, note1)
+	set_note(61, 1, note2)
+	sfx(61, 1)
 
 	fundamental_prev = fundamental
-	harmonic_prev = harmonic
 end

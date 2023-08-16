@@ -19,7 +19,8 @@ function advance(cnr, seg)
 		cnr += 1
 		if (cnr > #road) cnr = 1
 	end
-	return cnr, seg
+	if (cnr == 1 and seg == 1) totseg = 1
+	return cnr, seg, road[cnr].sumct + seg
 end
 
 function reverse(cnr, seg)
@@ -29,6 +30,5 @@ function reverse(cnr, seg)
 		if (cnr == 0) cnr = #road
 		seg = road[cnr].length
 	end
-
-	return cnr, seg
+	return cnr, seg, road[cnr].sumct + seg
 end

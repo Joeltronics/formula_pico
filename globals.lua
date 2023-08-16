@@ -1,5 +1,6 @@
 --
 -- Consts
+-- (including a few values which can be changed while debugging)
 --
 
 -- TODO: select this at start screen
@@ -17,6 +18,7 @@ speed_scale = 1
 length_scale = 2
 
 -- Acceleration, by gear
+-- TOOD: make it 7 gears, but have gear 1 be twice as long
 accel = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
 
 coast_decel_rel = 255/256
@@ -27,9 +29,9 @@ grass_max_speed = 0.125
 
 speed_to_kph = 350
 
--- cam_height = 1
-cam_height = 2
--- cam_height = 5
+-- cam_dy, cam_dz = 1, 1
+cam_dy, cam_dz = 2, 2
+-- cam_dy, cam_dz = 5, 5
 
 road_width = 3
 -- road_width = 4
@@ -47,7 +49,6 @@ road_detail_draw_distance = 30
 -- road_detail_draw_distance = 60
 -- road_detail_draw_distance = 75
 sprite_draw_distance = 45
-
 
 --
 -- Globals that are effectively const after init

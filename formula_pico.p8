@@ -18,8 +18,8 @@ enable_sound = true
 
 function _init()
 	cls()
-	-- prevent printing at bottom of screen from triggering scroll
-	poke(0x5f36, 0x40)
+	if (debug) poke(0x5F2D, 1)  -- enable keyboard
+	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
 	init_sound()
 	init_corners()
 	init_minimap()
@@ -32,8 +32,8 @@ end
 
 function _draw()
 	draw_bg()
-	local car_screen_x, car_screen_y = draw_road()
-	draw_car(car_screen_x, car_screen_y)
+	local car_screen_x, car_screen_y, car_scale = draw_road()
+	draw_car(car_screen_x, car_screen_y, car_scale)
 	draw_minimap()
 	draw_hud()
 	if (debug) draw_debug_overlay()

@@ -36,12 +36,19 @@ function game_tick()
 	if (btn(2)) accel_brake += 1
 	if (btn(3)) accel_brake -= 1
 
-	local debug_buttons = debug and btn(4) and btn(5)
-
-	if debug_buttons and btnp(3) then
-		camcnr, camseg = reverse(camcnr, camseg)
-		camtotseg -= 1
-		if (camtotseg == 0) camtotseg = sumct
+	if debug then
+		while stat(30) do
+			local key = stat(31)
+			printh('"' .. key .. '"')
+			if (key == 'k') cam_z += 0.25
+			if (key == 'j') cam_z -= 0.25
+			if (key == 'h') car_x -= 0.125
+			if (key == 'l') car_x += 0.125
+			if (key == '9') cam_dy = max(cam_dy - 0.25, 0.25)
+			if (key == '0') cam_dy += 0.25
+			if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
+			if (key == '=') cam_dz += 0.25
+		end
 	end
 
 	-- Determine acceleration & speed
@@ -101,12 +108,11 @@ function game_tick()
 	if steering ~= 0 then
 		if curr_speed > 0 then
 			car_x += steering * min(8*curr_speed, 1) / 64
-		elseif debug_buttons then
-			car_x += steering / 64
 		end
 		car_x = max(-1.5, min(1.5, car_x))
-		cam_x = 0.75 * car_x
 	end
+
+	cam_x = 0.75 * car_x
 
 	-- Car direction to draw
 	-- Based on:
@@ -131,9 +137,10 @@ function game_tick()
 	cam_z += dz
 	if cam_z > 1 then
 		cam_z -= 1
-		camcnr, camseg = advance(camcnr, camseg)
-		camtotseg += 1
-		if (camcnr == 1 and camseg == 1) camtotseg = 1
+		camcnr, camseg, camtotseg = advance(camcnr, camseg)
+	elseif cam_z < 0 then
+		cam_z += 1
+		camcnr, camseg, camtotseg = reverse(camcnr, camseg)
 	end
 
 	-- Update angle & sun coordinate
