@@ -45,7 +45,7 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
 	end
 end
 
-function draw_segment(sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
+function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
 
 	detail = distance <= road_detail_draw_distance
 
@@ -113,7 +113,30 @@ function draw_segment(sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
 		end
 	end
 
-	-- TODO: racing line
+	-- Racing line
+
+	if (not draw_racing_line) return
+
+	-- TODO: color red in braking zone
+	local col = 11
+
+	if (not corner.apex_seg) or (seg < corner.apex_seg) then
+		-- Before apex (or no apex)
+		-- TODO: optimize out duplicate w1 multiplication (also below)
+		line(
+			-- x1 + corner.entrance_x*w1, y1,
+			-- x2 + corner.entrance_x*w2, y2,
+			x1 + corner.entrance_x*w1 + (1 + seg)*corner.racing_line_dx_pre_apex*w1, y1,
+			x2 + corner.entrance_x*w2 + seg*corner.racing_line_dx_pre_apex*w2, y2,
+			col)
+	else
+		-- After apex
+		local past_apex = seg - corner.apex_seg
+		line(
+			x1 + corner.apex_x*w1 + (1 + past_apex)*corner.racing_line_dx_post_apex*w1, y1,
+			x2 + corner.apex_x*w2 + past_apex*corner.racing_line_dx_post_apex*w2, y2,
+			col)
+	end
 end
 
 function setclip(clp)
@@ -226,7 +249,7 @@ function draw_road()
 
 		local sumct = road[cnr].sumct + seg
 
-		draw_segment(sumct, x2, y2, scale2, x1, y1, scale1, road[cnr].gndcol, i)
+		draw_segment(road[cnr], seg, sumct, x2, y2, scale2, x1, y1, scale1, road[cnr].gndcol, i)
 
 		if i < sprite_draw_distance then
 

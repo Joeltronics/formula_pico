@@ -59,7 +59,13 @@ minimap = {}
 minimap_step = 1
 
 --
--- Runtime globals
+-- Runtime options
+--
+
+draw_racing_line = true
+
+--
+-- Other runtime globals
 --
 
 camcnr, camseg, camtotseg = 1, 1, 1

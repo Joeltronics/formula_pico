@@ -16,15 +16,85 @@ function init_corners()
 		local max_speed = min(1.25 - (corner.tu * length_scale), 1)
 		max_speed *= max_speed
 		corner.max_speed = max_speed
+	end
 
-		-- TODO: calculate racing line - entrance X, apex X & segment index, exit X, braking point for corner ahead
+	-- Corner apexes, entrances, exits
+
+	for corner_idx = 1, #road do
+		local corner0 = road[corner_idx]
+		local corner1 = road[corner_idx % #road + 1]
+		local corner2 = road[(corner_idx + 1) % #road + 1]
+
+		-- Apexes
+
+		if corner0.angle == 0 then
+			-- Straight, no apex
+			-- TODO: use apex for braking point
+
+			corner0.apex_seg = nil
+			corner0.apex_x = nil
+
+			-- For now, use entrance to next corner as apex
+			-- corner0.apex_seg = corner0.length
+			-- corner0.apex_x = -0.75 * sgn(corner1.angle)
+
+		elseif corner1.angle ~= 0 and (corner0.angle > 0) == (corner1.angle > 0) then
+			-- 2 corners of same direction in a row
+			-- Apex is at end of first
+			-- TODO: apex isn't necessarily in the middle of the two - could be double-apex, or just early or late
+			-- TODO: logic for more than 2 corner segments in a row
+			corner0.apex_seg = corner0.length
+			corner0.apex_x = 0.75 * sgn(corner0.angle)
+			corner0.exit_x = corner0.apex_x
+			corner1.apex_seg = 1
+			corner1.apex_x = corner0.apex_x
+			corner1.entrance_x = corner0.apex_x
+
+		elseif not corner0.apex_seg then
+			-- Standalone corner, or 2 corners changing direction (e.g. chicane)
+			-- Apex is in middle
+			corner0.apex_seg = corner0.length / 2
+			corner0.apex_x = 0.75 * sgn(corner0.angle)
+
+			corner0.entrance_x = -corner0.apex_x
+			corner0.exit_x = corner0.entrance_x
+
+		end
+	end
+
+	-- Consolidate entrances & exits
+
+	for corner_idx = 1, #road do
+		local corner0 = road[corner_idx]
+		local corner1 = road[corner_idx % #road + 1]
+
+		if corner0.exit_x and corner1.entrance_x then
+			corner0.exit_x = 0.5 * (corner0.exit_x + corner1.entrance_x)
+			corner1.entrance_x = corner0.exit_x
+		elseif corner0.exit_x then
+			corner1.entrance_x = corner0.exit_x
+		elseif corner1.entrance_x then
+			corner0.exit_x = corner1.entrance_x
+		else
+			corner0.exit_x, corner1.entrance_x = 0.5, 0.5
+		end
 	end
 
 	for corner_idx = 1, #road do
-		local corner = road[corner_idx]
-		local next_corner = road[corner_idx % #road + 1]
-		corner.dpitch = (next_corner.pitch - corner.pitch) / corner.length
-		-- corner.next_max_speed = next_corner.max_speed
+		local corner0 = road[corner_idx]
+		local corner1 = road[corner_idx % #road + 1]
+
+		corner0.dpitch = (corner1.pitch - corner0.pitch) / corner0.length
+
+		-- TODO: max speeds before & after apex
+		corner0.next_max_speed = corner1.max_speed
+		-- corner0.braking_point = TODO
+
+		corner0.racing_line_dx_pre_apex = ((corner0.apex_x or corner0.exit_x) - corner0.entrance_x) / (corner0.apex_seg or corner0.length)
+		corner0.racing_line_dx_post_apex = 0
+		if (corner0.apex_seg and corner0.apex_seg <= corner0.length) then
+			corner0.racing_line_dx_post_apex = (corner0.exit_x - corner0.apex_x) / (corner0.length - corner0.apex_seg)
+		end
 	end
 end
 
