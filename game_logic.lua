@@ -1,4 +1,21 @@
 
+
+function corner_exit_entrance(corner)
+	-- TODO: Improve this logic - smoothly interpolate
+	local direction = sgn(corner.angle)
+	if corner.max_speed_pre_apex < 0.5 then
+		-- Low speed
+		return -0.75 * direction
+	elseif corner.max_speed_pre_apex < 0.75 then
+		-- Med speed
+		return -0.25 * direction
+	else
+		-- High speed
+		return 0.5 * direction
+	end
+end
+
+
 function init_corners()
 
 	for corner in all(road) do
@@ -15,7 +32,7 @@ function init_corners()
 		-- TODO: adjust max speed for pitch (also acceleration?)
 		local max_speed = min(1.25 - (corner.tu * length_scale), 1)
 		max_speed *= max_speed
-		corner.max_speed = max_speed
+		corner.max_speed_pre_apex = max_speed
 	end
 
 	-- Corner apexes, entrances, exits
@@ -23,42 +40,37 @@ function init_corners()
 	for corner_idx = 1, #road do
 		local corner0 = road[corner_idx]
 		local corner1 = road[corner_idx % #road + 1]
-		local corner2 = road[(corner_idx + 1) % #road + 1]
+
+		corner0.max_speed_post_apex = corner1.max_speed_pre_apex
 
 		-- Apexes
 
 		if corner0.angle == 0 then
-			-- Straight, no apex
-			-- TODO: use apex for braking point
-
-			corner0.apex_seg = nil
-			corner0.apex_x = nil
-
-			-- For now, use entrance to next corner as apex
-			-- corner0.apex_seg = corner0.length
-			-- corner0.apex_x = -0.75 * sgn(corner1.angle)
+			-- Straight, apex indicates braking point
+			-- apex will be updated later once we know next corner entrance & apex
 
 		elseif corner1.angle ~= 0 and (corner0.angle > 0) == (corner1.angle > 0) then
 			-- 2 corners of same direction in a row
 			-- Apex is at end of first
 			-- TODO: apex isn't necessarily in the middle of the two - could be double-apex, or just early or late
-			-- TODO: logic for more than 2 corner segments in a row
+			-- TODO: special logic for more than 2 corner segments in a row
 			corner0.apex_seg = corner0.length
-			corner0.apex_x = 0.75 * sgn(corner0.angle)
+			corner0.apex_x = 0.9 * sgn(corner0.angle)
 			corner0.exit_x = corner0.apex_x
 			corner1.apex_seg = 1
 			corner1.apex_x = corner0.apex_x
 			corner1.entrance_x = corner0.apex_x
 
+			corner0.entrance_x = corner_exit_entrance(corner0)
+			corner1.exit_x = corner_exit_entrance(corner1)
+
 		elseif not corner0.apex_seg then
 			-- Standalone corner, or 2 corners changing direction (e.g. chicane)
 			-- Apex is in middle
 			corner0.apex_seg = corner0.length / 2
-			corner0.apex_x = 0.75 * sgn(corner0.angle)
-
-			corner0.entrance_x = -corner0.apex_x
+			corner0.apex_x = 0.9 * sgn(corner0.angle)
+			corner0.entrance_x = corner_exit_entrance(corner0)
 			corner0.exit_x = corner0.entrance_x
-
 		end
 	end
 
@@ -76,7 +88,25 @@ function init_corners()
 		elseif corner1.entrance_x then
 			corner0.exit_x = corner1.entrance_x
 		else
-			corner0.exit_x, corner1.entrance_x = 0.5, 0.5
+			corner0.exit_x, corner1.entrance_x = 0, 0
+		end
+
+		if not corner0.apex_x then
+
+			corner0.apex_seg = corner0.length
+			corner0.apex_x = corner0.exit_x
+
+			if corner1.max_speed_pre_apex < 0.99 then
+				-- Use apex to indicate braking point
+				local decel_needed = 1.0 - corner1.max_speed_pre_apex
+				-- FIXME: this isn't right! brake_decel is per frame, not per segment;
+				-- frames per segment depends on speed!
+				local decel_segments = ceil(decel_needed / (8 * brake_decel))
+				decel_segments -= 0.5*corner1.apex_seg
+				decel_segments = max(0, decel_segments)
+				corner0.apex_seg = max(2, corner0.length - decel_segments)
+				corner0.apex_x = corner0.exit_x
+			end
 		end
 	end
 
@@ -86,14 +116,10 @@ function init_corners()
 
 		corner0.dpitch = (corner1.pitch - corner0.pitch) / corner0.length
 
-		-- TODO: max speeds before & after apex
-		corner0.next_max_speed = corner1.max_speed
-		-- corner0.braking_point = TODO
-
-		corner0.racing_line_dx_pre_apex = ((corner0.apex_x or corner0.exit_x) - corner0.entrance_x) / (corner0.apex_seg or corner0.length)
+		corner0.racing_line_dx_pre_apex = (corner0.apex_x - corner0.entrance_x) / (corner0.apex_seg - 1)
 		corner0.racing_line_dx_post_apex = 0
-		if (corner0.apex_seg and corner0.apex_seg <= corner0.length) then
-			corner0.racing_line_dx_post_apex = (corner0.exit_x - corner0.apex_x) / (corner0.length - corner0.apex_seg)
+		if corner0.apex_seg <= corner0.length then
+			corner0.racing_line_dx_post_apex = (corner0.exit_x - corner0.apex_x) / (corner0.length - corner0.apex_seg + 1)
 		end
 	end
 end
@@ -126,8 +152,14 @@ function game_tick()
 	-- TODO: slow down on curb & grass
 	-- TODO: also factor in slope
 
-	local tu = road[camcnr].tu
-	local corner_max_speed = road[camcnr].max_speed
+	local corner = road[camcnr]
+
+	local tu = corner.tu
+	local corner_max_speed = corner.max_speed_pre_apex
+	if (corner.apex_seg and camseg >= corner.apex_seg) corner_max_speed = corner.max_speed_post_apex
+
+	-- Special check: hard-limit speed at apex, in case of insufficient braking
+	if (corner.apex_seg and camseg == corner.apex_seg) curr_speed = min(curr_speed, corner.max_speed_pre_apex)
 
 	accelerating = false
 
@@ -154,7 +186,6 @@ function game_tick()
 
 	elseif accel_brake > 0 then
 		-- Accelerate
-		-- gear = min(curr_speed, 0.99) * #accel + 1
 		local a = accel[flr(gear)]
 		curr_speed = min(curr_speed + a, corner_max_speed)
 		accelerating = true

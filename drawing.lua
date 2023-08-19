@@ -117,24 +117,23 @@ function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol
 
 	if (not draw_racing_line) return
 
-	-- TODO: color red in braking zone
+	-- TODO: logic for coloring red in braking zones doesn't really work on linked corners, only straights
 	local col = 11
 
-	if (not corner.apex_seg) or (seg < corner.apex_seg) then
-		-- Before apex (or no apex)
-		-- TODO: optimize out duplicate w1 multiplication (also below)
+	if seg < corner.apex_seg then
+		-- Before apex
+		-- if (corner.max_speed_pre_apex < corner.max_speed_post_apex) col = 8
 		line(
-			-- x1 + corner.entrance_x*w1, y1,
-			-- x2 + corner.entrance_x*w2, y2,
-			x1 + corner.entrance_x*w1 + (1 + seg)*corner.racing_line_dx_pre_apex*w1, y1,
-			x2 + corner.entrance_x*w2 + seg*corner.racing_line_dx_pre_apex*w2, y2,
+			x1 + w1*(corner.entrance_x + seg*corner.racing_line_dx_pre_apex), y1,
+			x2 + w2*(corner.entrance_x + (seg - 1)*corner.racing_line_dx_pre_apex), y2,
 			col)
 	else
 		-- After apex
+		if (corner.max_speed_pre_apex > corner.max_speed_post_apex and corner.angle == 0) col = 8
 		local past_apex = seg - corner.apex_seg
 		line(
-			x1 + corner.apex_x*w1 + (1 + past_apex)*corner.racing_line_dx_post_apex*w1, y1,
-			x2 + corner.apex_x*w2 + past_apex*corner.racing_line_dx_post_apex*w2, y2,
+			x1 + w1*(corner.apex_x + (1 + past_apex)*corner.racing_line_dx_post_apex), y1,
+			x2 + w2*(corner.apex_x + past_apex*corner.racing_line_dx_post_apex), y2,
 			col)
 	end
 end
@@ -483,6 +482,8 @@ function draw_car(x, y, scale)
 end
 
 function draw_debug_overlay()
+	local corner = road[camcnr]
+
 	-- cursor(0, 0, 7)
 	-- cursor(0, 128-16, 7)
 	cursor(88, 0, 7)
@@ -490,7 +491,9 @@ function draw_debug_overlay()
 	print("cpu:" .. cpu)
 	print(camcnr .. "," .. camseg .. ',' .. cam_z)
 
-	local corner = road[camcnr]
+	
+
+	print('apex:' .. corner.apex_seg .. '/' .. corner.length)
 
 	print('carx:' .. car_x)
 	-- print("camx:" .. cam_x)
