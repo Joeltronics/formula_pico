@@ -117,19 +117,20 @@ function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol
 
 	if (not draw_racing_line) return
 
-	-- TODO: logic for coloring red in braking zones doesn't really work on linked corners, only straights
 	local col = 11
 
 	if seg < corner.apex_seg then
 		-- Before apex
-		-- if (corner.max_speed_pre_apex < corner.max_speed_post_apex) col = 8
+		if (curr_speed > corner.max_speed_pre_apex) col = 8
+		if (curr_speed == corner.max_speed_pre_apex and corner.max_speed_pre_apex < 0.99) col = 10
 		line(
 			x1 + w1*(corner.entrance_x + seg*corner.racing_line_dx_pre_apex), y1,
 			x2 + w2*(corner.entrance_x + (seg - 1)*corner.racing_line_dx_pre_apex), y2,
 			col)
 	else
 		-- After apex
-		if (corner.max_speed_pre_apex > corner.max_speed_post_apex and corner.angle == 0) col = 8
+		if (curr_speed > corner.max_speed_post_apex) col = 8
+		if (curr_speed == corner.max_speed_post_apex and corner.max_speed_post_apex < 0.99) col = 10
 		local past_apex = seg - corner.apex_seg
 		line(
 			x1 + w1*(corner.apex_x + (1 + past_apex)*corner.racing_line_dx_post_apex), y1,
@@ -427,17 +428,14 @@ function draw_bg()
 end
 
 function draw_hud()
-	-- cursor(112, 110, 7)
 	cursor(116, 116, 7)
-
 	local speed_print = '' .. round(curr_speed * speed_to_kph)
 	if (#speed_print == 1) speed_print = ' ' .. speed_print
 	if (#speed_print == 2) speed_print = ' ' .. speed_print
 	print(speed_print .. '\nkph')
 
-	-- cursor(104, 112)
 	cursor(108, 118)
-	print(flr(gear))
+	print(gear)
 end
 
 function draw_car(x, y, scale)
@@ -507,6 +505,9 @@ function draw_debug_overlay()
 	else
 		print('cam:' .. cam_x)
 	end
+
+	-- DEBUG: SFX speed
+	print(get_speed(2))
 
 	-- cursor(92, 0)
 	-- print("ca:" .. camang)

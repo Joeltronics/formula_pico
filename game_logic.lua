@@ -144,6 +144,7 @@ function game_tick()
 			if (key == '0') cam_dy += 0.25
 			if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
 			if (key == '=') cam_dz += 0.25
+			if (key == 't') curr_speed += 0.25  -- turbo
 		end
 	end
 
@@ -200,6 +201,9 @@ function game_tick()
 	end
 
 	gear = min(curr_speed, 0.99) * #accel + 1
+	rpm = gear % 1
+	gear = flr(gear)
+	if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
 
 	-- Steering & corners
 

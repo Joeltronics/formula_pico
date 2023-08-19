@@ -21,6 +21,9 @@ length_scale = 2
 -- TOOD: make it 7 gears, but have gear 1 be twice as long
 accel = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
 
+-- SFX speed: ticks, around 1/120 second
+sfx_speed_by_gear = {2, 2, 2, 2, 2, 8, 64, 255}
+
 coast_decel_rel = 255/256
 coast_decel_abs = 1/2048
 brake_decel = 1/128
@@ -74,5 +77,6 @@ angle = start_angle
 sun_x = 64
 curr_speed = 0
 gear = 1
+rpm = 0
 car_sprite_turn = 0
 accelerating = false
