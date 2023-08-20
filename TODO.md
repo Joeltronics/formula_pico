@@ -52,7 +52,6 @@ Better off-track sprites and other stuff
 
 Improve start screen
 * Add some art
-* Select team (palette swap)
 * Select mode (practice, race, season, etc)
 
 More tracks

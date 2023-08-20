@@ -296,7 +296,18 @@ function draw_hud()
 	print(gear)
 end
 
+function init_car_palettes(team_idx)
+	car_palette = palettes[team_idx]
+	car_palette = {
+		[8]=car_palette[1],  -- main
+		[14]=car_palette[2],  -- accent 1
+		[2]=car_palette[3],  -- dark
+		[13]=car_palette[4],  -- floor
+	}
+end
+
 function draw_car(x, y, scale)
+	if (car_palette) pal(car_palette, 0)
 	palt(0, false)
 	palt(11, true)
 
@@ -334,6 +345,7 @@ function draw_car(x, y, scale)
 		camera()
 	end
 
+	pal()
 	palt()
 end
 

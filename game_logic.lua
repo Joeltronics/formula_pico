@@ -1,8 +1,9 @@
 
-function init_game(track_idx)
+function init_game(track_idx, team_idx)
 	road = tracks[track_idx]
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
+	init_car_palettes(team_idx)
 	init_corners()
 	init_minimap()
 end

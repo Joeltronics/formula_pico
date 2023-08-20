@@ -39,6 +39,18 @@ road_draw_distance = 90
 road_detail_draw_distance = 30
 sprite_draw_distance = 45
 
+palettes = {
+	-- main, accent, dark, floor
+	{ 8, 14, 2, 2, name='red' },
+	{ 1, 8, 0, 0, name='blue' },
+	{ 3, 11, 5, 0, name='green' },
+	{ 10, 0, 5, 0, name='yellow' },
+	{ 9, 12, 4, 4, name='orange' },
+	{ 14, 7, 2, 2, name='pink' },
+	{ 6, 7, 5, 0, name='silver' },
+	-- TODO: black team (need to recolor rear wing then)
+}
+
 --
 -- Globals that are effectively const after init
 --
@@ -61,6 +73,7 @@ draw_racing_line = true
 --
 
 road = nil  -- Setting this also acts as "game started" flag
+car_palette = nil
 
 camcnr, camseg, camtotseg = 1, 1, 1
 car_x, cam_x, cam_z = 0, 0, 0
