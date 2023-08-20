@@ -32,14 +32,9 @@ grass_max_speed = 0.125
 
 speed_to_kph = 350
 
--- cam_dy, cam_dz = 1, 1
 cam_dy, cam_dz = 2, 2
--- cam_dy, cam_dz = 5, 5
 
 road_width = 3
--- road_width = 4
--- center_line_width = 3/32
-center_line_width = 0
 shoulder_width = 1/8
 
 start_angle = 0.25
@@ -48,9 +43,6 @@ start_angle = 0.25
 draw_distance = 90
 road_draw_distance = 90
 road_detail_draw_distance = 30
--- road_detail_draw_distance = 45
--- road_detail_draw_distance = 60
--- road_detail_draw_distance = 75
 sprite_draw_distance = 45
 
 --

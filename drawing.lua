@@ -102,17 +102,6 @@ function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol
 		fillp()
 	end
 
-	-- Center line
-
-	if center_line_width > 0 and (sumct % 4) == 0 then
-		if detail then
-			local cw1, cw2 = center_line_width*scale1, center_line_width*scale2
-			filltrapz(x1, y1, cw1, x2, y2, cw2, 7)
-		else
-			line(x1, ceil(y1), x2, y2, 6)
-		end
-	end
-
 	-- Racing line
 
 	if (not draw_racing_line) return
@@ -285,146 +274,15 @@ function draw_road()
 	return car_screen_x, car_screen_y, car_scale
 end
 
-function draw_sunset_sky()
-
-	-- rectfill(0, 0, 127, 64, 1) -- dark blue
-
-	--[[
-
-	0xC blue
-	0xD indigo
-	0x1 dark blue
-	0x0 black
-
-	64 pixels / 4 = 16 segments, so each color could fade in 4 segments
-
-	]]
-
-	local fade0 = 0b1000000000100000
-	local fade1 = 0b1000001010000010
-	local fade2 = 0b1010010110100101
-	local fade3 = 0b0111110101111101
-	local fade4 = 0b1011111111101111
-
-	fillp()
-	rectfill(0, 0, 127, 3, 0xC)
-	fillp(fade0)
-	rectfill(0, 4, 127, 7, 0xDC)
-	fillp(fade2)
-	rectfill(0, 8, 127, 11, 0xDC)
-	fillp(fade4)
-	rectfill(0, 12, 127, 15, 0xDC)
-
-	fillp()
-	rectfill(0, 16, 127, 19, 0xD)
-	fillp(fade0)
-	rectfill(0, 20, 127, 23, 0x1D)
-	fillp(fade2)
-	rectfill(0, 24, 127, 27, 0x1D)
-	fillp(fade4)
-	rectfill(0, 28, 127, 31, 0x1D)
-	fillp()
-
-	rectfill(0, 32, 127, 43, 0x1)
-
-	fillp(fade0)
-	rectfill(0, 44, 127, 47, 0x01)
-	fillp(fade1)
-	rectfill(0, 48, 127, 51, 0x01)
-	fillp(fade2)
-	rectfill(0, 52, 127, 55, 0x01)
-	fillp(fade3)
-	rectfill(0, 56, 127, 59, 0x01)
-	fillp(fade4)
-	rectfill(0, 60, 127, 63, 0x01)
-
-	fillp()
-end
-
-function draw_sunset()
-
-	if sun_x < -64 or sun_x > 192 then
-		return
-	end
-
-	-- Circle: Y 48, R 32
-	-- Top: 16
-	-- Center: 48
-	-- Visible bottom: 64
-	-- Actual bottom: 80
-	
-	-- yellow = 10 = 0xA
-	-- orange = 9 = 0x9
-	-- peach = 15 = 0xF
-	-- pink = 14 = 0xE
-
-	-- yellow
-	clip(0, 0, 128, 46)
-	circfill(sun_x, 48, 32, 0xA)
-
-	-- orange to yellow
-	fillp(0b1010000110110101)
-	clip(0, 46, 128, 4)
-	circfill(sun_x, 48, 32, 0xA9)
-
-	-- orange
-	fillp()
-	clip(0, 50, 128, 2)
-	circfill(sun_x, 48, 32, 0xA9)
-
-	-- orange -> peach
-	fillp(0b1011010110100001)
-	clip(0, 52, 128, 4)
-	circfill(sun_x, 48, 32, 0x9F)
-
-	-- peach
-	fillp()
-	clip(0, 56, 128, 2)
-	circfill(sun_x, 48, 32, 0x9F)
-
-	-- peach -> pink
-	fillp(0b1010000110110101)
-	clip(0, 58, 128, 4)
-	circfill(sun_x, 48, 32, 0xFE)
-
-	-- pink
-	fillp()
-	clip(0, 62, 128, 2)
-	circfill(sun_x, 48, 32, 0xE)
-
-	clip()
-
-	-- for y in all({35, 40, 44, 48, 51, 54, 56, 58, 60, 62}) do
-	-- 	line(0, y, 128, y, 1)
-	-- end
-end
-
-function draw_day_sun()
-	if sun_x >= -64 and sun_x <= 192 then
-		circfill(sun_x, 12, 8, 10)
-	end
-end
-
 function draw_bg()
-
 	clip()
-
-	-- cls() -- slow, not needed
 
 	-- TODO: use the map for this, don't redraw every frame
 
-	-- Daytime
-	-- rectfill(0, 0, 127, 64, 12) -- light blue
-	rectfill(0, 0, 128, 128, 12) -- light blue
-	draw_day_sun()
-
-	-- Nighttime
-	-- draw_sunset_sky()
-	-- draw_sunset()
-
-	-- Grass
-	-- rectfill(0, 64, 127, 127, 3) -- dark green (light green is super ugly)
-	-- rectfill(0, 64, 127, 127, 0) -- black
+	rectfill(0, 0, 128, 128, 12)
+	if sun_x >= -64 and sun_x <= 192 then
+		circfill(sun_x, 12, 8, 10)
+	end
 end
 
 function draw_hud()
@@ -482,36 +340,16 @@ end
 function draw_debug_overlay()
 	local corner = road[camcnr]
 
-	-- cursor(0, 0, 7)
-	-- cursor(0, 128-16, 7)
 	cursor(88, 0, 7)
 	local cpu = round(stat(1) * 100)
 	print("cpu:" .. cpu)
 	print(camcnr .. "," .. camseg .. ',' .. cam_z)
 
-	
-
-	print('apex:' .. corner.apex_seg .. '/' .. corner.length)
-
 	print('carx:' .. car_x)
-	-- print("camx:" .. cam_x)
-	-- print('tu:' .. corner.tu)
-	-- print('a:' .. angle)
-	-- print('p:' .. corner.pitch)
-	-- print('dp:' .. corner.dpitch)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then
 		print('cam:' .. cam_x .. ',' .. cam_dy .. ',' .. cam_dz)
 	else
 		print('cam:' .. cam_x)
 	end
-
-	-- DEBUG: SFX speed
-	print(get_speed(2))
-
-	-- cursor(92, 0)
-	-- print("ca:" .. camang)
-	-- print("cx:" .. cx)
-	-- print("cy:" .. cy)
-	-- print("cz:" .. cz)
 end

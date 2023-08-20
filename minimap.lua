@@ -21,28 +21,28 @@ function init_minimap()
 			count += 1
 		end
 	end
+
+	-- TODO: calculate minimap_x / minimap_y dynamically from this (maybe minimap_scale too?)
 end
 
 function draw_minimap()
 
-	-- TODO: use a sprite or BG or something for this
+	-- TODO: use a sprite or the map or something for this
 
 	camera(-128 + road.minimap_x, -64 + road.minimap_y)
 
-	-- map
+	-- Map
 	line(0, 0, 0, 0, 7)
 	for seg in all(minimap) do
 		line(seg[1], seg[2])
 	end
 
-	-- finish line
-	-- local x, y = minimap[road.finish_seg]
-	local x, y = minimap[flr((road.finish_seg - 1) / minimap_step) + 1]
+	-- Finish line
+	local x, y = minimap[(road.finish_seg - 1) \ minimap_step + 1]
 	line(x, y, x, y, 0)
 
-	-- current position
-	-- local pos = minimap[camtotseg]
-	local pos = minimap[flr((camtotseg - 1) / minimap_step) + 1]
+	-- Current position
+	local pos = minimap[(camtotseg - 1) \ minimap_step + 1]
 	line(pos[1], pos[2], pos[1], pos[2], 8)
 
 	camera()
