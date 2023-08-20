@@ -3,6 +3,10 @@ function round(val)
 	return flr(val + 0.5)
 end
 
+function print_centered(text, x, y, col)
+	print(text, x - 2*#text, y, col)
+end
+
 function project(x, y, z)
 	local scale = 64 / z
 	return x * scale + 64, y * scale + 64, scale

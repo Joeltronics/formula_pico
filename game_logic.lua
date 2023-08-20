@@ -1,4 +1,11 @@
 
+function init_game(track_idx)
+	road = tracks[track_idx]
+	if (debug) poke(0x5F2D, 1)  -- enable keyboard
+	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
+	init_corners()
+	init_minimap()
+end
 
 function corner_exit_entrance(corner)
 	-- TODO: Improve this logic - smoothly interpolate
@@ -135,7 +142,7 @@ function game_tick()
 	if debug then
 		while stat(30) do
 			local key = stat(31)
-			printh('"' .. key .. '"')
+			-- printh('"' .. key .. '"')
 			if (key == 'k') cam_z += 0.25
 			if (key == 'j') cam_z -= 0.25
 			if (key == 'h') car_x -= 0.125
@@ -144,7 +151,7 @@ function game_tick()
 			if (key == '0') cam_dy += 0.25
 			if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
 			if (key == '=') cam_dz += 0.25
-			if (key == 't') curr_speed += 0.25  -- turbo
+			if (key == '`') curr_speed += 0.25  -- turbo
 		end
 	end
 

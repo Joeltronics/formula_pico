@@ -3,12 +3,6 @@
 -- (including a few values which can be changed while debugging)
 --
 
--- TODO: select this at start screen
--- road = tracks[1]
--- road = tracks[2]
-road = tracks[3]
--- road = tracks[4]
-
 speed_scale = 1
 -- speed_scale = 0.25
 -- speed_scale = 0.125
@@ -57,11 +51,16 @@ minimap_step = 1
 -- Runtime options
 --
 
+debug = true
+print_cpu = true
+enable_sound = true
 draw_racing_line = true
 
 --
 -- Other runtime globals
 --
+
+road = nil  -- Setting this also acts as "game started" flag
 
 camcnr, camseg, camtotseg = 1, 1, 1
 car_x, cam_x, cam_z = 0, 0, 0

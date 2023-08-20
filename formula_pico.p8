@@ -5,37 +5,43 @@ __lua__
 -- by Joel Geddert
 -- License: CC BY-NC-SA 4.0
 
-debug = true
-enable_sound = true
-
 #include map_data.lua
 #include globals.lua
 #include utils.lua
 #include minimap.lua
 #include sound.lua
 #include drawing.lua
+#include title_screen.lua
 #include game_logic.lua
 
 function _init()
-	cls()
-	if (debug) poke(0x5F2D, 1)  -- enable keyboard
-	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
-	init_corners()
-	init_minimap()
+	init_title_screen()
 end
 
 function _update60()
-	game_tick()
-	update_sound()
+	if road then
+		game_tick()
+		update_sound()
+	else
+		update_title_screen()
+	end
 end
 
 function _draw()
-	draw_bg()
-	local car_screen_x, car_screen_y, car_scale = draw_road()
-	draw_car(car_screen_x, car_screen_y, car_scale)
-	draw_minimap()
-	draw_hud()
-	if (debug) draw_debug_overlay()
+	if road then
+		draw_bg()
+		local car_screen_x, car_screen_y, car_scale = draw_road()
+		draw_car(car_screen_x, car_screen_y, car_scale)
+		draw_minimap()
+		draw_hud()
+		if debug then
+			draw_debug_overlay()
+		elseif print_cpu then
+			draw_cpu_only_overlay()
+		end
+	else
+		draw_title_screen()
+	end
 end
 
 __gfx__

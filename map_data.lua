@@ -59,68 +59,6 @@ bg_finishline = {
 -- TOOD: define racing line
 tracks = {
 {
-	name="test",
-	minimap_scale = 0.5,
-	minimap_x = 24, -- distance from right side of screen
-	minimap_y = 0, -- distance from vertical center
-	finish_seg = 5,
-	{length=20,
-	-- , bgl=bg_finishline, bgr=bg_finishline
-	-- ,  bgc=bg_finishline_c
-	},
-	{length=12, angle=-0.25, bgr=bg_sign},
-	{length=12, pitch=-.75, bgl=bg_tree3},
-	{length=8, angle=0.125, bgl=bg_sign},
-	{length=20, angle=0.125, pitch=.75},
-	{length=8, pitch=-.5},
-	{length=10, angle=0.25},
-	{length=8},
-	{length=62, angle=0.25, bgl=bg_tree3, bgr=bg_tree5},
-
-	{length=6, angle=0.25, bgl=bg_sign},
-	{length=8, angle=-0.25, bgr=bg_sign},
-
-	{length=40, bgl=bg_tree4, bgr=bg_tree5},
-
-	{length=6, angle=0.5, bgl=bg_sign},
-
-	{length=8},
-
-	{length=8, angle=-0.125},
-	{length=8, angle=0.125},
-},
-{
-	name="italy",
-	minimap_scale = 0.25,
-	minimap_x = 24,
-	minimap_y = 0,
-	finish_seg = 5,
-	{length=40},
-	{length=6, angle=0.25}, -- 1: chicane
-	{length=8, angle=-0.375}, -- 2
-	{length=8, angle=0.125},
-	{length=8},
-	{length=64, angle=0.2}, -- 3: curva grande
-	{length=12},
-	{length=6, angle=-0.25}, -- 4: chicane
-	{length=6, angle=0.25}, -- 5
-	{length=12},
-	{length=12, angle=0.25}, -- 6: lesmo
-	{length=12},
-	{length=12, angle=0.2}, -- 7
-	{length=12},
-	{length=12, angle=-0.05}, -- serraglio
-	{length=40},
-	{length=8, angle=-0.15}, -- 8 :ascari
-	{length=8, angle=0.2}, -- 9
-	{length=8, angle=-0.15}, -- 10
-	{length=72},
-	{length=10, angle=0.25}, -- 11: parabolica
-	{length=10, angle=0.125},
-	{length=30, angle=0.125},
-	{length=12},
-},
-{
 	name="belgium",
 	minimap_scale = 0.25,
 	minimap_x = 12,
@@ -169,6 +107,68 @@ tracks = {
 	{length=6, angle=0.25}, -- 19: chicane
 	{length=6, angle=-0.25}, -- 20
 	{length=14},
+},
+{
+	name="italy",
+	minimap_scale = 0.25,
+	minimap_x = 24,
+	minimap_y = 0,
+	finish_seg = 5,
+	{length=40},
+	{length=6, angle=0.25}, -- 1: chicane
+	{length=8, angle=-0.375}, -- 2
+	{length=8, angle=0.125},
+	{length=8},
+	{length=64, angle=0.2}, -- 3: curva grande
+	{length=12},
+	{length=6, angle=-0.25}, -- 4: chicane
+	{length=6, angle=0.25}, -- 5
+	{length=12},
+	{length=12, angle=0.25}, -- 6: lesmo
+	{length=12},
+	{length=12, angle=0.2}, -- 7
+	{length=12},
+	{length=12, angle=-0.05}, -- serraglio
+	{length=40},
+	{length=8, angle=-0.15}, -- 8 :ascari
+	{length=8, angle=0.2}, -- 9
+	{length=8, angle=-0.15}, -- 10
+	{length=72},
+	{length=10, angle=0.25}, -- 11: parabolica
+	{length=10, angle=0.125},
+	{length=30, angle=0.125},
+	{length=12},
+},
+{
+	name="test",
+	minimap_scale = 0.5,
+	minimap_x = 24, -- distance from right side of screen
+	minimap_y = 0, -- distance from vertical center
+	finish_seg = 5,
+	{length=20,
+	-- , bgl=bg_finishline, bgr=bg_finishline
+	-- ,  bgc=bg_finishline_c
+	},
+	{length=12, angle=-0.25, bgr=bg_sign},
+	{length=12, pitch=-.75, bgl=bg_tree3},
+	{length=8, angle=0.125, bgl=bg_sign},
+	{length=20, angle=0.125, pitch=.75},
+	{length=8, pitch=-.5},
+	{length=10, angle=0.25},
+	{length=8},
+	{length=62, angle=0.25, bgl=bg_tree3, bgr=bg_tree5},
+
+	{length=6, angle=0.25, bgl=bg_sign},
+	{length=8, angle=-0.25, bgr=bg_sign},
+
+	{length=40, bgl=bg_tree4, bgr=bg_tree5},
+
+	{length=6, angle=0.5, bgl=bg_sign},
+
+	{length=8},
+
+	{length=8, angle=-0.125},
+	{length=8, angle=0.125},
 },
 {
 	name="hill test",

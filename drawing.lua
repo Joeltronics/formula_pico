@@ -337,6 +337,12 @@ function draw_car(x, y, scale)
 	palt()
 end
 
+function draw_cpu_only_overlay()
+	cursor(100, 0, 7)
+	local cpu = round(stat(1) * 100)
+	print("cpu:" .. cpu)
+end
+
 function draw_debug_overlay()
 	local corner = road[camcnr]
 
@@ -344,7 +350,6 @@ function draw_debug_overlay()
 	local cpu = round(stat(1) * 100)
 	print("cpu:" .. cpu)
 	print(camcnr .. "," .. camseg .. ',' .. cam_z)
-
 	print('carx:' .. car_x)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then
