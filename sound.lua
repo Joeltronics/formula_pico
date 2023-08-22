@@ -82,7 +82,14 @@ function update_sound()
 	sfx(2, 0)
 	fundamental_prev = fundamental
 
-	if abs(car_x) >= 1 then
+	-- TODO: add echo when in tunnel
+
+	if abs(car_x) >= road[camcnr].wall then
+		-- Touching wall
+		-- TODO: different sound effect from grass
+		if (harmonic_prev ~= -3) sfx(1, 1)
+		harmonic_prev = -3
+	elseif abs(car_x) >= 1 then
 		-- Off the track
 		if (harmonic_prev ~= -3) sfx(1, 1)
 		harmonic_prev = -3

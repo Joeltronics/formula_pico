@@ -23,6 +23,7 @@ coast_decel_abs = 1/2048
 brake_decel = 1/128
 
 grass_max_speed = 0.125
+wall_max_speed = 0.25
 
 speed_to_kph = 350
 

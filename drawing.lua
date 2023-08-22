@@ -45,28 +45,32 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
 	end
 end
 
-function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
-
-	detail = distance <= road_detail_draw_distance
-
-	y1, yt = ceil(y1), flr(y2)
-
-	if (y2 < y1) return
-
-	local w1 = road_width*scale1
-	local w2 = road_width*scale2
-
-	-- Ground
-
+function draw_ground(y1, y2, sumct, gndcol)
 	if not gndcol then
 		gndcol = 3
 		if ((sumct % 6) >= 3) gndcol = 11
 	end
 	rectfill(0, y1, 128, y2, gndcol)
+end
 
-	if (distance > road_draw_distance) return
+function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
+
+	detail = (distance <= road_detail_draw_distance)
+
+	y1, yt = ceil(y1), flr(y2)
+
+	if corner.tnl then
+		draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
+	elseif (y2 >= y1) then
+		draw_ground(y1, y2, sumct, gndcol)
+		-- TODO: draw walls
+	end
+
+	if (y2 < y1 or distance > road_draw_distance) return
 
 	-- Road
+
+	local w1, w2 = road_width*scale1, road_width*scale2
 
 	filltrapz(x1, y1, w1, x2, y2, w2, 5)
 
@@ -126,6 +130,45 @@ function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol
 			x2 + w2*(corner.apex_x + past_apex*corner.racing_line_dx_post_apex), y2,
 			col)
 	end
+end
+
+function get_tunnel_rect(x, y, scale)
+	local w, h = (2*road_width + 0.4)*scale, 4*scale
+	local x1, y1, x2, y2 = ceil(x - w/2), ceil(y - h), ceil(x + w/2), ceil(y)
+	return x1, y1, x2, y2
+end
+
+function clip_to_tunnel(px,py,scale,clp)
+	local x1, y1, x2, y2 = get_tunnel_rect(px, py, scale)
+	clp[1] = max(clp[1], x1)
+	clp[2] = max(clp[2], y1)
+	clp[3] = min(clp[3], x2)
+	clp[4] = min(clp[4], y2)
+end
+
+function draw_tunnel_face(x, y, scale)
+	local x1, y1, x2, y2 = get_tunnel_rect(x, y, scale)
+
+	-- tunnel wall top
+	local wh = 4.5*scale
+	local wy = ceil(y - wh)
+
+	-- faces
+	if(y1 > 0) rectfill(0, wy, 128, y1-1, 7)
+	if(x1 > 0) rectfill(0, y1, x1-1, y2-1, 7)
+	if(x2 < 128) rectfill(x2, y1, 127, y2-1, 7)
+end
+
+function draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
+	local col = 0
+	if(sumct % 4 < 2) col = 1
+
+	local x11, y11, x12, y12 = get_tunnel_rect(x1, y1, scale1)
+	local x21, y21, x22, y22 = get_tunnel_rect(x2, y2, scale2)
+
+	if(y11 > y21) rectfill(x11, y11, x12-1, y21-1, col) -- top
+	if(x11 > x21) rectfill(x11, y21, x21-1, y22-1, col) -- left
+	if(x12 < x22) rectfill(x22, y21, x12-1, y22-1, col) -- right
 end
 
 function setclip(clp)
@@ -220,13 +263,16 @@ function draw_road()
 	local sp = {}
 
 	-- current clip region
-	-- TODO: only last value is ever used, can just store that one
-	local clp={0, 0, 128, 128}
+	local clp = {0, 0, 128, 128}
 	clip()
 
 	-- Draw road segments
 
 	local x1, y1, scale1 = project(x, y, z)
+
+	local corner = road[cnr]
+
+	local ptnl = corner.tnl
 
 	for i = 1, draw_distance do
 
@@ -236,9 +282,16 @@ function draw_road()
 
 		local x2, y2, scale2 = project(x, y, z)
 
-		local sumct = road[cnr].sumct + seg
+		local sumct = corner.sumct + seg
 
-		draw_segment(road[cnr], seg, sumct, x2, y2, scale2, x1, y1, scale1, road[cnr].gndcol, i)
+		local tnl = corner.tnl
+		if tnl and not ptnl then
+			draw_tunnel_face(x1, y1, scale1)
+			clip_to_tunnel(x1, y1, scale1, clp)
+			setclip(clp)
+		end
+
+		draw_segment(corner, seg, sumct, x2, y2, scale2, x1, y1, scale1, corner.gndcol, i)
 
 		if i < sprite_draw_distance then
 
@@ -247,20 +300,26 @@ function draw_road()
 				add_bg_sprite(sp, sumct, seg, bg_finishline,  1, x2, y2, scale2, clp)
 			end
 
-			add_bg_sprite(sp, sumct, seg, road[cnr].bgl, -1, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, road[cnr].bgc,  0, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, road[cnr].bgr,  1, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, corner.bgl, -1, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, corner.bgc,  0, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, corner.bgr,  1, x2, y2, scale2, clp)
 		end
 
 		-- Reduce clip region
-		clp[4] = min(clp[4], ceil(y2))
+		if tnl then
+			clip_to_tunnel(x2, y2, scale2, clp)
+		else
+			clp[4] = min(clp[4], ceil(y2))
+		end
 		setclip(clp)
 
 		-- Advance
-		xd += road[cnr].tu
-		yd -= road[cnr].dpitch
+		xd += corner.tu
+		yd -= corner.dpitch
 		cnr, seg, _ = advance(cnr, seg)
+		corner = road[cnr]
 		x1, y1, scale1 = x2, y2, scale2
+		ptnl = tnl
 	end
 
 	-- Draw sprites
@@ -313,9 +372,17 @@ function draw_car(x, y, scale)
 
 	-- TODO: extra sprites for braking or on grass
 
-	if abs(car_x) >= 1 and curr_speed > 0 then
-		-- On grass; bumpy
-		y -= flr(rnd(2))
+	if curr_speed > 0 then
+		if abs(car_x) >= road[camcnr].wall then
+			-- Touching wall
+			-- TODO: add smoke, or other indicator of scraping
+		end
+
+		if abs(car_x) >= 1 then
+			-- On grass; bumpy
+			y -= flr(rnd(2))
+			-- TODO: add "flinging grass" sprite
+		end
 	end
 
 	-- DEBUG

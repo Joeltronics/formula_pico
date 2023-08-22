@@ -152,9 +152,9 @@ tracks = {
 	{length=12, angle=-0.25, bgr=bg_sign},
 	{length=12, pitch=-.75, bgl=bg_tree3},
 	{length=8, angle=0.125, bgl=bg_sign},
-	{length=20, angle=0.125, pitch=.75},
-	{length=8, pitch=-.5},
-	{length=10, angle=0.25},
+	{length=20, angle=0.125, pitch=.75, tnl=true},
+	{length=8, pitch=-.5, tnl=true},
+	{length=10, angle=0.25, tnl=true},
 	{length=8},
 	{length=62, angle=0.25, bgl=bg_tree3, bgr=bg_tree5},
 

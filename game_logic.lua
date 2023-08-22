@@ -40,7 +40,12 @@ function init_corners()
 		-- TODO: adjust max speed for pitch (also acceleration?)
 		local max_speed = min(1.25 - (corner.tu * length_scale), 1)
 		max_speed *= max_speed
+		max_speed = max(max_speed, 0.0625)
 		corner.max_speed_pre_apex = max_speed
+
+		corner.tnl = corner.tnl or false
+		corner.wall = corner.wall or 1.5
+		if (corner.tnl) corner.wall = 0.85
 	end
 
 	-- Corner apexes, entrances, exits
@@ -172,20 +177,33 @@ function game_tick()
 
 	accelerating = false
 
-	if abs(car_x) >= 1 then
+	if abs(car_x) >= corner.wall then
+		-- Touching wall
+		-- Decrease max speed significantly
+		-- Slower acceleration
+		-- Faster braking
+		-- Increase coasting deceleration significantly
+		-- Increase tire deg
+		corner_max_speed = min(corner_max_speed, wall_max_speed)
+		-- TODO
+
+	elseif abs(car_x) >= 1 then
 		-- On grass
 		-- Decrease max speed significantly
 		-- Slower acceleration
 		-- Slower braking
-		-- Increase coasting deceleration
+		-- Increase coasting deceleration significantly
 		corner_max_speed = min(corner_max_speed, grass_max_speed)
 		-- TODO
+
 	elseif abs(car_x) >= 0.75 then
 		-- On curb
 		-- Max speed unaffected
 		-- Decrease acceleration
 		-- Decrease braking
 		-- Increase coasting deceleration
+		-- Increase tire deg slightly
+
 		-- TODO
 	end
 
@@ -222,8 +240,11 @@ function game_tick()
 		if curr_speed > 0 then
 			car_x += steering * min(8*curr_speed, 1) / 64
 		end
-		car_x = max(-1.5, min(1.5, car_x))
 	end
+
+	-- TODO: make wall distance changes gradual
+	car_x = max(-corner.wall, min(corner.wall, car_x))
+	-- TODO: add very slight "bounce back from wall" physics
 
 	cam_x = 0.75 * car_x
 
