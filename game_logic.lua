@@ -158,6 +158,8 @@ function game_tick()
 			if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
 			if (key == '=') cam_dz += 0.25
 			if (key == '`') curr_speed += 0.25  -- turbo
+			if (key == '<') heading -= 1/256
+			if (key == '>') heading += 1/256
 		end
 	end
 
@@ -283,6 +285,4 @@ function game_tick()
 	heading %= 1.0
 	-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
 	if (curr_section_idx == 1 and curr_segment_idx == 1) heading = start_heading
-
-	sun_x = (heading * 512 + 192) % 512 - 256
 end

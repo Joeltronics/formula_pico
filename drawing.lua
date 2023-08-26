@@ -11,12 +11,12 @@ Colors:
 	7 white
 	8 red
 	9 orange
-	10 yellow
-	11 green
-	12 blue
-	13 indigo
-	14 pink
-	15 peach
+	10/0xA yellow
+	11/0xB green
+	12/0xC blue
+	13/0xD indigo
+	14/0xE pink
+	15/0xF peach
 ]]
 
 function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
@@ -334,10 +334,35 @@ function draw_bg()
 	clip()
 
 	-- TODO: use the map for this, don't redraw every frame
+	-- TODO: draw some hills
 
-	rectfill(0, 0, 128, 128, 12)
+	local section = road[curr_section_idx]
+	local horizon = 64 + 32*(section.pitch + section.dpitch*(curr_segment_idx - 1))
+
+	-- Sky
+	rectfill(0, 0, 128, horizon - 1, 12)
+
+	-- Horizon
+	fillp(0b0011110000111100)
+	rectfill(0, horizon, 128, 128, 0xB3)
+	fillp()
+
+	-- Sun
+	local sun_x = (heading * 512 + 192) % 512 - 256
 	if sun_x >= -64 and sun_x <= 192 then
-		circfill(sun_x, 12, 8, 10)
+		circfill(sun_x, horizon - 52, 8, 10)
+	end
+
+	-- Trees
+	local tree_y = horizon - 7
+	for off = -64,128,64 do
+		local tree_x = sun_x % 64 + off
+		spr(112, tree_x, tree_y, 2, 1)
+		spr(112, tree_x + 16, tree_y, 1, 1, true)
+		spr(113, tree_x + 24, tree_y, 1, 1, true)
+		spr(112, tree_x + 32, tree_y)
+		spr(112, tree_x + 40, tree_y, 2, 1, true)
+		spr(113, tree_x + 56, tree_y)
 	end
 end
 
@@ -421,10 +446,12 @@ end
 
 function draw_debug_overlay()
 	local section = road[curr_section_idx]
+	local cpu = round(stat(1) * 100)
+	local mem = round(stat(0) * 100 / 2048)
 
 	cursor(88, 0, 7)
-	local cpu = round(stat(1) * 100)
 	print("cpu:" .. cpu)
+	print("mem:" .. mem)
 	print(curr_section_idx .. "," .. curr_segment_idx .. ',' .. curr_subseg)
 	print('carx:' .. car_x)
 
@@ -433,4 +460,7 @@ function draw_debug_overlay()
 	else
 		print('cam:' .. cam_x)
 	end
+
+	-- local pitch = (section.pitch + section.dpitch*(curr_segment_idx - 1))
+	-- print('pi:' .. pitch)
 end

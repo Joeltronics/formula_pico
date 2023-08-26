@@ -80,7 +80,6 @@ car_palette = nil
 curr_section_idx, curr_segment_idx, curr_segment_total, curr_subseg = 1, 1, 1, 0
 car_x, cam_x = 0, 0
 heading = start_heading
-sun_x = 64
 curr_speed = 0
 gear = 1
 rpm = 0
