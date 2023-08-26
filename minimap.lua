@@ -3,14 +3,14 @@ function init_minimap()
 
 	minimap = {}
 
-	local minimap_scale = road.minimap_scale / length_scale
-	minimap_step = max(1, round(length_scale / road.minimap_scale))
+	local minimap_scale = road.minimap_scale
+	minimap_step = road.minimap_step
 
-	local count, x, y, dx, dy, heading = 0, 0, 0, 0, -1, start_heading
+	local count, x, y, dx, dy, heading = 0, 0, 0, 0, -1, road.start_heading
 	for section in all(road) do
 		for n = 1, section.length do
 
-			if (count % minimap_step == 0) add(minimap, {x, y})
+			if (count % minimap_step == 0) add(minimap, {round(x), round(y)})
 
 			heading -= section.angle_per_seg
 			heading %= 1.0
@@ -23,15 +23,13 @@ function init_minimap()
 			count += 1
 		end
 	end
-
-	-- TODO: calculate minimap_x / minimap_y dynamically from this (maybe minimap_scale too?)
 end
 
 function draw_minimap()
 
-	-- TODO: use a sprite or the map or something for this
+	-- TODO: use a sprite or the map or something for this, don't redraw the lines every frame
 
-	camera(-128 + road.minimap_x, -64 + road.minimap_y)
+	camera(-127 + road.minimap_offset_x, -64 + road.minimap_offset_y)
 
 	-- Map
 	line(0, 0, 0, 0, 7)

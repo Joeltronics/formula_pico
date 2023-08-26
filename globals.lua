@@ -8,9 +8,6 @@ speed_scale = 1
 -- speed_scale = 0.125
 -- speed_scale = 0.0625
 
--- length_scale = 1
-length_scale = 2
-
 -- Acceleration, by gear
 -- TOOD: make it 7 gears, but have gear 1 be twice as long
 accel_by_gear = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
@@ -31,11 +28,6 @@ wall_max_speed = 0.25
 speed_to_kph = 350
 
 cam_dy, cam_dz = 2, 2
-
-road_width = 3
-shoulder_width = 1/8
-
-start_heading = 0.25
 
 -- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
 draw_distance = 90
@@ -81,6 +73,7 @@ total_segment_count = nil
 -- Other runtime globals
 --
 
+-- TODO: rename "track"
 road = nil  -- Setting this also acts as "game started" flag
 cars = {}
 car_positions = {}

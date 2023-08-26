@@ -5,8 +5,9 @@ __lua__
 -- by Joel Geddert
 -- License: CC BY-NC-SA 4.0
 
-#include map_data.lua
+#include generated_data.lua
 #include globals.lua
+#include bg_objects.lua
 #include utils.lua
 #include minimap.lua
 #include sound.lua

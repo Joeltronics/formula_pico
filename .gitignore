@@ -1,3 +1,6 @@
+maps
+*.png
+*.svg
 *.sh
 *.bat
 *.ps1

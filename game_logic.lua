@@ -120,9 +120,11 @@ end
 
 
 function init_sections()
+
+	road.start_heading = road.start_heading or start_heading
+
 	total_segment_count = 0
 	for section in all(road) do
-		section.length *= length_scale
 		section.pitch = section.pitch or 0
 		section.angle = section.angle or 0
 
@@ -132,8 +134,8 @@ function init_sections()
 		section.sumct = total_segment_count
 		total_segment_count += section.length
 
-		-- TODO: adjust max speed for pitch (also acceleration?)
-		local max_speed = min(1.25 - (section.tu * length_scale), 1)
+		-- TODO: adjust max speed for pitch (adjust acceleration too?)
+		local max_speed = min(1.25 - (32 * section.angle_per_seg), 1)
 		max_speed *= max_speed
 		max_speed = max(max_speed, 0.0625)
 		section.max_speed_pre_apex = max_speed
@@ -141,6 +143,10 @@ function init_sections()
 		section.tnl = section.tnl or false
 		section.wall = section.wall or 1.5
 		if (section.tnl) section.wall = 0.85
+
+		if (section.bgl) section.bgl = bg_objects[section.bgl]
+		if (section.bgc) section.bgc = bg_objects[section.bgc]
+		if (section.bgr) section.bgr = bg_objects[section.bgr]
 	end
 
 	-- Corner apexes, entrances, exits
@@ -403,7 +409,7 @@ function game_tick()
 			if (car.section_idx == 2 and car.segment_idx == 1) then
 				car.laps += 1
 				-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
-				car.heading = start_heading
+				car.heading = road.start_heading
 			end
 
 		elseif subseg < 0 then
