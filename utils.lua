@@ -16,23 +16,23 @@ function skew(x, y, z, xd, yd)
 	return x + z*xd, y + z*yd, z
 end
 
-function advance(cnr, seg)
-	seg += 1
-	if seg > road[cnr].length then
-		seg = 1
-		cnr += 1
-		if (cnr > #road) cnr = 1
+function advance(section_idx, segment_idx)
+	segment_idx += 1
+	if segment_idx > road[section_idx].length then
+		segment_idx = 1
+		section_idx += 1
+		if (section_idx > #road) section_idx = 1
 	end
-	if (cnr == 1 and seg == 1) totseg = 1
-	return cnr, seg, road[cnr].sumct + seg
+	if (section_idx == 1 and segment_idx == 1) totseg = 1
+	return section_idx, segment_idx, road[section_idx].sumct + segment_idx
 end
 
-function reverse(cnr, seg)
-	seg -= 1
-	if seg == 0 then
-		cnr -= 1
-		if (cnr == 0) cnr = #road
-		seg = road[cnr].length
+function reverse(section_idx, segment_idx)
+	segment_idx -= 1
+	if segment_idx == 0 then
+		section_idx -= 1
+		if (section_idx == 0) section_idx = #road
+		segment_idx = road[section_idx].length
 	end
-	return cnr, seg, road[cnr].sumct + seg
+	return section_idx, segment_idx, road[section_idx].sumct + segment_idx
 end

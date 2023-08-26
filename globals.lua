@@ -33,7 +33,7 @@ cam_dy, cam_dz = 2, 2
 road_width = 3
 shoulder_width = 1/8
 
-start_angle = 0.25
+start_heading = 0.25
 
 -- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
 draw_distance = 90
@@ -77,9 +77,9 @@ draw_racing_line = true
 road = nil  -- Setting this also acts as "game started" flag
 car_palette = nil
 
-camcnr, camseg, camtotseg = 1, 1, 1
-car_x, cam_x, cam_z = 0, 0, 0
-angle = start_angle
+curr_section_idx, curr_segment_idx, curr_segment_total, curr_subseg = 1, 1, 1, 0
+car_x, cam_x = 0, 0
+heading = start_heading
 sun_x = 64
 curr_speed = 0
 gear = 1

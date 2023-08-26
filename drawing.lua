@@ -53,13 +53,13 @@ function draw_ground(y1, y2, sumct, gndcol)
 	rectfill(0, y1, 128, y2, gndcol)
 end
 
-function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
+function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
 
 	detail = (distance <= road_detail_draw_distance)
 
 	y1, yt = ceil(y1), flr(y2)
 
-	if corner.tnl then
+	if section.tnl then
 		draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
 	elseif (y2 >= y1) then
 		draw_ground(y1, y2, sumct, gndcol)
@@ -112,22 +112,22 @@ function draw_segment(corner, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol
 
 	local col = 11
 
-	if seg < corner.apex_seg then
+	if seg < section.apex_seg then
 		-- Before apex
-		if (curr_speed > corner.max_speed_pre_apex) col = 8
-		if (curr_speed == corner.max_speed_pre_apex and corner.max_speed_pre_apex < 0.99) col = 10
+		if (curr_speed > section.max_speed_pre_apex) col = 8
+		if (curr_speed == section.max_speed_pre_apex and section.max_speed_pre_apex < 0.99) col = 10
 		line(
-			x1 + w1*(corner.entrance_x + seg*corner.racing_line_dx_pre_apex), y1,
-			x2 + w2*(corner.entrance_x + (seg - 1)*corner.racing_line_dx_pre_apex), y2,
+			x1 + w1*(section.entrance_x + seg*section.racing_line_dx_pre_apex), y1,
+			x2 + w2*(section.entrance_x + (seg - 1)*section.racing_line_dx_pre_apex), y2,
 			col)
 	else
 		-- After apex
-		if (curr_speed > corner.max_speed_post_apex) col = 8
-		if (curr_speed == corner.max_speed_post_apex and corner.max_speed_post_apex < 0.99) col = 10
-		local past_apex = seg - corner.apex_seg
+		if (curr_speed > section.max_speed_post_apex) col = 8
+		if (curr_speed == section.max_speed_post_apex and section.max_speed_post_apex < 0.99) col = 10
+		local past_apex = seg - section.apex_seg
 		line(
-			x1 + w1*(corner.apex_x + (1 + past_apex)*corner.racing_line_dx_post_apex), y1,
-			x2 + w2*(corner.apex_x + past_apex*corner.racing_line_dx_post_apex), y2,
+			x1 + w1*(section.apex_x + (1 + past_apex)*section.racing_line_dx_post_apex), y1,
+			x2 + w2*(section.apex_x + past_apex*section.racing_line_dx_post_apex), y2,
 			col)
 	end
 end
@@ -233,27 +233,24 @@ end
 function draw_road()
 
 	-- road position
-	local cnr, seg = camcnr, camseg
-	local corner = road[camcnr]
-
-	-- local nextcnr, nextseg = advance(cnr, seg)
-	-- local nextcorner = road[nextcnr]
+	local sect, seg = curr_section_idx, curr_segment_idx
+	local section = road[curr_section_idx]
 
 	-- direction
 	-- TODO: look ahead a bit more than this to determine camera
-	local camang = cam_z * corner.tu
+	local camang = curr_subseg * section.tu
 	local xd = -camang
-	local yd = -(corner.pitch + corner.dpitch*(camseg - 1))
+	local yd = -(section.pitch + section.dpitch*(curr_segment_idx - 1))
 	local zd = 1
 
 	-- Starting coords
 
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
-	-- local cx, cy, cz = skew(road_width*cam_x, 0, cam_z, xd, yd)
+	-- local cx, cy, cz = skew(road_width*cam_x, 0, curr_subseg, xd, yd)
 	-- local x, y, z = -cx, -cy + cam_dy, -cz + cam_dz
 	-- Option 2
-	local cx, cy, cz = skew(0, 0, cam_z, xd, yd)
+	local cx, cy, cz = skew(0, 0, curr_subseg, xd, yd)
 	local x, y, z = -cx - road_width*cam_x, -cy + cam_dy, -cz + cam_dz
 
 	-- Car draw coords
@@ -270,9 +267,9 @@ function draw_road()
 
 	local x1, y1, scale1 = project(x, y, z)
 
-	local corner = road[cnr]
+	local section = road[sect]
 
-	local ptnl = corner.tnl
+	local ptnl = section.tnl
 
 	for i = 1, draw_distance do
 
@@ -282,16 +279,16 @@ function draw_road()
 
 		local x2, y2, scale2 = project(x, y, z)
 
-		local sumct = corner.sumct + seg
+		local sumct = section.sumct + seg
 
-		local tnl = corner.tnl
+		local tnl = section.tnl
 		if tnl and not ptnl then
 			draw_tunnel_face(x1, y1, scale1)
 			clip_to_tunnel(x1, y1, scale1, clp)
 			setclip(clp)
 		end
 
-		draw_segment(corner, seg, sumct, x2, y2, scale2, x1, y1, scale1, corner.gndcol, i)
+		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, section.gndcol, i)
 
 		if i < sprite_draw_distance then
 
@@ -300,9 +297,9 @@ function draw_road()
 				add_bg_sprite(sp, sumct, seg, bg_finishline,  1, x2, y2, scale2, clp)
 			end
 
-			add_bg_sprite(sp, sumct, seg, corner.bgl, -1, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, corner.bgc,  0, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, corner.bgr,  1, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
+			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
 		end
 
 		-- Reduce clip region
@@ -314,10 +311,10 @@ function draw_road()
 		setclip(clp)
 
 		-- Advance
-		xd += corner.tu
-		yd -= corner.dpitch
-		cnr, seg, _ = advance(cnr, seg)
-		corner = road[cnr]
+		xd += section.tu
+		yd -= section.dpitch
+		sect, seg, _ = advance(sect, seg)
+		section = road[sect]
 		x1, y1, scale1 = x2, y2, scale2
 		ptnl = tnl
 	end
@@ -373,7 +370,7 @@ function draw_car(x, y, scale)
 	-- TODO: extra sprites for braking or on grass
 
 	if curr_speed > 0 then
-		if abs(car_x) >= road[camcnr].wall then
+		if abs(car_x) >= road[curr_section_idx].wall then
 			-- Touching wall
 			-- TODO: add smoke, or other indicator of scraping
 		end
@@ -423,12 +420,12 @@ function draw_cpu_only_overlay()
 end
 
 function draw_debug_overlay()
-	local corner = road[camcnr]
+	local section = road[curr_section_idx]
 
 	cursor(88, 0, 7)
 	local cpu = round(stat(1) * 100)
 	print("cpu:" .. cpu)
-	print(camcnr .. "," .. camseg .. ',' .. cam_z)
+	print(curr_section_idx .. "," .. curr_segment_idx .. ',' .. curr_subseg)
 	print('carx:' .. car_x)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then

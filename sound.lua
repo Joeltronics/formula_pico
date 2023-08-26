@@ -90,18 +90,18 @@ function update_sound()
 	sfx(2, 0)
 	fundamental_prev = fundamental
 
-	local corner = road[camcnr]
+	local section = road[curr_section_idx]
 
 	-- Add echo in tunnel
-	if corner.tnl ~= tnl_prev then
+	if section.tnl ~= tnl_prev then
 		local noiz, buzz, detune, reverb = 0, 0, 0, 0
-		if (corner.tnl) reverb = 1
+		if (section.tnl) reverb = 1
 		set_flags(2, noiz, buzz, detune, reverb, 1)
 		set_flags(3, noiz, buzz, detune, reverb, 2)
-		tnl_prev = corner.tnl
+		tnl_prev = section.tnl
 	end
 
-	if abs(car_x) >= corner.wall then
+	if abs(car_x) >= section.wall then
 		-- Touching wall
 		-- TODO: different sound effect from grass
 		if (harmonic_prev ~= -3) sfx(1, 1)

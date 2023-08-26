@@ -4,17 +4,17 @@ function init_minimap()
 	local minimap_scale = road.minimap_scale / length_scale
 	minimap_step = max(1, round(length_scale / road.minimap_scale))
 
-	local count, x, y, dx, dy, curr_angle = 0, 0, 0, 0, -1, start_angle
-	for corner in all(road) do
-		for n = 1, corner.length do
+	local count, x, y, dx, dy, curr_heading = 0, 0, 0, 0, -1, start_heading
+	for section in all(road) do
+		for n = 1, section.length do
 
 			if (count % minimap_step == 0) add(minimap, {x, y})
 
-			curr_angle -= corner.angle_per_seg
-			curr_angle %= 1.0
+			curr_heading -= section.angle_per_seg
+			curr_heading %= 1.0
 
-			dx = minimap_scale * cos(curr_angle)
-			dy = minimap_scale * sin(curr_angle)
+			dx = minimap_scale * cos(curr_heading)
+			dy = minimap_scale * sin(curr_heading)
 
 			x += dx
 			y += dy
@@ -42,7 +42,7 @@ function draw_minimap()
 	line(x, y, x, y, 0)
 
 	-- Current position
-	local pos = minimap[(camtotseg - 1) \ minimap_step + 1]
+	local pos = minimap[(curr_segment_total - 1) \ minimap_step + 1]
 	line(pos[1], pos[2], pos[1], pos[2], 8)
 
 	camera()
