@@ -16,7 +16,8 @@ length_scale = 2
 accel = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
 
 -- SFX speed: ticks, around 1/120 second
-sfx_speed_by_gear = {2, 2, 2, 2, 2, 8, 64, 255}
+-- This is also how long first note is held before sliding, so don't go higher than 8
+sfx_speed_by_gear = {2, 2, 2, 2, 2, 4, 8, 8}
 
 coast_decel_rel = 255/256
 coast_decel_abs = 1/2048

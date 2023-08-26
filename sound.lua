@@ -10,6 +10,7 @@ engine_harmonic_interval = 16  -- V10
 
 fundamental_prev = 0
 harmonic_prev = 0
+tnl_prev = false
 
 function make_note(pitch, instr, vol, effect)
 	-- | C E E E | V V V W | W W P P | P P P P |
@@ -48,6 +49,16 @@ end
 -- 	poke(addr + 67, loop_end)
 -- end
 
+function set_flags(sfx, noiz, buzz, detune, reverb, dampen)
+	local byte = 1 -- tracker mode
+	byte |= noiz and 2 or 0
+	byte |= buzz and 4 or 0
+	byte += detune * 8
+	byte += reverb * 24
+	byte += dampen * 72
+	poke(0x3200 + 68*sfx + 64, byte)
+end
+
 function update_sound()
 
 	if (not enable_sound) return
@@ -68,23 +79,29 @@ function update_sound()
 	if (fundamental == fundamental_prev) return
 
 	-- Slow down SFX at high speeds for less audible stepping
-	-- There's still some audible stepping since effect is 2 notes and it has to hold 1st before sliding to 2nd
-	-- Also, this doesn't seem to work properly anyway - it sounds different from in the editor
 	local sfx_speed = sfx_speed_by_gear[1]
 	if (accelerating) sfx_speed = sfx_speed_by_gear[gear]
 	set_speed(2, sfx_speed)
 	set_speed(3, sfx_speed)
 
-	local note1 = make_note(fundamental_prev, 2, 5, 0)
-	local note2 = make_note(fundamental, 2, 5, 1)
-	set_note(2, 0, note1)
-	set_note(2, 1, note2)
+	set_note(2, 0, make_note(fundamental_prev, 2, 5, 2))
+	set_note(2, 1, make_note(fundamental, 2, 5, 1))
+	set_note(2, 2, make_note(fundamental, 2, 5, 2))
 	sfx(2, 0)
 	fundamental_prev = fundamental
 
-	-- TODO: add echo when in tunnel
+	local corner = road[camcnr]
 
-	if abs(car_x) >= road[camcnr].wall then
+	-- Add echo in tunnel
+	if corner.tnl ~= tnl_prev then
+		local noiz, buzz, detune, reverb = 0, 0, 0, 0
+		if (corner.tnl) reverb = 1
+		set_flags(2, noiz, buzz, detune, reverb, 1)
+		set_flags(3, noiz, buzz, detune, reverb, 2)
+		tnl_prev = corner.tnl
+	end
+
+	if abs(car_x) >= corner.wall then
 		-- Touching wall
 		-- TODO: different sound effect from grass
 		if (harmonic_prev ~= -3) sfx(1, 1)
@@ -97,10 +114,9 @@ function update_sound()
 		local harmonic = fundamental + engine_harmonic_interval
 		local harm_instr, harm_vol = 4, 2 -- engine braking
 		if (accelerating) harm_instr, harm_vol = 1, 2 -- driving
-		note1 = make_note(harmonic_prev, harm_instr, harm_vol, 0)
-		note2 = make_note(harmonic, harm_instr, harm_vol, 1)
-		set_note(3, 0, note1)
-		set_note(3, 1, note2)
+		set_note(3, 0, make_note(harmonic_prev, harm_instr, harm_vol, 2))
+		set_note(3, 1, make_note(harmonic, harm_instr, harm_vol, 1))
+		set_note(3, 2, make_note(harmonic, harm_instr, harm_vol, 2))
 		sfx(3, 1)
 		harmonic_prev = harmonic
 	end
