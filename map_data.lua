@@ -63,8 +63,8 @@ tracks = {
 	minimap_scale = 0.25,
 	minimap_x = 12,
 	minimap_y = 16,
-	finish_seg = 5,
-	{length=28}, -- heading 0.25
+	{length=8}, -- start/finish; heading 0.25
+	{length=20},
 	{length=8, angle=0.375}, -- 1: la source; heading 0.625
 	{length=16, pitch=-0.5},
 	{length=16, angle=0.075}, -- 2; heading 0.7
@@ -113,8 +113,8 @@ tracks = {
 	minimap_scale = 0.25,
 	minimap_x = 24,
 	minimap_y = 0,
-	finish_seg = 5,
-	{length=40},
+	{length=8}, -- start/finish
+	{length=32},
 	{length=6, angle=0.25}, -- 1: chicane
 	{length=8, angle=-0.375}, -- 2
 	{length=8, angle=0.125},
@@ -144,11 +144,8 @@ tracks = {
 	minimap_scale = 0.5,
 	minimap_x = 24, -- distance from right side of screen
 	minimap_y = 0, -- distance from vertical center
-	finish_seg = 5,
-	{length=20,
-	-- , bgl=bg_finishline, bgr=bg_finishline
-	-- ,  bgc=bg_finishline_c
-	},
+	{length=8}, -- start/finish
+	{length=12},
 	{length=12, angle=-0.25, bgr=bg_sign},
 	{length=12, pitch=-.75, bgl=bg_tree3},
 	{length=8, angle=0.125, bgl=bg_sign},
@@ -175,8 +172,8 @@ tracks = {
 	minimap_scale = 0.5,
 	minimap_x = 12,
 	minimap_y = -20,
-	finish_seg = 5,
-	{length=20},
+	{length=8}, -- start/finish
+	{length=12},
 	{length=20, gndcol=8},
 	{length=20, pitch=1, gndcol=8},
 	{length=20, pitch=1, gndcol=8},

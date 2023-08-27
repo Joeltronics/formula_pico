@@ -78,7 +78,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndco
 
 	if (not detail) fillp(0b0101101001011010)
 
-	if sumct == road.finish_seg then
+	if sumct == road[1].length then
 		if detail then
 			fillp(0b0011001111001100)
 			-- Just fill 1st 50% of segment
@@ -292,7 +292,7 @@ function draw_road()
 
 		if i < sprite_draw_distance then
 
-			if sumct == road.finish_seg then
+			if sumct == road[1].length then
 				add_bg_sprite(sp, sumct, seg, bg_finishline, -1, x2, y2, scale2, clp)
 				add_bg_sprite(sp, sumct, seg, bg_finishline,  1, x2, y2, scale2, clp)
 			end

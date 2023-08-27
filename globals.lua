@@ -57,7 +57,6 @@ palettes = {
 -- Globals that are effectively const after init
 --
 
-sumct = 0
 minimap = {}
 minimap_step = 1
 

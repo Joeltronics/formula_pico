@@ -25,7 +25,7 @@ end
 
 
 function init_sections()
-
+	local sumct = 0
 	for section in all(road) do
 		section.length *= length_scale
 		section.pitch = section.pitch or 0

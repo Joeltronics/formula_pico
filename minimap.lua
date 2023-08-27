@@ -1,6 +1,8 @@
 
 function init_minimap()
 
+	minimap = {}
+
 	local minimap_scale = road.minimap_scale / length_scale
 	minimap_step = max(1, round(length_scale / road.minimap_scale))
 
@@ -38,12 +40,14 @@ function draw_minimap()
 	end
 
 	-- Finish line
-	local x, y = minimap[(road.finish_seg - 1) \ minimap_step + 1]
+	local coord = minimap[(road[1].length - 1) \ minimap_step + 1]
+	local x, y = coord[1], coord[2]
 	line(x, y, x, y, 0)
 
 	-- Current position
-	local pos = minimap[(curr_segment_total - 1) \ minimap_step + 1]
-	line(pos[1], pos[2], pos[1], pos[2], 8)
+	coord = minimap[(curr_segment_total - 1) \ minimap_step + 1]
+	x, y = coord[1], coord[2]
+	line(x, y, x, y, car_palette[8])
 
 	camera()
 end
