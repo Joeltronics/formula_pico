@@ -80,7 +80,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndco
 
 	if (not detail) fillp(0b0101101001011010)
 
-	if sumct == road[1].length then
+	if sumct == road[1].length + 1 then
 		if detail then
 			fillp(0b0011001111001100)
 			-- Just fill 1st 50% of segment
@@ -411,6 +411,38 @@ function draw_bg()
 end
 
 function draw_hud()
+
+	if #cars > 1 then
+		-- TODO: may only want to print 4 cars (self, leader, and cars before/after)
+		rectfill(0, 0, 13, 47, 0)
+		for pos_num = 1,#car_positions do
+			local car_idx = car_positions[pos_num]
+			local car = cars[car_idx]
+			local y = 6*(pos_num - 1)
+			cursor(0, y, 7)
+			print(pos_num)
+			rectfill(4, y, 8, y+5, car.palette[8])
+			cursor(5, y, car.palette[14])
+			-- For now, just use car index as car number
+			print(car_idx)
+			-- TODO: print tire status (once that's implemented)
+			-- TODO: figure out approx time delta and print it
+			if car.finished then
+				fillp(0b1010010110100101)
+				rectfill(9, y, 13, y+5, 7)
+				fillp()
+			else
+				cursor(10, y, 7)
+				if car.in_pit then
+					print('p')
+				else
+					-- TODO: on lap 10, fill wider background rectangle
+					print(max(1, 1 + car.laps))
+				end
+			end
+		end
+	end
+
 	cursor(116, 116, 7)
 	local speed_print = '' .. round(cars[1].speed * speed_to_kph)
 	if (#speed_print == 1) speed_print = ' ' .. speed_print

@@ -15,7 +15,7 @@ length_scale = 2
 -- TOOD: make it 7 gears, but have gear 1 be twice as long
 accel_by_gear = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
 
-ai_accel_random = {1/1.5, 1/1.25, 1/1.125, 1, 1, 1.125, 1.25, 1.5}
+ai_accel_random = {1/1.5, 1/1.25, 1/1.125, 1, 1, 1, 1.125, 1.25}
 
 -- SFX speed: ticks, around 1/120 second
 -- This is also how long first note is held before sliding, so don't go higher than 8
@@ -75,6 +75,7 @@ print_cpu = true
 enable_sound = true
 draw_racing_line = true
 collisions = false
+total_segment_count = nil
 
 --
 -- Other runtime globals
@@ -82,3 +83,4 @@ collisions = false
 
 road = nil  -- Setting this also acts as "game started" flag
 cars = {}
+car_positions = {}

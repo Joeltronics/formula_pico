@@ -35,9 +35,10 @@ function init_cars(team_idx, ghost, num_other_cars)
 		end
 		add(cars, {
 			x=0,
+			laps=-1,
 			section_idx=1,
 			segment_idx=segment_idx,
-			segment_total=1,
+			segment_total=segment_idx,
 			subseg=0,
 			speed=0,
 			gear=1,
@@ -48,10 +49,57 @@ function init_cars(team_idx, ghost, num_other_cars)
 			accelerating=false,
 			heading=start_heading,
 			sprite_turn=0,
+			finished=false,
+			in_pit=false,
 		})
 
 		del(teams, team_idx)
 		team_idx = rnd(teams)
+	end
+
+	car_positions = {}
+	for idx = (1+num_other_cars),1,-1 do
+		add(car_positions, idx)
+	end
+end
+
+function sort2(list, idx1, idx2)
+	local item1 = list[idx1]
+	local item2 = list[idx2]
+	if (item1[2] < item2[2]) then
+		list[idx1] = item2
+		list[idx2] = item1
+	end
+end
+
+function update_car_positions(full)
+
+	local car_scores = {}
+	for idx in all(car_positions) do
+		local car = cars[idx]
+		-- Laps count from end of 1st section, so add 1 extra lap to compensate
+		local effective_laps = car.laps
+		if (car.section_idx == 1) effective_laps += 1
+		local score = (1 + total_segment_count)*effective_laps + car.segment_total + car.subseg
+		add(car_scores, {idx, score})
+	end
+
+	-- Bubblesort
+	-- In practice, 1 single loop should be good enough in most cases - cars start sorted, and even in rare case of
+	-- double overtake in 1 frame, position will only be updated 1 frame late
+
+	local num_loops = 1
+	if (full) num_loops = #cars
+
+	for loop_idx = 1,num_loops do
+		for idx = 1,#cars-1 do
+			sort2(car_scores, idx, idx+1)
+		end
+	end
+
+	car_positions = {}
+	for item in all(car_scores) do
+		add(car_positions, item[1])
 	end
 end
 
@@ -72,7 +120,7 @@ end
 
 
 function init_sections()
-	local sumct = 0
+	total_segment_count = 0
 	for section in all(road) do
 		section.length *= length_scale
 		section.pitch = section.pitch or 0
@@ -81,8 +129,8 @@ function init_sections()
 		section.angle_per_seg = section.angle / section.length
 		section.tu = 16 * section.angle_per_seg
 
-		section.sumct = sumct
-		sumct += section.length
+		section.sumct = total_segment_count
+		total_segment_count += section.length
 
 		-- TODO: adjust max speed for pitch (also acceleration?)
 		local max_speed = min(1.25 - (section.tu * length_scale), 1)
@@ -207,6 +255,12 @@ function game_tick()
 			if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
 			if (key == '=') cam_dz += 0.25
 			if (key == '`') player_car.speed = min(player_car.speed + 0.25, 2)  -- turbo
+			if (key == '~') then
+				-- turbo for all cars
+				for car in all(cars) do
+					car.speed = min(car.speed + 0.25, 2)
+				end
+			end
 			if (key == '<') player_car.heading -= 1/256
 			if (key == '>') player_car.heading += 1/256
 		end
@@ -337,21 +391,32 @@ function game_tick()
 		--   - Faster while turning into section
 		local dz = 0.5 * speed_scale * speed
 
+		car.heading -= road[section_idx].angle_per_seg * dz
+		car.heading %= 1.0
+
 		local subseg = car.subseg + dz
 		if subseg > 1 then
 			subseg -= 1
 			car.section_idx, car.segment_idx, car.segment_total = advance(section_idx, segment_idx)
+
+			-- Finish line is at end of 1st segment
+			if (car.section_idx == 2 and car.segment_idx == 1) then
+				car.laps += 1
+				-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
+				car.heading = start_heading
+			end
+
 		elseif subseg < 0 then
 			subseg += 1
 			car.section_idx, car.segment_idx, car.segment_total = reverse(section_idx, segment_idx)
+
+			if (section_idx == 2 and segment_idx == 1) then
+				car.laps -= 1
+			end
 		end
 		car.subseg = subseg
-
-		-- Update angle & sun coordinate
-
-		car.heading -= road[section_idx].angle_per_seg * dz
-		car.heading %= 1.0
-		-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
-		if (section_idx == 1 and segment_idx == 1) car.heading = start_heading
 	end
+
+	-- TODO: don't do this on every update; only if there was an overtake
+	update_car_positions(false)
 end
