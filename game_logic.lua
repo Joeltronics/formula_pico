@@ -1,11 +1,58 @@
 
-function init_game(track_idx, team_idx)
+function init_game(track_idx, team_idx, ghost, num_other_cars)
 	road = tracks[track_idx]
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
-	init_car_palettes(team_idx)
+	init_cars(team_idx, ghost, num_other_cars)
 	init_sections()
 	init_minimap()
+end
+
+function init_cars(team_idx, ghost, num_other_cars)
+
+	collisions = not ghost
+	cars = {}
+
+	local teams = {1, 2, 3, 4, 5, 6, 7, 8}
+
+	for zidx = 0, num_other_cars do
+		local palette = palettes[team_idx]
+		palette = {
+			[8]=palette[1],  -- main
+			[14]=palette[2],  -- accent 1
+			[2]=palette[3],  -- dark
+			[13]=palette[4],  -- floor
+		}
+
+		local ai = zidx ~= 0
+
+		local segment_idx = 1 + zidx
+		local is_ghost = ghost and zidx == 1
+		if is_ghost then
+			-- Ghost car
+			palette = palette_ghost
+			segment_idx = 1
+		end
+		add(cars, {
+			x=0,
+			section_idx=1,
+			segment_idx=segment_idx,
+			segment_total=1,
+			subseg=0,
+			speed=0,
+			gear=1,
+			rpm=0,
+			palette=palette,
+			ai=ai,
+			ghost=is_ghost,
+			accelerating=false,
+			heading=start_heading,
+			sprite_turn=0,
+		})
+
+		del(teams, team_idx)
+		team_idx = rnd(teams)
+	end
 end
 
 function corner_exit_entrance(section)
@@ -145,144 +192,166 @@ function game_tick()
 	if (btn(2)) accel_brake += 1
 	if (btn(3)) accel_brake -= 1
 
+	local player_car = cars[1]
+
 	if debug then
 		while stat(30) do
 			local key = stat(31)
 			-- printh('"' .. key .. '"')
-			if (key == 'k') curr_subseg += 0.25
-			if (key == 'j') curr_subseg -= 0.25
-			if (key == 'h') car_x -= 0.125
-			if (key == 'l') car_x += 0.125
+			if (key == 'k') player_car.subseg += 0.25
+			if (key == 'j') player_car.subseg -= 0.25
+			if (key == 'h') player_car.x -= 0.125
+			if (key == 'l') player_car.x += 0.125
 			if (key == '9') cam_dy = max(cam_dy - 0.25, 0.25)
 			if (key == '0') cam_dy += 0.25
 			if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
 			if (key == '=') cam_dz += 0.25
-			if (key == '`') curr_speed += 0.25  -- turbo
-			if (key == '<') heading -= 1/256
-			if (key == '>') heading += 1/256
+			if (key == '`') player_car.speed = min(player_car.speed + 0.25, 2)  -- turbo
+			if (key == '<') player_car.heading -= 1/256
+			if (key == '>') player_car.heading += 1/256
 		end
 	end
 
-	-- Determine acceleration & speed
-	-- TODO: look ahead for braking point, slow down; can also speed up after apex
-	-- TODO: slow down on curb & grass
-	-- TODO: also factor in slope
+	for car_idx = 1, #cars do
+		local car = cars[car_idx]
 
-	local section = road[curr_section_idx]
+		local car_x = car.x
+		local section_idx, segment_idx, segment_total = car.section_idx, car.segment_idx, car.segment_total
+		local speed, gear = car.speed, car.gear
 
-	local tu = section.tu
-	local section_max_speed = section.max_speed_pre_apex
-	if (section.apex_seg and curr_segment_idx >= section.apex_seg) section_max_speed = section.max_speed_post_apex
+		-- Determine acceleration & speed
+		-- TODO: look ahead for braking point, slow down; can also speed up after apex
+		-- TODO: slow down on curb & grass
+		-- TODO: also factor in slope
 
-	-- Special check: hard-limit speed at apex, in case of insufficient braking
-	if (section.apex_seg and curr_segment_idx == section.apex_seg) curr_speed = min(curr_speed, section.max_speed_pre_apex)
+		local section = road[section_idx]
 
-	accelerating = false
+		local tu = section.tu
+		local section_max_speed = section.max_speed_pre_apex
+		if (section.apex_seg and segment_idx >= section.apex_seg) section_max_speed = section.max_speed_post_apex
 
-	if abs(car_x) >= section.wall then
-		-- Touching wall
-		-- Decrease max speed significantly
-		-- Slower acceleration
-		-- Faster braking
-		-- Increase coasting deceleration significantly
-		-- Increase tire deg
-		section_max_speed = min(section_max_speed, wall_max_speed)
-		-- TODO
+		-- Special check: hard-limit speed at apex, in case of insufficient braking
+		-- TODO: change this to understeer instead
+		if (section.apex_seg and segment_idx == section.apex_seg) speed = min(speed, section.max_speed_pre_apex)
 
-	elseif abs(car_x) >= 1 then
-		-- On grass
-		-- Decrease max speed significantly
-		-- Slower acceleration
-		-- Slower braking
-		-- Increase coasting deceleration significantly
-		section_max_speed = min(section_max_speed, grass_max_speed)
-		-- TODO
+		local accel = accel_by_gear[flr(gear)]
+		if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
 
-	elseif abs(car_x) >= 0.75 then
-		-- On curb
-		-- Max speed unaffected
-		-- Decrease acceleration
-		-- Decrease braking
-		-- Increase coasting deceleration
-		-- Increase tire deg slightly
+		if abs(car_x) >= section.wall then
+			-- Touching wall
+			-- Decrease max speed significantly
+			-- Slower acceleration
+			-- Faster braking
+			-- Increase coasting deceleration significantly
+			-- Increase tire deg
+			section_max_speed = min(section_max_speed, wall_max_speed)
+			-- TODO
 
-		-- TODO
-	end
+		elseif abs(car_x) >= 1 then
+			-- On grass
+			-- Decrease max speed significantly
+			-- Slower acceleration
+			-- Slower braking
+			-- Increase coasting deceleration significantly
+			section_max_speed = min(section_max_speed, grass_max_speed)
+			-- TODO
 
-	if curr_speed > section_max_speed then
-		-- Brake (to section speed)
-		curr_speed = max(curr_speed - brake_decel, section_max_speed)
+		elseif abs(car_x) >= 0.75 then
+			-- On curb
+			-- Max speed unaffected
+			-- Decrease acceleration
+			-- Decrease braking
+			-- Increase coasting deceleration
+			-- Increase tire deg slightly
 
-	elseif accel_brake > 0 then
-		-- Accelerate
-		local a = accel[flr(gear)]
-		curr_speed = min(curr_speed + a, section_max_speed)
-		accelerating = true
-
-	elseif accel_brake < 0 then
-		-- Brake (to zero)
-		curr_speed = max(curr_speed - brake_decel, 0)
-	else
-		-- Coast
-		-- TODO: this should be affected by slope even more than regular acceleration is
-		curr_speed = max(curr_speed*coast_decel_rel - coast_decel_abs, 0)
-	end
-
-	gear = min(curr_speed, 0.99) * #accel + 1
-	rpm = gear % 1
-	gear = flr(gear)
-	if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
-
-	-- Steering & corners
-
-	-- Steering: only when moving (or going up)
-	-- TODO: compensate for corners, i.e. push toward outside of corners
-	local car_x_prev = car_x
-	if steering ~= 0 then
-		if curr_speed > 0 then
-			car_x += steering * min(8*curr_speed, 1) / 64
+			-- TODO
 		end
+
+		car.accelerating = false
+		if speed > section_max_speed then
+			-- Brake (to section speed)
+			speed = max(speed - brake_decel, section_max_speed)
+
+		elseif car.ai or accel_brake > 0 then
+			-- Accelerate
+			speed = min(speed + accel, section_max_speed)
+			car.accelerating = true
+
+		elseif accel_brake < 0 then
+			-- Brake (to zero)
+			speed = max(speed - brake_decel, 0)
+		else
+			-- Coast
+			-- TODO: this should be affected by slope even more than regular acceleration is
+			speed = max(speed*coast_decel_rel - coast_decel_abs, 0)
+		end
+
+		gear = min(speed, 0.99) * #accel_by_gear + 1
+		local rpm = gear % 1
+		gear = flr(gear)
+		if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
+
+		car.speed, car.gear, car.rpm = speed, gear, rpm
+
+		-- Steering & corners
+
+		local car_x_prev = car_x
+
+		if car.ai then
+			car_x = 0.0  -- TODO: steer, following racing line
+		else
+			-- Steering: only when moving (or going up)
+			-- TODO: compensate for corners, i.e. push toward outside of corners
+			if steering ~= 0 then
+				if speed > 0 then
+					car_x += steering * min(8*speed, 1) / 64
+				end
+			end
+		end
+
+		-- TODO: make wall distance changes gradual
+		car_x = max(-section.wall, min(section.wall, car_x))
+		-- TODO: add very slight "bounce back from wall" physics
+
+		car.x = car_x
+
+		-- Car direction to draw
+		-- Based on:
+		--    - Did we move left/right
+		--    - Is road turning
+		--    - Are we near edge of screen
+
+		local car_sprite_turn = car_x - car_x_prev
+		if (car_sprite_turn ~= 0) car_sprite_turn = sgn(car_sprite_turn)
+
+		if (abs(tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
+		-- TODO: look at car_x relative to cam_x
+		if (abs(car_x) > 0.5) car_sprite_turn -= sgn(car_x)
+		car.sprite_turn = car_sprite_turn
+
+		-- Move forward
+
+		-- TODO:
+		--   - Adjust relative to tu and x position, i.e. inside of section is faster, outside is slower
+		--   - Increment slightly less while steering, but compensated for tu
+		--   - Faster while turning into section
+		local dz = 0.5 * speed_scale * speed
+
+		local subseg = car.subseg + dz
+		if subseg > 1 then
+			subseg -= 1
+			car.section_idx, car.segment_idx, car.segment_total = advance(section_idx, segment_idx)
+		elseif subseg < 0 then
+			subseg += 1
+			car.section_idx, car.segment_idx, car.segment_total = reverse(section_idx, segment_idx)
+		end
+		car.subseg = subseg
+
+		-- Update angle & sun coordinate
+
+		car.heading -= road[section_idx].angle_per_seg * dz
+		car.heading %= 1.0
+		-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
+		if (section_idx == 1 and segment_idx == 1) car.heading = start_heading
 	end
-
-	-- TODO: make wall distance changes gradual
-	car_x = max(-section.wall, min(section.wall, car_x))
-	-- TODO: add very slight "bounce back from wall" physics
-
-	cam_x = 0.75 * car_x
-
-	-- Car direction to draw
-	-- Based on:
-	--    - Did we move left/right
-	--    - Is road turning
-	--    - Are we near edge of screen
-
-	car_sprite_turn = car_x - car_x_prev
-	if (car_sprite_turn ~= 0) car_sprite_turn = sgn(car_sprite_turn)
-	if (abs(tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
-	-- TODO: look at car_x relative to cam_x
-	if (abs(car_x) > 0.5) car_sprite_turn -= sgn(car_x)
-
-	-- Move forward
-
-	-- TODO:
-	--   - Adjust relative to tu and x position, i.e. inside of section is faster, outside is slower
-	--   - Increment slightly less while steering, but compensated for tu
-	--   - Faster while turning into section
-	local dz = 0.5 * speed_scale * curr_speed
-
-	curr_subseg += dz
-	if curr_subseg > 1 then
-		curr_subseg -= 1
-		curr_section_idx, curr_segment_idx, curr_segment_total = advance(curr_section_idx, curr_segment_idx)
-	elseif curr_subseg < 0 then
-		curr_subseg += 1
-		curr_section_idx, curr_segment_idx, curr_segment_total = reverse(curr_section_idx, curr_segment_idx)
-	end
-
-	-- Update angle & sun coordinate
-
-	heading -= road[curr_section_idx].angle_per_seg * dz
-	heading %= 1.0
-	-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
-	if (curr_section_idx == 1 and curr_segment_idx == 1) heading = start_heading
 end

@@ -63,7 +63,7 @@ function update_sound()
 
 	if (not enable_sound) return
 
-	if curr_speed == 0 then
+	if cars[1].speed == 0 then
 		-- Idling
 		sfx(-1, 1)
 		harmonic_prev = -1
@@ -73,14 +73,14 @@ function update_sound()
 	end
 
 	-- TODO: scale linearly by frequency, not pitch (need to take log - or use lookup table)
-	local fundamental = flr(rpm * 36)
+	local fundamental = flr(cars[1].rpm * 36)
 
 	-- TODO: there's probably a rare glitch here, if acceleration/off-track state changes but not fundamental
 	if (fundamental == fundamental_prev) return
 
 	-- Slow down SFX at high speeds for less audible stepping
 	local sfx_speed = sfx_speed_by_gear[1]
-	if (accelerating) sfx_speed = sfx_speed_by_gear[gear]
+	if (cars[1].accelerating) sfx_speed = sfx_speed_by_gear[cars[1].gear]
 	set_speed(2, sfx_speed)
 	set_speed(3, sfx_speed)
 
@@ -90,7 +90,7 @@ function update_sound()
 	sfx(2, 0)
 	fundamental_prev = fundamental
 
-	local section = road[curr_section_idx]
+	local section = road[cars[1].section_idx]
 
 	-- Add echo in tunnel
 	if section.tnl ~= tnl_prev then
@@ -101,6 +101,7 @@ function update_sound()
 		tnl_prev = section.tnl
 	end
 
+	local car_x = cars[1].x
 	if abs(car_x) >= section.wall then
 		-- Touching wall
 		-- TODO: different sound effect from grass
@@ -113,7 +114,7 @@ function update_sound()
 	else
 		local harmonic = fundamental + engine_harmonic_interval
 		local harm_instr, harm_vol = 4, 2 -- engine braking
-		if (accelerating) harm_instr, harm_vol = 1, 2 -- driving
+		if (cars[1].accelerating) harm_instr, harm_vol = 1, 2 -- driving
 		set_note(3, 0, make_note(harmonic_prev, harm_instr, harm_vol, 2))
 		set_note(3, 1, make_note(harmonic, harm_instr, harm_vol, 1))
 		set_note(3, 2, make_note(harmonic, harm_instr, harm_vol, 2))

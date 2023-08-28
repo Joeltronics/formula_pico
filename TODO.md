@@ -29,13 +29,15 @@ Tire management
 	- Can override during pit stop
 
 Add other cars
-1. Just draw & keep track of them
-	- Have them always follow racing line
+1. (Done) Just draw & keep track of them
+	- Have them always follow center of track
 	- No clipping yet
-	- Draw them on minimap
-2. Add hitboxes/clipping
-3. Add AI & overtaking logic
-4. Pit stops & tire management for other cars as well
+2. (Done) Draw them on minimap
+3. Keep track of their rank and display it
+4. Have them follow racing line
+5. Add hitboxes/clipping
+6. Add AI & overtaking logic
+7. Pit stops & tire management for other cars as well
 
 ## Graphics
 

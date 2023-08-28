@@ -19,6 +19,8 @@ Colors:
 	15/0xF peach
 ]]
 
+cam_x = 0
+
 function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
 	-- draw a trapezoid by stacking horizontal lines
 
@@ -111,19 +113,20 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndco
 	if (not draw_racing_line) return
 
 	local col = 11
+	local speed = cars[1].speed
 
 	if seg < section.apex_seg then
 		-- Before apex
-		if (curr_speed > section.max_speed_pre_apex) col = 8
-		if (curr_speed == section.max_speed_pre_apex and section.max_speed_pre_apex < 0.99) col = 10
+		if (speed > section.max_speed_pre_apex) col = 8
+		if (speed == section.max_speed_pre_apex and section.max_speed_pre_apex < 0.99) col = 10
 		line(
 			x1 + w1*(section.entrance_x + seg*section.racing_line_dx_pre_apex), y1,
 			x2 + w2*(section.entrance_x + (seg - 1)*section.racing_line_dx_pre_apex), y2,
 			col)
 	else
 		-- After apex
-		if (curr_speed > section.max_speed_post_apex) col = 8
-		if (curr_speed == section.max_speed_post_apex and section.max_speed_post_apex < 0.99) col = 10
+		if (speed > section.max_speed_post_apex) col = 8
+		if (speed == section.max_speed_post_apex and section.max_speed_post_apex < 0.99) col = 10
 		local past_apex = seg - section.apex_seg
 		line(
 			x1 + w1*(section.apex_x + (1 + past_apex)*section.racing_line_dx_post_apex), y1,
@@ -175,15 +178,16 @@ function setclip(clp)
 	clip(clp[1], clp[2], clp[3]-clp[1], clp[4]-clp[2])
 end
 
-function add_bg_sprite(
-	sprite_list, sumct, seg, bg, side, px, py, scale, clp)
+function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 
 	if (not bg) return
 
-	if bg.spacing == 0 then
-		if (seg ~= 1) return
-	elseif (sumct % bg.spacing) ~= 0 then
-		return
+	if bg.spacing then
+		if bg.spacing == 0 then
+			if (seg ~= 1) return
+		elseif (sumct % bg.spacing) ~= 0 then
+			return
+		end
 	end
 
 	-- find position
@@ -201,10 +205,31 @@ function add_bg_sprite(
 		w=w,
 		h=h,
 		img=bg.img,
+		palette=bg.palette,
 		palt=bg.palt,
 		flip_x=(side > 0 and bg.flip_r),
 		clp={clp[1],clp[2],clp[3],clp[4]}
 	})
+end
+
+function add_car_sprite(sprite_list, car, seg, x1, y1, scale1, x2, y2, scale2, clp)
+	-- TODO: use car.sprite_turn (as well as dx value) to draw correct sprite
+	-- FIXME: there's a ton of judder with these!
+	local subseg = car.subseg
+	add_bg_sprite(
+		sprite_list, sumct, seg,
+		{
+			img={0, 0, 24, 24},
+			siz={0.75,0.75},
+			palt=11,
+			palette=car.palette,
+		},
+		0,
+		x1 + (x2-x1)*subseg,
+		y1 + (y2-y1)*subseg,
+		scale1 + (scale2-scale1)*subseg,
+		clp)
+
 end
 
 function draw_bg_sprite(s)
@@ -215,6 +240,8 @@ function draw_bg_sprite(s)
 		palt(0, false)
 		palt(s.palt, true)
 	end
+
+	if (s.palette) pal(s.palette, 0)
 
 	local x1=ceil(s.x-s.w/2)
 	local x2=ceil(s.x+s.w/2)
@@ -227,33 +254,40 @@ function draw_bg_sprite(s)
 		s.flip_x  -- flip_x
 	)
 
-	palt()
+	if (s.palette) pal()
+	if (s.palt) palt()
 end
 
 function draw_road()
 
 	-- road position
-	local sect, seg = curr_section_idx, curr_segment_idx
-	local section = road[curr_section_idx]
+	local section_idx = cars[1].section_idx
+	local segment_idx = cars[1].segment_idx
+	local subseg = cars[1].subseg
+	local sect, seg = section_idx, segment_idx
+	local section = road[section_idx]
 
 	-- direction
 	-- TODO: look ahead a bit more than this to determine camera
-	local camang = curr_subseg * section.tu
+	local camang = subseg * section.tu
 	local xd = -camang
-	local yd = -(section.pitch + section.dpitch*(curr_segment_idx - 1))
+	local yd = -(section.pitch + section.dpitch*(segment_idx - 1))
 	local zd = 1
 
 	-- Starting coords
 
+	cam_x = 0.75 * cars[1].x
+
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
-	-- local cx, cy, cz = skew(road_width*cam_x, 0, curr_subseg, xd, yd)
+	-- local cx, cy, cz = skew(road_width*cam_x, 0, subseg, xd, yd)
 	-- local x, y, z = -cx, -cy + cam_dy, -cz + cam_dz
 	-- Option 2
-	local cx, cy, cz = skew(0, 0, curr_subseg, xd, yd)
+	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
 	local x, y, z = -cx - road_width*cam_x, -cy + cam_dy, -cz + cam_dz
 
 	-- Car draw coords
+	local car_x = cars[1].x
 	local car_screen_x, car_screen_y, car_scale = project(car_x, cam_dy, cam_dz)
 
 	-- sprites
@@ -264,6 +298,8 @@ function draw_road()
 	clip()
 
 	-- Draw road segments
+
+	-- TODO: start 1 segment behind the player - other sprites have a problem with pop-in
 
 	local x1, y1, scale1 = project(x, y, z)
 
@@ -291,7 +327,6 @@ function draw_road()
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, section.gndcol, i)
 
 		if i < sprite_draw_distance then
-
 			if sumct == road[1].length then
 				add_bg_sprite(sp, sumct, seg, bg_finishline, -1, x2, y2, scale2, clp)
 				add_bg_sprite(sp, sumct, seg, bg_finishline,  1, x2, y2, scale2, clp)
@@ -300,6 +335,15 @@ function draw_road()
 			add_bg_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp)
 			add_bg_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
 			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
+
+			-- TODO: optimize this, don't need to iterate all cars every segment
+			-- TODO: use this for player car sprite too, for correct Z order of carse right behind player
+			for car_idx = 2, #cars do
+				local car = cars[car_idx]
+				if car.section_idx == sect and car.segment_idx == seg then
+					add_car_sprite(sp, car, seg, x1, y1, scale1, x2, y2, scale2, clp)
+				end
+			end
 		end
 
 		-- Reduce clip region
@@ -336,8 +380,8 @@ function draw_bg()
 	-- TODO: use the map for this, don't redraw every frame
 	-- TODO: draw some hills
 
-	local section = road[curr_section_idx]
-	local horizon = 64 + 32*(section.pitch + section.dpitch*(curr_segment_idx - 1))
+	local section = road[cars[1].section_idx]
+	local horizon = 64 + 32*(section.pitch + section.dpitch*(cars[1].segment_idx - 1))
 
 	-- Sky
 	rectfill(0, 0, 128, horizon - 1, 12)
@@ -348,7 +392,7 @@ function draw_bg()
 	fillp()
 
 	-- Sun
-	local sun_x = (heading * 512 + 192) % 512 - 256
+	local sun_x = (cars[1].heading * 512 + 192) % 512 - 256
 	if sun_x >= -64 and sun_x <= 192 then
 		circfill(sun_x, horizon - 52, 8, 10)
 	end
@@ -368,34 +412,27 @@ end
 
 function draw_hud()
 	cursor(116, 116, 7)
-	local speed_print = '' .. round(curr_speed * speed_to_kph)
+	local speed_print = '' .. round(cars[1].speed * speed_to_kph)
 	if (#speed_print == 1) speed_print = ' ' .. speed_print
 	if (#speed_print == 2) speed_print = ' ' .. speed_print
 	print(speed_print .. '\nkph')
 
 	cursor(108, 118)
-	print(gear)
-end
-
-function init_car_palettes(team_idx)
-	car_palette = palettes[team_idx]
-	car_palette = {
-		[8]=car_palette[1],  -- main
-		[14]=car_palette[2],  -- accent 1
-		[2]=car_palette[3],  -- dark
-		[13]=car_palette[4],  -- floor
-	}
+	print(cars[1].gear)
 end
 
 function draw_car(x, y, scale)
-	if (car_palette) pal(car_palette, 0)
+	if (cars[1].palette) pal(cars[1].palette, 0)
 	palt(0, false)
 	palt(11, true)
 
+	local car_x = cars[1].x
+	local speed = cars[1].speed
+
 	-- TODO: extra sprites for braking or on grass
 
-	if curr_speed > 0 then
-		if abs(car_x) >= road[curr_section_idx].wall then
+	if speed > 0 then
+		if abs(car_x) >= road[cars[1].section_idx].wall then
 			-- Touching wall
 			-- TODO: add smoke, or other indicator of scraping
 		end
@@ -410,6 +447,8 @@ function draw_car(x, y, scale)
 	-- DEBUG
 	local use_scale = false
 	-- local use_scale = (scale ~= 32)
+
+	local car_sprite_turn = cars[1].sprite_turn
 
 	if use_scale then
 		camera()
@@ -445,14 +484,15 @@ function draw_cpu_only_overlay()
 end
 
 function draw_debug_overlay()
-	local section = road[curr_section_idx]
+	local section = road[cars[1].section_idx]
 	local cpu = round(stat(1) * 100)
 	local mem = round(stat(0) * 100 / 2048)
+	local car_x = cars[1].x
 
 	cursor(88, 0, 7)
 	print("cpu:" .. cpu)
 	print("mem:" .. mem)
-	print(curr_section_idx .. "," .. curr_segment_idx .. ',' .. curr_subseg)
+	print(cars[1].section_idx .. "," .. cars[1].segment_idx .. ',' .. cars[1].subseg)
 	print('carx:' .. car_x)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then
@@ -461,6 +501,6 @@ function draw_debug_overlay()
 		print('cam:' .. cam_x)
 	end
 
-	-- local pitch = (section.pitch + section.dpitch*(curr_segment_idx - 1))
+	-- local pitch = (section.pitch + section.dpitch*(segment_idx - 1))
 	-- print('pi:' .. pitch)
 end

@@ -13,7 +13,9 @@ length_scale = 2
 
 -- Acceleration, by gear
 -- TOOD: make it 7 gears, but have gear 1 be twice as long
-accel = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
+accel_by_gear = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
+
+ai_accel_random = {1/1.5, 1/1.25, 1/1.125, 1, 1, 1.125, 1.25, 1.5}
 
 -- SFX speed: ticks, around 1/120 second
 -- This is also how long first note is held before sliding, so don't go higher than 8
@@ -50,7 +52,11 @@ palettes = {
 	{ 9, 12, 4, 4, name='orange' },
 	{ 14, 7, 2, 2, name='pink' },
 	{ 6, 7, 5, 0, name='silver' },
-	-- TODO: black team (need to recolor rear wing then)
+	{ 0, 11, 5, 0, name='black' }, -- TODO: recolor rear wing
+}
+
+palette_ghost = {
+	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 7, 6,
 }
 
 --
@@ -68,19 +74,11 @@ debug = true
 print_cpu = true
 enable_sound = true
 draw_racing_line = true
+collisions = false
 
 --
 -- Other runtime globals
 --
 
 road = nil  -- Setting this also acts as "game started" flag
-car_palette = nil
-
-curr_section_idx, curr_segment_idx, curr_segment_total, curr_subseg = 1, 1, 1, 0
-car_x, cam_x = 0, 0
-heading = start_heading
-curr_speed = 0
-gear = 1
-rpm = 0
-car_sprite_turn = 0
-accelerating = false
+cars = {}

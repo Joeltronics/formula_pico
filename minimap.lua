@@ -6,17 +6,17 @@ function init_minimap()
 	local minimap_scale = road.minimap_scale / length_scale
 	minimap_step = max(1, round(length_scale / road.minimap_scale))
 
-	local count, x, y, dx, dy, curr_heading = 0, 0, 0, 0, -1, start_heading
+	local count, x, y, dx, dy, heading = 0, 0, 0, 0, -1, start_heading
 	for section in all(road) do
 		for n = 1, section.length do
 
 			if (count % minimap_step == 0) add(minimap, {x, y})
 
-			curr_heading -= section.angle_per_seg
-			curr_heading %= 1.0
+			heading -= section.angle_per_seg
+			heading %= 1.0
 
-			dx = minimap_scale * cos(curr_heading)
-			dy = minimap_scale * sin(curr_heading)
+			dx = minimap_scale * cos(heading)
+			dy = minimap_scale * sin(heading)
 
 			x += dx
 			y += dy
@@ -44,10 +44,20 @@ function draw_minimap()
 	local x, y = coord[1], coord[2]
 	line(x, y, x, y, 0)
 
-	-- Current position
-	coord = minimap[(curr_segment_total - 1) \ minimap_step + 1]
+	-- Car positions
+
+	-- Other cars
+	-- TODO: draw these in reverse place order, i.e. first place drawn last
+	for idx = 2, #cars do
+		coord = minimap[(cars[idx].segment_total - 1) \ minimap_step + 1]
+		x, y = coord[1], coord[2]
+		line(x, y, x, y, cars[idx].palette[8])
+	end
+
+	-- Always draw self last
+	coord = minimap[(cars[1].segment_total - 1) \ minimap_step + 1]
 	x, y = coord[1], coord[2]
-	line(x, y, x, y, car_palette[8])
+	line(x, y, x, y, cars[1].palette[8])
 
 	camera()
 end
