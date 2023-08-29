@@ -219,8 +219,8 @@ function add_car_sprite(sprite_list, car, seg, x1, y1, scale1, x2, y2, scale2, c
 	add_bg_sprite(
 		sprite_list, sumct, seg,
 		{
-			img={0, 0, 24, 24},
-			siz={0.75,0.75},
+			img={0, 0, 24, 16},
+			siz={0.75,0.5},
 			palt=11,
 			palette=car.palette,
 		},
@@ -485,22 +485,19 @@ function draw_car(x, y, scale)
 	if use_scale then
 		camera()
 		local size = scale * 24 / 32
-		sspr(0, 0, 24, 24, x - size/2, y - size, size, size)
+		sspr(0, 0, 24, 16, x - size/2, y - size, size, size)
 	else
-		-- Car sprite is 24x24, x & y define bottom center
-		camera(-x + 12, -y + 24)
-		if car_sprite_turn < -1 then
-			-- TODO: sprite for this
-			spr(3, 1, 0, 3, 3)
-		elseif car_sprite_turn < 0 then
-			spr(3, 1, 0, 3, 3)
-		elseif car_sprite_turn > 1 then
-			-- TODO: sprite for this
-			spr(6, -1, 0, 3, 3)
-		elseif car_sprite_turn > 0 then
-			spr(6, -1, 0, 3, 3)
+		-- Car sprite is 24x16, x & y define bottom center
+		camera(-x + 12, -y + 16)
+		local flip = car_sprite_turn < 0
+		if abs(car_sprite_turn) > 2 then
+			spr(9, 0, 0, 3, 2, flip)
+		elseif abs(car_sprite_turn) > 1 then
+			spr(6, 0, 0, 3, 2, flip)
+		elseif car_sprite_turn ~= 0 then
+			spr(3, 0, 0, 3, 2, flip)
 		else
-			spr(0, 0, 0, 3, 3)
+			spr(0, 0, 0, 3, 2)
 		end
 		camera()
 	end
