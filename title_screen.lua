@@ -23,10 +23,11 @@ function update_title_screen()
 
 			local num_other_cars = 0
 			local ghost = false
+			-- if mode == 1 then
+			-- 	num_other_cars = 1
+			-- 	ghost = true
+			-- elseif mode == 2 then
 			if mode == 1 then
-				num_other_cars = 1
-				ghost = true
-			elseif mode == 2 then
 				num_other_cars = 7
 			end
 
@@ -47,7 +48,7 @@ function update_title_screen()
 	if (btnp(1)) incr += 1
 
 	if incr ~= 0 then
-		if (row_zidx == 0) mode = (mode + incr) % 3
+		if (row_zidx == 0) mode = (mode + incr) % 2
 		if (row_zidx == 1) track_zidx = (track_zidx + incr) % #tracks
 		if (row_zidx == 2) team_zidx = (team_zidx + incr) % #palettes
 		-- TODO: add separate debug option to print CPU or not
@@ -69,8 +70,8 @@ function draw_title_screen()
 
 	local mode_str = ''
 	if (mode == 0) mode_str = 'practice'
-	if (mode == 1) mode_str = 'time trial'
-	if (mode == 2) mode_str = 'race'
+	-- if (mode == 1) mode_str = 'time trial'
+	if (mode == 1) mode_str = 'race'
 
 	print_centered("mode: " .. mode_str, 64, 64, 7)
 	print_centered("track: " .. tracks[track_zidx+1].name, 64, 70, 7)
