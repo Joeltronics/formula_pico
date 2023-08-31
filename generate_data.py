@@ -498,6 +498,8 @@ def draw_track(track, scale=16):
 def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 
 	name = yaml_track['name'].strip().lower()
+	length_km = yaml_track.get('length_km', None)
+
 	start_heading = yaml_track.get('start_heading', yaml_defaults['start_heading'])
 	length_scale = yaml_track.get('length_scale', yaml_defaults['length_scale'])
 	track_width = yaml_track.get('track_width', yaml_defaults['track_width'])
@@ -523,6 +525,9 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	height = track.y_max - track.y_min
 
 	print(f'Length: {len(track.segments)} segments')
+	if length_km is not None:
+		m_per_segment = length_km / len(track.segments) * 100
+		print(f'True length: {length_km} km, segment length: {m_per_segment:.3f} m')
 	print(f'End coord: ({track.points[-1][0]:.3f}, {track.points[-1][1]:.3f})')
 	print(f'X range: [{track.x_min:.3f}, {track.x_max:.3f}], Y range: [{track.y_min:.3f}, {track.y_max:.3f}]')
 	print(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width/track.minimap_scale)}x{ceil(height/track.minimap_scale)}')
