@@ -212,7 +212,7 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 	})
 end
 
-function add_car_sprite(sprite_list, car, seg, x1, y1, scale1, x2, y2, scale2, clp)
+function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 	-- TODO: use car.sprite_turn (as well as dx value) to draw correct sprite
 	-- FIXME: there's a ton of judder with these!
 	local subseg = car.subseg
@@ -225,9 +225,7 @@ function add_car_sprite(sprite_list, car, seg, x1, y1, scale1, x2, y2, scale2, c
 			palette=car.palette,
 		},
 		0,
-		x1 + (x2-x1)*subseg,
-		y1 + (y2-y1)*subseg,
-		scale1 + (scale2-scale1)*subseg,
+		x, y, scale,
 		clp)
 
 end
@@ -286,10 +284,6 @@ function draw_road()
 	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
 	local x, y, z = -cx - track_width*cam_x, -cy + cam_dy, -cz + cam_dz
 
-	-- Car draw coords
-	local car_x = cars[1].x
-	local car_screen_x, car_screen_y, car_scale = project(car_x, cam_dy, cam_dz)
-
 	-- sprites
 	local sp = {}
 
@@ -308,6 +302,8 @@ function draw_road()
 	local ptnl = section.tnl
 
 	for i = 1, draw_distance do
+
+		local x_prev, y_prev, z_prev = x, y, z
 
 		x += xd
 		y += yd
@@ -337,11 +333,17 @@ function draw_road()
 			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
 
 			-- TODO: optimize this, don't need to iterate all cars every segment
-			-- TODO: use this for player car sprite too, for correct Z order of carse right behind player
+			-- FIXME: z-order problems:
+			--    - cars in same segment can end up in wrong order
+			--    - we don't use this for player car sprite, so it's always drawn on top
 			for car_idx = 2, #cars do
 				local car = cars[car_idx]
 				if car.section_idx == sect and car.segment_idx == seg then
-					add_car_sprite(sp, car, seg, x1, y1, scale1, x2, y2, scale2, clp)
+					local car_x = x_prev + car.x + car.subseg * xd
+					local car_y = y_prev + car.subseg * yd
+					local car_z = z_prev + car.subseg * zd
+					local this_car_screen_x, this_car_screen_y, this_car_scale = project(car_x, car_y, car_z)
+					add_car_sprite(sp, car, seg, this_car_screen_x, this_car_screen_y, this_car_scale, clp)
 				end
 			end
 		end
@@ -370,8 +372,6 @@ function draw_road()
 	end
 
 	clip()
-
-	return car_screen_x, car_screen_y, car_scale
 end
 
 function draw_bg()
@@ -410,38 +410,39 @@ function draw_bg()
 	end
 end
 
+function draw_ranking()
+	-- TODO: may only want to print 4 cars (self, leader, and cars before/after)
+	cursor()
+	for pos_num = 1,#car_positions do
+		local car_idx = car_positions[pos_num]
+		local car = cars[car_idx]
+		local bgcol, fgcol = digit_to_hex_char(car.palette[8]), digit_to_hex_char(car.palette[14])
+
+		-- For now, just use car index as car number
+		local text = '\#0\f7' .. pos_num .. '\-h\#' .. bgcol .. '\f' .. fgcol .. car_idx .. '\-h\#0\f7'
+
+		-- TODO: print tire status (once that's implemented)
+		-- TODO: figure out approx time delta and print it (instead of number of laps; "1 lap" or something if lapped)
+
+		if car.finished then
+			text = text .. '▒'
+		elseif car.in_pit then
+			text = text .. 'pit'
+		else
+			text = text .. (1 + car.laps)
+		end
+
+		print(text .. '\0')
+		-- Player indicator (separate print call, to reset background)
+		if (car_idx == 1) print('◀\0')
+		print('\n\0')
+	end
+end
+
 function draw_hud()
 
 	if #cars > 1 then
-		-- TODO: may only want to print 4 cars (self, leader, and cars before/after)
-		-- TODO: draw icon indicating player, to make it easier to find
-		rectfill(0, 0, 13, 47, 0)
-		for pos_num = 1,#car_positions do
-			local car_idx = car_positions[pos_num]
-			local car = cars[car_idx]
-			local y = 6*(pos_num - 1)
-			cursor(0, y, 7)
-			print(pos_num)
-			rectfill(4, y, 8, y+5, car.palette[8])
-			cursor(5, y, car.palette[14])
-			-- For now, just use car index as car number
-			print(car_idx)
-			-- TODO: print tire status (once that's implemented)
-			-- TODO: figure out approx time delta and print it
-			if car.finished then
-				fillp(0b1010010110100101)
-				rectfill(9, y, 13, y+5, 7)
-				fillp()
-			else
-				cursor(10, y, 7)
-				if car.in_pit then
-					print('p')
-				else
-					-- TODO: on lap 10, fill wider background rectangle
-					print(max(1, 1 + car.laps))
-				end
-			end
-		end
+		draw_ranking()
 	end
 
 	cursor(116, 116, 7)
@@ -454,13 +455,16 @@ function draw_hud()
 	print(cars[1].gear)
 end
 
-function draw_car(x, y, scale)
+function draw_car()
+
 	if (cars[1].palette) pal(cars[1].palette, 0)
 	palt(0, false)
 	palt(11, true)
 
 	local car_x = cars[1].x
 	local speed = cars[1].speed
+
+	local x, y, scale = project(car_x, cam_dy, cam_dz)
 
 	-- TODO: extra sprites for braking or on grass
 

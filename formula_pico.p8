@@ -31,8 +31,8 @@ end
 function _draw()
 	if road then
 		draw_bg()
-		local car_screen_x, car_screen_y, car_scale = draw_road()
-		draw_car(car_screen_x, car_screen_y, car_scale)
+		draw_road()
+		draw_car()
 		draw_minimap()
 		draw_hud()
 		if debug then

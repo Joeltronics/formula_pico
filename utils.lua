@@ -7,6 +7,10 @@ function print_centered(text, x, y, col)
 	print(text, x - 2*#text, y, col)
 end
 
+function digit_to_hex_char(digit)
+	return sub("0123456789abcdef", digit + 1, digit + 1)
+end
+
 function project(x, y, z)
 	local scale = 64 / z
 	return x * scale + 64, y * scale + 64, scale
