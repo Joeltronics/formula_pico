@@ -143,6 +143,7 @@ class Section:
 	tnl: bool = False
 	pitch: float = 0.0
 	gndcol: int | None = None
+	has_apex: bool | None = None
 	apex: int | None = None
 	bgl: str = ''
 	bgr: str = ''
@@ -177,6 +178,7 @@ class Track:
 		self.sections = sections
 
 		self.start_heading: float = start_heading
+		self.end_heading: float = None
 		self.track_width: float = track_width
 		self.shoulder_width: float = shoulder_width
 
@@ -197,7 +199,7 @@ class Track:
 
 		self._calculate_apexes()
 
-		self.segments = self._make_segments()
+		self._make_segments()
 
 		self.points = [segment.center_start for segment in self.segments] + [self.segments[-1].center_end]
 
@@ -264,12 +266,12 @@ class Track:
 		prev_direction = SectionDirection.straight
 		for section in self.sections:
 
-			if section.angle > 0:
-				direction = SectionDirection.right
-			elif section.angle < 0:
-				direction = SectionDirection.left
-			else:
+			if section.angle == 0 or (section.has_apex == False):
 				direction = SectionDirection.straight
+			elif section.angle > 0:
+				direction = SectionDirection.right
+			else:
+				direction = SectionDirection.left
 
 			if direction != prev_direction:
 				_finish_turn()
@@ -288,7 +290,7 @@ class Track:
 
 		heading = self.start_heading
 
-		segments = []
+		self.segments = []
 
 		for idx, section in enumerate(self.sections):
 			try:
@@ -308,16 +310,16 @@ class Track:
 					center_end = Point(x, y)
 
 					seg = Segment(
-						idx=len(segments), angle=angle_per_seg, center_start=center_start, center_end=center_end)
-					segments.append(seg)
+						idx=len(self.segments), angle=angle_per_seg, center_start=center_start, center_end=center_end)
+					self.segments.append(seg)
 					section.segments.append(seg)
 
 			except Exception as ex:
 				raise Exception(f'Failed to parse track "{self.name}" corner {idx}: {ex}') from ex
 
-		set_normals(segments)
+		self.end_heading = heading
 
-		return segments
+		set_normals(self.segments)
 
 	def lua_output_data(self, defaults: dict):
 
@@ -586,13 +588,15 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	length_km = yaml_track.get('length_km', None)
 
 	start_heading = yaml_track.get('start_heading', yaml_defaults['start_heading'])
-	length_scale = yaml_track.get('length_scale', yaml_defaults['length_scale'])
+	length_scale = yaml_track.get('length_scale', yaml_defaults.get('length_scale', 1))
+	angle_scale = yaml_track.get('angle_scale', yaml_defaults.get('angle_scale', 1.0))
 	track_width = yaml_track.get('track_width', yaml_defaults['track_width'])
 	shoulder_width = yaml_track.get('shoulder_width', yaml_defaults['shoulder_width'])
 
 	sections = [Section(**s) for s in yaml_track['sections']]
 	for section in sections:
-		section.length *= length_scale
+		section.length = int(round(section.length * length_scale))
+		section.angle *= angle_scale
 
 	# TODO: break sections into subsections, i.e. pre-apex/post-apex, braking zones, etc
 	# TODO: calculate racing line
@@ -614,6 +618,8 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		m_per_segment = length_km / len(track.segments) * 100
 		print(f'True length: {length_km} km, segment length: {m_per_segment:.3f} m')
 	print(f'End coord: ({track.points[-1][0]:.3f}, {track.points[-1][1]:.3f})')
+	# TODO: give a warning if these don't match up
+	print(f'Start heading: {track.start_heading}, end heading: {track.end_heading}')
 	print(f'X range: [{track.x_min:.3f}, {track.x_max:.3f}], Y range: [{track.y_min:.3f}, {track.y_max:.3f}]')
 	print(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width/track.minimap_scale)}x{ceil(height/track.minimap_scale)}')
 	print(f'minimap_step: {track.minimap_step}')
@@ -686,8 +692,8 @@ def main():
 		f.write(GENERATED_DATA_HEADER + '\n')
 
 		for k, v in data.items():
-			# length_scale is applied in this script; skip it
-			if k == 'length_scale':
+			# These are applied in this script; skip them
+			if k in ['length_scale', 'angle_scale']:
 				continue
 			f.write(f'{k}={to_lua_str(v)}\n')
 

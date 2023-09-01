@@ -1,5 +1,5 @@
 
-length_scale: 2
+
 start_heading: 0.25
 track_width: 3
 shoulder_width: 0.125
@@ -8,11 +8,12 @@ tracks:
   - name: austria
     start_heading: 0.5
     length_km: 4.32
+    length_scale: 2
     sections:
     - {length: 8}  # start/finish
     - {length: 40}
     - {length: 6, angle: 0.25} # 1
-    - {length: 6, angle: -0.0625}
+    - {length: 6, angle: -0.0625, has_apex: False}
     - {length: 16}
     - {length: 28, angle: 0.0625}
     - {length: 8, pitch: 0.5}
@@ -41,6 +42,7 @@ tracks:
 
   - name: belgium
     length_km: 7.00
+    length_scale: 2
     sections:
     - {length: 8}  # start/finish; heading 0.25
     - {length: 20}
@@ -90,6 +92,7 @@ tracks:
 
   - name: "italy"
     length_km: 5.79
+    length_scale: 2
     sections:
     - {length: 8}  # start/finish; heading 0.25
     - {length: 46}
@@ -119,7 +122,94 @@ tracks:
     - {length: 30, angle: 0.125}
     - {length: 16}
 
+  - name: monaco
+    # TODO: background not trees
+    # TODO: walls
+    # TODO: while the scale is accurate in terms of realism compared to other tracks,
+    # it feels too short - likely want to scale up a bit
+    length_km: 3.34
+    length_scale: 1
+    angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
+    track_width: 2
+    sections:
+    - {length: 16}  # start/finish
+    - {length: 8}
+    - {length: 4, angle: 2, pitch: 0.25}
+    - {length: 4, pitch: 0.25}
+    - {length: 4, angle: -2, pitch: 0.25}
+    - {length: 4, pitch: 0.25}
+    - {length: 8, angle: 8}  # 1: Sainte Devote
+    - {length: 12}
+    - {length: 4, angle: -1, pitch: 1, has_apex: False}
+    - {length: 24, pitch: 1}
+    - {length: 4, angle: 1, pitch: 1, has_apex: False}
+    - {length: 3, pitch: 1}
+    - {length: 6, angle: -2, pitch: 1, has_apex: False}
+    - {length: 3, pitch: 1}
+    - {length: 4, angle: 3, pitch: 0.25}  # 2: Beau Rivage
+    - {length: 6, pitch: 0.25}
+    - {length: 10, angle: -4}  # 3: Massenet
+    - {length: 6, angle: -4}
+    - {length: 10, angle: -4}
+    - {length: 12}
+    - {length: 10, angle: 8}  # 4: Casino
+    - {length: 12, pitch: -1}
+    - {length: 20, pitch: -1}
+    - {length: 10, angle: 12, pitch: -0.5}  # 5: Mirabeau Haute
+    - {length: 4, angle: -3, pitch: -0.5}
+    - {length: 10, pitch: -0.5}
+    - {length: 6, angle: -16, pitch: -0.25}  # 6: Hairpin
+    - {length: 8, pitch: -0.5}
+    - {length: 8, angle: 9, pitch: -0.5}  # 7: Mirabeau Bas
+    - {length: 10, pitch: -0.75}
+    - {length: 4, angle: 2, has_apex: False}
+    - {length: 2}
+    - {length: 8, angle: 8}  # 8: Portier
+    - {length: 8}
+    - {length: 16, tnl: true}  # Tunnel
+    - {length: 4, angle: 1, tnl: true}
+    - {length: 4, tnl: true}
+    - {length: 20, angle: 4, tnl: true}  # 9
+    - {length: 28, tnl: true}
+    - {length: 4, pitch: -0.5}  # Tunnel exit
+    - {length: 10, angle: 1.5, pitch: -0.5}
+    - {length: 16}
+    - {length: 4, angle: -8}  # 10: Nouvelle Chicane
+    - {length: 2}
+    - {length: 4, angle: 8}
+    - {length: 4}
+    - {length: 4, angle: 4}  # 11: Chicane exit
+    - {length: 2}
+    - {length: 4, angle: -4}
+    - {length: 20}
+    - {length: 9, angle: -5}  # 12: Tabac
+    - {length: 12, angle: -3, has_apex: False}
+    - {length: 4, angle: -4}  # 13: Louis Chiron
+    - {length: 2}
+    - {length: 4, angle: 4}  # 14
+    - {length: 20}
+    - {length: 4, angle: 8}  # 15
+    - {length: 2}
+    - {length: 4, angle: -8}  # 16
+    - {length: 8}
+    - {length: 16, angle: -4}
+    - {length: 4}
+    - {length: 8, angle: 3}
+    - {length: 8, angle: 8}  # 17: Rascasse
+    - {length: 4, pitch: 0.25}
+    - {length: 4, angle: 1.5, pitch: 0.25, has_apex: False}
+    - {length: 4, pitch: 0.25}
+    - {length: 6, angle: 8}  # 18: Anthony Noghes
+    - {length: 2}
+    - {length: 4, angle: -3}  # 19
+    - {length: 10}
+    - {length: 10, angle: 2, has_apex: False}
+    - {length: 12}
+    - {length: 10, angle: 1, has_apex: False}
+    - {length: 10}
+
   - name: "test"
+    length_scale: 2
     sections:
     - {length: 8}
     - {length: 12}
@@ -145,6 +235,7 @@ tracks:
     - {length: 8, angle: 0.125}
 
   - name: "hill test"
+    length_scale: 2
     sections:
     - {length: 8}
     - {length: 12}
