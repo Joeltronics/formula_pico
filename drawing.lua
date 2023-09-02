@@ -47,15 +47,13 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
 	end
 end
 
-function draw_ground(y1, y2, sumct, gndcol)
-	if not gndcol then
-		gndcol = 3
-		if ((sumct % 6) >= 3) gndcol = 11
-	end
+function draw_ground(y1, y2, sumct, gndcol1, gndcol2)
+	local gndcol = gndcol1
+	if ((sumct % 6) >= 3) gndcol = gndcol2
 	rectfill(0, y1, 128, y2, gndcol)
 end
 
-function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndcol, distance)
+function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, distance)
 
 	detail = (distance <= road_detail_draw_distance)
 
@@ -64,7 +62,9 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, gndco
 	if section.tnl then
 		draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
 	elseif (y2 >= y1) then
-		draw_ground(y1, y2, sumct, gndcol)
+		draw_ground(y1, y2, sumct,
+			section.gndcol1 or road.gndcol1 or 3,
+			section.gndcol2 or road.gndcol2 or 11)
 		-- TODO: draw walls
 	end
 
@@ -320,7 +320,7 @@ function draw_road()
 			setclip(clp)
 		end
 
-		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, section.gndcol, i)
+		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
 		if i < sprite_draw_distance then
 			if sumct == road[1].length then
@@ -387,8 +387,9 @@ function draw_bg()
 	rectfill(0, 0, 128, horizon - 1, 12)
 
 	-- Horizon
+	local horizon_col = 16*(road.gndcol1 or 3) + (road.gndcol2 or 11)
 	fillp(0b0011110000111100)
-	rectfill(0, horizon, 128, 128, 0xB3)
+	rectfill(0, horizon, 128, 128, horizon_col)
 	fillp()
 
 	-- Sun
@@ -397,16 +398,19 @@ function draw_bg()
 		circfill(sun_x, horizon - 52, 8, 10)
 	end
 
-	-- Trees
-	local tree_y = horizon - 7
+	-- Trees/Buildings
+	local spr1 = nil
+	if (road.tree_bg) spr1 = 112
+	if (road.city_bg) spr1 = 114
+	if (not spr1) return
 	for off = -64,128,64 do
-		local tree_x = sun_x % 64 + off
-		spr(112, tree_x, tree_y, 2, 1)
-		spr(112, tree_x + 16, tree_y, 1, 1, true)
-		spr(113, tree_x + 24, tree_y, 1, 1, true)
-		spr(112, tree_x + 32, tree_y)
-		spr(112, tree_x + 40, tree_y, 2, 1, true)
-		spr(113, tree_x + 56, tree_y)
+		local x, y = sun_x % 64 + off, horizon - 7
+		spr(spr1, x, y, 2, 1)
+		spr(spr1, x + 16, y, 1, 1, true)
+		spr(spr1 + 1, x + 24, y, 1, 1, true)
+		spr(spr1, x + 32, y)
+		spr(spr1, x + 40, y, 2, 1, true)
+		spr(spr1 + 1, x + 56, y)
 	end
 end
 

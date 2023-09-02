@@ -2,7 +2,8 @@
 
 Improve cornering logic
 
-Improve racing line calculation
+Improve racing line & max speed calculation
+* Do it in the Python data generation script
 
 Add walls
 
@@ -33,7 +34,7 @@ Add other cars
 	- Have them always follow center of track
 	- No clipping yet
 2. (Done) Draw them on minimap
-3. Keep track of their rank and display it
+3. (Done) Keep track of their rank and display it
 4. Have them follow racing line
 5. Add hitboxes/clipping
 6. Add AI & overtaking logic

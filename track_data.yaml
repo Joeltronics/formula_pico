@@ -9,6 +9,7 @@ tracks:
     start_heading: 0.5
     length_km: 4.32
     length_scale: 2
+    tree_bg: true
     sections:
     - {length: 8}  # start/finish
     - {length: 40}
@@ -43,6 +44,7 @@ tracks:
   - name: belgium
     length_km: 7.00
     length_scale: 2
+    tree_bg: true
     sections:
     - {length: 8}  # start/finish; heading 0.25
     - {length: 20}
@@ -93,6 +95,7 @@ tracks:
   - name: "italy"
     length_km: 5.79
     length_scale: 2
+    tree_bg: true
     sections:
     - {length: 8}  # start/finish; heading 0.25
     - {length: 46}
@@ -123,7 +126,6 @@ tracks:
     - {length: 16}
 
   - name: monaco
-    # TODO: background not trees
     # TODO: walls
     # TODO: while the scale is accurate in terms of realism compared to other tracks,
     # it feels too short - likely want to scale up a bit
@@ -131,6 +133,9 @@ tracks:
     length_scale: 1
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
     track_width: 2
+    city_bg: true
+    gndcol1: 6
+    gndcol2: 7
     sections:
     - {length: 16}  # start/finish
     - {length: 8}
@@ -210,6 +215,7 @@ tracks:
 
   - name: "test"
     length_scale: 2
+    tree_bg: true
     sections:
     - {length: 8}
     - {length: 12}
@@ -236,19 +242,18 @@ tracks:
 
   - name: "hill test"
     length_scale: 2
+    tree_bg: true
     sections:
     - {length: 8}
     - {length: 12}
-    - {length: 20, gndcol: 8}
-    - {length: 20, pitch: 1, gndcol: 8}
-    - {length: 20, pitch: 1, gndcol: 8}
-    # - {length: 20, pitch: 1, gndcol: 8}
+    - {length: 20, gndcol1: 8, gndcol2: 2}
+    - {length: 20, pitch: 1, gndcol1: 8, gndcol2: 2}
+    - {length: 20, pitch: 1, gndcol1: 8, gndcol2: 2}
     - {length: 20}
     - {length: 12, angle: 0.5}
     - {length: 20}
-    - {length: 20, gndcol: 1}
-    - {length: 20, pitch: -1, gndcol: 1}
-    - {length: 20, pitch: -1, gndcol: 1}
-    # - {length: 20, pitch: -1, gndcol: 1}
+    - {length: 20, gndcol1: 1, gndcol2: 12}
+    - {length: 20, pitch: -1, gndcol1: 1, gndcol2: 12}
+    - {length: 20, pitch: -1, gndcol1: 1, gndcol2: 12}
     - {length: 20}
     - {length: 12, angle: 0.5}

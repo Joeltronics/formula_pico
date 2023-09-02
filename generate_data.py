@@ -16,6 +16,9 @@ import yaml
 TWO_PI: Final = 2.0 * PI
 EPS: Final = 1e-9
 
+MINIMAP_MAX_WIDTH = 32
+MINIMAP_MAX_HEIGHT = 48
+
 DATA_FILENAME_IN: Final = Path('track_data.yaml')
 DATA_FILENAME_OUT: Final = Path('generated_data.lua')
 MAP_DIR_OUT: Final = Path('maps')
@@ -142,7 +145,8 @@ class Section:
 	# start_heading: float  # TODO
 	tnl: bool = False
 	pitch: float = 0.0
-	gndcol: int | None = None
+	gndcol1: int | None = None
+	gndcol2: int | None = None
 	has_apex: bool | None = None
 	apex: int | None = None
 	bgl: str = ''
@@ -152,7 +156,7 @@ class Section:
 
 	def to_lua_dict(self) -> dict:
 		ret = dict(length=self.length)
-		for attr_name in ['angle', 'tnl', 'pitch', 'gndcol', 'bgl', 'bgr', 'bgc']:
+		for attr_name in ['angle', 'tnl', 'pitch', 'gndcol1', 'gndcol2', 'bgl', 'bgr', 'bgc']:
 			if (val := getattr(self, attr_name, None)):
 				ret[attr_name] = val
 		return ret
@@ -169,7 +173,7 @@ class Section:
 		if self.angle:
 			items.append(to_lua_str(self.angle))
 
-		for attr_name in ['tnl', 'gndcol', 'bgl', 'bgr', 'bgc']:
+		for attr_name in ['tnl', 'gndcol1', 'gndcol2', 'bgl', 'bgr', 'bgc']:
 			if (val := getattr(self, attr_name, None)):
 				items.append(f'{attr_name}={to_lua_str(val, quote_strings=False)}')
 
@@ -190,6 +194,10 @@ class Track:
 			start_heading: float,
 			track_width: float,
 			shoulder_width: float,
+			tree_bg: bool = False,
+			city_bg: bool = False,
+			gndcol1: int | None = None,
+			gndcol2: int | None = None,
 			):
 
 		self.name = name
@@ -199,6 +207,11 @@ class Track:
 		self.end_heading: float = None
 		self.track_width: float = track_width
 		self.shoulder_width: float = shoulder_width
+
+		self.tree_bg = tree_bg
+		self.city_bg = city_bg
+		self.gndcol1 = gndcol1
+		self.gndcol2 = gndcol2
 
 		self.segments: list[Segment] = None
 		self.points: list[Point] = None
@@ -233,20 +246,18 @@ class Track:
 		width = self.x_max - self.x_min
 		height = self.y_max - self.y_min
 
-		minimap_max_width = 32
-		minimap_max_height = 48
-		self.minimap_scale = max(
+		self.minimap_scale = min(
 			1, 
-			width / minimap_max_width,
-			height / minimap_max_height,
+			MINIMAP_MAX_WIDTH / width,
+			MINIMAP_MAX_HEIGHT / height,
 		)
-		self.minimap_step = floor(self.minimap_scale)
+		self.minimap_step = floor(1.0 / self.minimap_scale)
 
 		# Start coordinate is (0, 0)
 		# Offset from right side of screen so (x_max) just touches right side of screen
-		self.minimap_offset_x = int(ceil(self.x_max / self.minimap_scale))
+		self.minimap_offset_x = int(ceil(self.x_max * self.minimap_scale))
 		# Offset from vertical center of screen to put bottom of minimap at center of screen
-		self.minimap_offset_y = int(round(-self.y_min / self.minimap_scale))
+		self.minimap_offset_y = int(round(-self.y_min * self.minimap_scale))
 
 	def _calculate_apexes(self):
 
@@ -345,7 +356,7 @@ class Track:
 
 		ret['name'] = self.name
 
-		ret['minimap_scale'] = 1 / self.minimap_scale  # TODO: take reciprical when setting this, not here
+		ret['minimap_scale'] = self.minimap_scale
 		ret['minimap_step'] = self.minimap_step
 		ret['minimap_offset_x'] = self.minimap_offset_x
 		ret['minimap_offset_y'] = self.minimap_offset_y
@@ -356,6 +367,17 @@ class Track:
 			ret['track_width'] = self.track_width
 		if self.shoulder_width != defaults['shoulder_width']:
 			ret['shoulder_width'] = self.shoulder_width
+
+		if self.gndcol1 is not None:
+			ret['gndcol1'] = self.gndcol1
+		if self.gndcol2 is not None:
+			ret['gndcol2'] = self.gndcol2
+
+		if self.city_bg:
+			ret['city_bg'] = True
+
+		if self.tree_bg:
+			ret['tree_bg'] = True
 
 		if compress:
 			sections_compressed = ';'.join(s.to_lua_compressed() for s in self.sections)
@@ -495,7 +517,7 @@ def draw_track(track, scale=16):
 
 		c = cairo.Context(surface)
 
-		c.set_source_rgb(*PALETTE[3])
+		c.set_source_rgb(*PALETTE[track.gndcol1 if track.gndcol1 is not None else 3])
 
 		c.paint()
 
@@ -537,12 +559,26 @@ def draw_track(track, scale=16):
 
 		for idx, (section, segment) in enumerate(iterate_segments(sections)):
 
+			# TODO: track.gndcol1/track.gndcol2/section.gndcol1/section.gndcol2
+
+			if section.gndcol1 is not None:
+				gndcol1 = section.gndcol1
+			elif track.gndcol1 is not None:
+				gndcol1 = track.gndcol1
+			else:
+				gndcol1 = 3
+
+			if section.gndcol2 is not None:
+				gndcol2 = section.gndcol2
+			elif track.gndcol2 is not None:
+				gndcol2 = track.gndcol2
+			else:
+				gndcol2 = 11
+
 			if section.tnl:
 				gndcol = 1 if (idx % 4 < 2) else 0
-			elif section.gndcol:
-				gndcol = section.gndcol
 			else:
-				gndcol = 11 if ((idx % 6) >= 3) else 3
+				gndcol = gndcol2 if ((idx % 6) >= 3) else gndcol1
 
 			polygon(segment.points(-2*track_width, 2*track_width), PALETTE[gndcol], stroke=2)
 
@@ -631,6 +667,10 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		start_heading=start_heading,
 		track_width=track_width,
 		shoulder_width=shoulder_width,
+		city_bg=yaml_track.get('city_bg', False),
+		tree_bg=yaml_track.get('tree_bg', False),
+		gndcol1=yaml_track.get('gndcol1', None),
+		gndcol2=yaml_track.get('gndcol2', None),
 	)
 
 	width = track.x_max - track.x_min
@@ -644,7 +684,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	# TODO: give a warning if these don't match up
 	print(f'Start heading: {track.start_heading}, end heading: {track.end_heading}')
 	print(f'X range: [{track.x_min:.3f}, {track.x_max:.3f}], Y range: [{track.y_min:.3f}, {track.y_max:.3f}]')
-	print(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width/track.minimap_scale)}x{ceil(height/track.minimap_scale)}')
+	print(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width*track.minimap_scale)}x{ceil(height*track.minimap_scale)}')
 	print(f'minimap_step: {track.minimap_step}')
 	print(f'minimap_offset: ({track.minimap_offset_x}, {track.minimap_offset_y})')
 
@@ -736,7 +776,7 @@ def main():
 				draw_line_map(track.points, show=args.show, filename=filename)
 
 				# print('Drawing minimap')
-				minimap_points = [p / track.minimap_scale for p in track.points[::track.minimap_step]]
+				minimap_points = [p * track.minimap_scale for p in track.points[::track.minimap_step]]
 				filename = MAP_DIR_OUT / f'{track.name}_minimap.png'
 				draw_line_map(minimap_points, curve_joint=False, show=args.show, filename=filename)
 
