@@ -163,7 +163,7 @@ tracks:
     - {length: 10, angle: 12, pitch: -0.5}  # 5: Mirabeau Haute
     - {length: 4, angle: -3, pitch: -0.5}
     - {length: 10, pitch: -0.5}
-    - {length: 6, angle: -16, pitch: -0.25}  # 6: Hairpin
+    - {length: 8, angle: -16, pitch: -0.25}  # 6: Hairpin
     - {length: 8, pitch: -0.5}
     - {length: 8, angle: 9, pitch: -0.5}  # 7: Mirabeau Bas
     - {length: 10, pitch: -0.75}
@@ -203,7 +203,7 @@ tracks:
     - {length: 8, angle: 8}  # 17: Rascasse
     - {length: 4, pitch: 0.25}
     - {length: 4, angle: 1.5, pitch: 0.25, has_apex: False}
-    - {length: 4, pitch: 0.25}
+    - {length: 6, pitch: 0.25}
     - {length: 6, angle: 8}  # 18: Anthony Noghes
     - {length: 2}
     - {length: 4, angle: -3}  # 19
