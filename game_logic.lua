@@ -4,7 +4,7 @@ function init_game(track_idx, team_idx, ghost, num_other_cars)
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
 	init_cars(team_idx, ghost, num_other_cars)
-	init_sections()
+	init_track()
 	init_minimap()
 end
 
@@ -119,12 +119,39 @@ function corner_exit_entrance(section)
 end
 
 
-function init_sections()
+function init_track()
 
 	road.start_heading = road.start_heading or start_heading
 
+	if road.sections_compressed then
+		for section_compressed in all(split(road.sections_compressed, ';')) do
+			local section = {}
+			local section_items = split(section_compressed)
+			for idx = 1,#section_items do
+				local key_value = split(section_items[idx], '=')
+
+				-- length,[pitch,][angle,][k=v,]
+
+				if (#key_value == 2) then
+					section[key_value[1]] = key_value[2]
+				elseif idx == 1 then
+					section.length = key_value[1]
+				elseif idx == 2 then
+					section.pitch = key_value[1]
+				elseif idx == 3 then
+					section.angle = key_value[1]
+				else
+					assert(false)
+				end
+			end
+			add(road, section)
+		end
+	end
+
 	total_segment_count = 0
 	for section in all(road) do
+		assert(section.length and section.length > 0)
+
 		section.pitch = section.pitch or 0
 		section.angle = section.angle or 0
 

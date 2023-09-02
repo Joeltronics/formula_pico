@@ -157,6 +157,24 @@ class Section:
 				ret[attr_name] = val
 		return ret
 
+	def to_lua_compressed(self) -> str:
+
+		items = [to_lua_str(self.length)]
+
+		# TODO: if angle but no pitch, could put key=value in 2nd slot
+
+		if self.angle or self.pitch:
+			items.append(to_lua_str(self.pitch))
+
+		if self.angle:
+			items.append(to_lua_str(self.angle))
+
+		for attr_name in ['tnl', 'gndcol', 'bgl', 'bgr', 'bgc']:
+			if (val := getattr(self, attr_name, None)):
+				items.append(f'{attr_name}={to_lua_str(val, quote_strings=False)}')
+
+		return ','.join(items)
+
 
 def iterate_segments(sections: Iterable[Section]):
 	for section in sections:
@@ -321,7 +339,7 @@ class Track:
 
 		set_normals(self.segments)
 
-	def lua_output_data(self, defaults: dict):
+	def lua_output_data(self, defaults: dict, compress: bool):
 
 		ret = dict()
 
@@ -339,7 +357,12 @@ class Track:
 		if self.shoulder_width != defaults['shoulder_width']:
 			ret['shoulder_width'] = self.shoulder_width
 
-		ret['sections'] = [section.to_lua_dict() for section in self.sections]
+		if compress:
+			sections_compressed = ';'.join(s.to_lua_compressed() for s in self.sections)
+			ret['sections_compressed'] = sections_compressed
+			ret['sections'] = []
+		else:
+			ret['sections'] = [section.to_lua_dict() for section in self.sections]
 
 		return ret
 
@@ -628,7 +651,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	return track
 
 
-def to_lua_str(val, indent=0) -> str:
+def to_lua_str(val, indent=0, quote_strings=True) -> str:
 
 	indent_str = '\t' * indent
 
@@ -652,28 +675,29 @@ def to_lua_str(val, indent=0) -> str:
 			return str(float_round_pico8_precision(val))
 
 	elif isinstance(val, str):
-		return f'"{val}"'
+		return f'"{val}"' if quote_strings else val
 
 	elif isinstance(val, (tuple, list)):
 		if val and isinstance(val[0], dict):
 			# Split lines
-			return '{' + ','.join('\n\t' + indent_str + to_lua_str(v, indent=1+indent) for v in val) + '\n' + indent_str + '}'
+			return '{' + ','.join('\n\t' + indent_str + to_lua_str(v, indent=1+indent, quote_strings=quote_strings) for v in val) + '\n' + indent_str + '}'
 		else:
 			# All on 1 line
-			return '{' + ','.join(to_lua_str(v, indent=indent) for v in val) + '}'
+			return '{' + ','.join(to_lua_str(v, indent=indent, quote_strings=quote_strings) for v in val) + '}'
 
 	else:
 		if not isinstance(val, dict):
 			warn(f'Unknown type, treating as dict: {type(val).__name__}')
 			val = vars(val)
 		# TODO: split lines
-		return '{' + ','.join(f'{k}={to_lua_str(v, indent=indent)}' for k, v in val.items()) + '}'
+		return '{' + ','.join(f'{k}={to_lua_str(v, indent=indent, quote_strings=quote_strings)}' for k, v in val.items()) + '}'
 
 
 def main():
 	parser = ArgumentParser()
 	parser.add_argument('--no-draw', dest='draw', action='store_false')
 	parser.add_argument('--show', action='store_true')
+	parser.add_argument('--uncompressed', dest='compress', action='store_false')
 	args = parser.parse_args()
 	data = load_data()
 
@@ -719,9 +743,7 @@ def main():
 				# print('Drawing track')
 				draw_track(track)
 
-			# TODO: compress output data
-
-			track_lua_data = track.lua_output_data(data)
+			track_lua_data = track.lua_output_data(data, compress=args.compress)
 
 			sections = track_lua_data.pop('sections')
 
