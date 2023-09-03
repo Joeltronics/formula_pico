@@ -153,13 +153,14 @@ function draw_tunnel_face(x, y, scale)
 	local x1, y1, x2, y2 = get_tunnel_rect(x, y, scale)
 
 	-- tunnel wall top
-	local wh = 4.5*scale
+	-- TODO: variable tunnel height per section
+	local wh = 8*scale
 	local wy = ceil(y - wh)
 
 	-- faces
-	if(y1 > 0) rectfill(0, wy, 128, y1-1, 7)
-	if(x1 > 0) rectfill(0, y1, x1-1, y2-1, 7)
-	if(x2 < 128) rectfill(x2, y1, 127, y2-1, 7)
+	if(y1 > 0) rectfill(0, wy, 128, y1-1, 6)
+	if(x1 > 0) rectfill(0, y1, x1-1, y2-1, 6)
+	if(x2 < 128) rectfill(x2, y1, 127, y2-1, 6)
 end
 
 function draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)

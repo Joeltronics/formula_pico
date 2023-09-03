@@ -97,14 +97,15 @@ tracks:
     length_scale: 2
     tree_bg: true
     sections:
-    - {length: 8}  # start/finish; heading 0.25
-    - {length: 46}
+    - {length: 8, pitch: 0.125}  # start/finish; heading 0.25
+    - {length: 46, pitch: 0.125}
     - {length: 6, angle: 0.25} # 1: chicane
     - {length: 8, angle: -0.375} # 2
     - {length: 16, angle: 0.125}
-    - {length: 8}  # heading 0.25
+    - {length: 8, pitch: 0.125}  # heading 0.25
     - {length: 44, angle: 0.2} # 3: curva grande; heading 0.45
-    - {length: 32}
+    - {length: 16}
+    - {length: 16, pitch: 0.5}
     - {length: 6, angle: -0.25} # 4: chicane
     - {length: 6, angle: 0.25} # 5; heading 0.45
     - {length: 12}
@@ -113,17 +114,21 @@ tracks:
     - {length: 12, angle: 0.2} # 7
     - {length: 12}
     - {length: 12, angle: -0.075} # serraglio
-    - {length: 24}
+    - {length: 8}
+    - {length: 8}
+    - {length: 8, pitch: -0.75}
     - {length: 4, tnl: true}
-    - {length: 24}
+    - {length: 8}
+    - {length: 8, pitch: 0.75}
+    - {length: 8}
     - {length: 8, angle: -0.125} # 8 :ascari
     - {length: 8, angle: 0.2} # 9
     - {length: 8, angle: -0.15} # 10
-    - {length: 72}
+    - {length: 72, pitch: -0.25}
     - {length: 12, angle: 0.25} # 11: parabolica
     - {length: 16, angle: 0.125}
     - {length: 30, angle: 0.125}
-    - {length: 16}
+    - {length: 16, pitch: 0.125}
 
   - name: monaco
     # TODO: walls
