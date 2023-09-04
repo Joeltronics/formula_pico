@@ -108,6 +108,17 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 		fillp()
 	end
 
+	-- Center line
+
+	if road.street and (sumct % 4) == 0 then
+		if detail then
+			local cw1, cw2 = center_line_width*scale1, center_line_width*scale2
+			filltrapz(x1, y1, cw1, x2, y2, cw2, 7)
+		else
+			line(x1, ceil(y1), x2, y2, 6)
+		end
+	end
+
 	-- Racing line
 
 	if (not draw_racing_line) return

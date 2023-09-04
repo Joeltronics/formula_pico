@@ -194,6 +194,7 @@ class Track:
 			start_heading: float,
 			track_width: float,
 			shoulder_width: float,
+			street: bool = False,
 			tree_bg: bool = False,
 			city_bg: bool = False,
 			gndcol1: int | None = None,
@@ -208,6 +209,7 @@ class Track:
 		self.track_width: float = track_width
 		self.shoulder_width: float = shoulder_width
 
+		self.street = street
 		self.tree_bg = tree_bg
 		self.city_bg = city_bg
 		self.gndcol1 = gndcol1
@@ -367,6 +369,9 @@ class Track:
 			ret['track_width'] = self.track_width
 		if self.shoulder_width != defaults['shoulder_width']:
 			ret['shoulder_width'] = self.shoulder_width
+
+		if self.street:
+			ret['street'] = self.street
 
 		if self.gndcol1 is not None:
 			ret['gndcol1'] = self.gndcol1
@@ -589,6 +594,9 @@ def draw_track(track, scale=16):
 			roadcol = 5
 			polygon(segment.points(-track_width, track_width), PALETTE[roadcol], stroke=2)
 
+			if track.street and (idx % 4 == 0):
+				polygon(segment.points(-3/32, 3/32), PALETTE[7], stroke=0)
+
 		# Line across start of each section
 
 		for section in sections:
@@ -667,6 +675,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		start_heading=start_heading,
 		track_width=track_width,
 		shoulder_width=shoulder_width,
+		street=yaml_track.get('street', False),
 		city_bg=yaml_track.get('city_bg', False),
 		tree_bg=yaml_track.get('tree_bg', False),
 		gndcol1=yaml_track.get('gndcol1', None),

@@ -138,6 +138,7 @@ tracks:
     length_scale: 1
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
     track_width: 2.5
+    street: true
     city_bg: true
     gndcol1: 6
     gndcol2: 7
@@ -262,3 +263,14 @@ tracks:
     - {length: 20, pitch: -1, gndcol1: 1, gndcol2: 12}
     - {length: 20}
     - {length: 12, angle: 0.5}
+
+  - name: "dragstrip"
+    track_width: 4
+    street: true
+    city_bg: true
+    gndcol1: 4
+    gndcol2: 15
+    sections:
+    - {length: 16}
+    - {length: 1008}
+
