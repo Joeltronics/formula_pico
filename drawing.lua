@@ -226,7 +226,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 			-- TODO: add smoke, or other indicator of scraping
 		end
 
-		if car_abs_x >= 1 then
+		if car_abs_x >= road.half_width then
 			-- On grass; bumpy
 			y -= flr(rnd(2))
 			-- TODO: add "flinging grass" sprite
@@ -239,7 +239,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 			img={
 				24 * ceil(abs(min(car.sprite_turn, 4))),
 				0, 24, 16},
-			siz={0.75, 0.5},
+			siz={car_width, car_height},
 			palt=11,
 			palette=car.palette,
 			flip=car.sprite_turn < 0,
@@ -293,8 +293,9 @@ function draw_road()
 
 	-- Starting coords
 
-	-- TODO: if off track, move camera even further to make sure care is in frame
-	cam_x = cam_x_scale * cars[1].x
+	-- TODO: if off track, move camera even further to make sure car is in frame
+	-- TODO: as with car draw coords below, figure out why 0.5 is necessary
+	cam_x = cam_x_scale * 0.5 * cars[1].x
 
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
@@ -342,6 +343,13 @@ function draw_road()
 
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
+		-- DEBUG
+		-- if (debug and i == 1) then
+		-- 	for n = -5, 5 do
+		-- 		line(x1 - n*scale1, y1, x2 - n*scale2, y2, 10)
+		-- 	end
+		-- end
+
 		if i < sprite_draw_distance then
 			if sumct == road[1].length then
 				add_bg_sprite(sp, sumct, seg, bg_objects['finishline'], -1, x2, y2, scale2, clp)
@@ -358,7 +366,8 @@ function draw_road()
 			for pos = #car_positions,1,-1 do
 				local car = cars[car_positions[pos]]
 				if car.section_idx == sect and car.segment_idx == seg then
-					local car_x = x_prev + road.track_width*car.x + car.subseg * xd
+					-- TODO: figure out why 2x is necessary - seem to be confusing width & half-width somewhere
+					local car_x = x_prev + car.subseg * xd + 2*car.x
 					local car_y = y_prev + car.subseg * yd
 					local car_z = z_prev + car.subseg * zd
 					local this_car_screen_x, this_car_screen_y, this_car_scale = project(car_x, car_y, car_z)
@@ -492,6 +501,8 @@ function draw_debug_overlay()
 	print("mem:" .. round(stat(0) * 100 / 2048))
 	print(cars[1].section_idx .. "," .. cars[1].segment_idx .. ',' .. cars[1].subseg)
 	print('carx:' .. cars[1].x)
+	-- print('hw:' .. road.half_width)
+	-- print('wall:' .. section.wall)
 
 	print('st:' .. cars[1].sprite_turn)
 

@@ -123,6 +123,7 @@ function init_track()
 
 	road.start_heading = road.start_heading or start_heading
 	road.track_width = road.track_width or track_width
+	road.half_width = 0.5 * road.track_width
 
 	if road.sections_compressed then
 		for section_compressed in all(split(road.sections_compressed, ';')) do
@@ -169,8 +170,10 @@ function init_track()
 		section.max_speed_pre_apex = max_speed
 
 		section.tnl = section.tnl or false
-		section.wall = section.wall or 1.5
-		if (section.tnl) section.wall = 0.85
+
+		section.wall = section.wall or 2 * road.half_width
+		-- TODO: why is this 2x needed?
+		if (section.tnl) section.wall = road.half_width + 2*shoulder_width
 
 		if (section.bgl) section.bgl = bg_objects[section.bgl]
 		if (section.bgc) section.bgc = bg_objects[section.bgc]
@@ -276,8 +279,8 @@ function tick_debug()
 		if (key == '⌂') player_car.subseg += 1
 		if (key == '웃') player_car.subseg -= 1
 		if (key == ':') player_car.subseg = 0
-		if (key == 'h') player_car.x -= 0.125
-		if (key == 'l') player_car.x += 0.125
+		if (key == 'h') player_car.x -= 0.25
+		if (key == 'l') player_car.x += 0.25
 		if (key == '♥') player_car.x -= 1
 		if (key == '⬅️') player_car.x += 1
 		if (key == '7') cam_x_scale = max(cam_x_scale - 0.25, 0)
@@ -305,6 +308,7 @@ function tick_car(car, accel_brake, steering)
 	local car_x_prev = car_x
 	local section_idx, segment_idx, segment_total = car.section_idx, car.segment_idx, car.segment_total
 	local speed, gear = car.speed, car.gear
+	local half_width = road.half_width
 
 	-- Determine acceleration & speed
 	-- TODO: look ahead for braking point, slow down; can also speed up after apex
@@ -334,7 +338,7 @@ function tick_car(car, accel_brake, steering)
 		section_max_speed = min(section_max_speed, wall_max_speed)
 		-- TODO
 
-	elseif abs(car_x) >= 1 then
+	elseif abs(car_x) >= half_width then
 		-- On grass
 		-- Decrease max speed significantly
 		-- Slower acceleration
@@ -343,7 +347,7 @@ function tick_car(car, accel_brake, steering)
 		section_max_speed = min(section_max_speed, grass_max_speed)
 		-- TODO
 
-	elseif abs(car_x) >= 0.75 then
+	elseif abs(car_x) >= 0.75 * half_width then
 		-- On curb
 		-- Max speed unaffected
 		-- Decrease acceleration
@@ -390,14 +394,15 @@ function tick_car(car, accel_brake, steering)
 			-- TODO: compensate for corners, i.e. push toward outside of corners
 			if steering ~= 0 then
 				if speed > 0 then
-					car_x += steering * min(8*speed, 1) / 64
+					car_x += steering * min(8*speed, 1) / 48
 				end
 			end
 		end
 	end
 
-	-- TODO: make wall distance changes gradual
-	car_x = max(-section.wall, min(section.wall, car_x))
+	-- TODO: make wall distance changes gradual from 1 section to next
+	local wall_clip = section.wall - 0.5*car_width
+	car_x = max(-wall_clip, min(wall_clip, car_x))
 	-- TODO: add very slight "bounce back from wall" physics
 
 	car.x = car_x
@@ -413,7 +418,7 @@ function tick_car(car, accel_brake, steering)
 
 	if (abs(tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
 	-- TODO: this should happen at drawing time; also it should be relative to cam_x
-	if (abs(car_x) > 0.5) car_sprite_turn -= sgn(car_x)
+	if (abs(car_x) > 0.5*half_width) car_sprite_turn -= sgn(car_x)
 	car.sprite_turn = car_sprite_turn
 
 	-- Move forward

@@ -27,6 +27,8 @@ wall_max_speed = 0.25
 
 speed_to_kph = 350
 
+car_width, car_height = 0.75, 0.5
+
 cam_dy, cam_dz = 2, 2
 cam_x_scale = 0.75
 

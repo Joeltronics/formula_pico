@@ -107,7 +107,7 @@ function update_sound()
 		-- TODO: different sound effect from grass
 		if (harmonic_prev ~= -3) sfx(1, 1)
 		harmonic_prev = -3
-	elseif abs(car_x) >= 1 then
+	elseif abs(car_x) >= road.half_width then
 		-- Off the track
 		if (harmonic_prev ~= -3) sfx(1, 1)
 		harmonic_prev = -3
