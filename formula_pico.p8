@@ -32,7 +32,6 @@ function _draw()
 	if road then
 		draw_bg()
 		draw_road()
-		draw_car()
 		draw_minimap()
 		draw_hud()
 		if debug then

@@ -208,27 +208,43 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 		img=bg.img,
 		palette=bg.palette,
 		palt=bg.palt,
-		flip_x=(side > 0 and bg.flip_r),
+		flip_x=(bg.flip or side > 0 and bg.flip_r),
 		clp={clp[1],clp[2],clp[3],clp[4]}
 	})
 end
 
 function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
-	-- TODO: use car.sprite_turn (as well as dx value) to draw correct sprite
-	-- FIXME: there's a ton of judder with these!
-	local subseg = car.subseg
+
+	-- TODO: may want to offset drawing location by 1 pixel in some cases?
+	-- TODO: use track x value to add extra turn? (i.e. cars ahead after a corner)
+
+	local car_abs_x = abs(car.x)
+
+	if car.speed > 0 then
+		if car_abs_x >= road[car.section_idx].wall then
+			-- Touching wall
+			-- TODO: add smoke, or other indicator of scraping
+		end
+
+		if car_abs_x >= 1 then
+			-- On grass; bumpy
+			y -= flr(rnd(2))
+			-- TODO: add "flinging grass" sprite
+		end
+	end
+
 	add_bg_sprite(
 		sprite_list, sumct, seg,
 		{
-			img={0, 0, 24, 16},
-			siz={0.75,0.5},
+			img={
+				24 * ceil(abs(min(car.sprite_turn, 4))),
+				0, 24, 16},
+			siz={0.75, 0.5},
 			palt=11,
 			palette=car.palette,
+			flip=car.sprite_turn < 0,
 		},
-		0,
-		x, y, scale,
-		clp)
-
+		0, x, y, scale, clp)
 end
 
 function draw_bg_sprite(s)
@@ -255,6 +271,8 @@ function draw_bg_sprite(s)
 
 	if (s.palette) pal()
 	if (s.palt) palt()
+	-- pal()
+	-- palt()
 end
 
 function draw_road()
@@ -334,14 +352,13 @@ function draw_road()
 			add_bg_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
 			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
 
+			-- Iterate in reverse order of car positions, in order to prevent Z-order problems
 			-- TODO: optimize this, don't need to iterate all cars every segment
-			-- FIXME: z-order problems:
-			--    - cars in same segment can end up in wrong order
-			--    - we don't use this for player car sprite, so it's always drawn on top
-			for car_idx = 2, #cars do
-				local car = cars[car_idx]
+			-- FIXME: there still could be z-order problems if 1 car is lapped
+			for pos = #car_positions,1,-1 do
+				local car = cars[car_positions[pos]]
 				if car.section_idx == sect and car.segment_idx == seg then
-					local car_x = x_prev + car.x + car.subseg * xd
+					local car_x = x_prev + road.track_width*car.x + car.subseg * xd
 					local car_y = y_prev + car.subseg * yd
 					local car_z = z_prev + car.subseg * zd
 					local this_car_screen_x, this_car_screen_y, this_car_scale = project(car_x, car_y, car_z)
@@ -461,79 +478,22 @@ function draw_hud()
 	print(cars[1].gear)
 end
 
-function draw_car()
-
-	if (cars[1].palette) pal(cars[1].palette, 0)
-	palt(0, false)
-	palt(11, true)
-
-	local car_x = cars[1].x
-	local speed = cars[1].speed
-
-	local x, y, scale = project(car_x, cam_dy, cam_dz)
-
-	-- TODO: extra sprites for braking or on grass
-
-	if speed > 0 then
-		if abs(car_x) >= road[cars[1].section_idx].wall then
-			-- Touching wall
-			-- TODO: add smoke, or other indicator of scraping
-		end
-
-		if abs(car_x) >= 1 then
-			-- On grass; bumpy
-			y -= flr(rnd(2))
-			-- TODO: add "flinging grass" sprite
-		end
-	end
-
-	-- DEBUG
-	local use_scale = false
-	-- local use_scale = (scale ~= 32)
-
-	local car_sprite_turn = cars[1].sprite_turn
-
-	if use_scale then
-		camera()
-		local size = scale * 24 / 32
-		sspr(0, 0, 24, 16, x - size/2, y - size, size, size)
-	else
-		-- Car sprite is 24x16, x & y define bottom center
-		camera(-x + 12, -y + 16)
-		local flip = car_sprite_turn < 0
-		if abs(car_sprite_turn) > 2 then
-			spr(9, 0, 0, 3, 2, flip)
-		elseif abs(car_sprite_turn) > 1 then
-			spr(6, 0, 0, 3, 2, flip)
-		elseif car_sprite_turn ~= 0 then
-			spr(3, 0, 0, 3, 2, flip)
-		else
-			spr(0, 0, 0, 3, 2)
-		end
-		camera()
-	end
-
-	pal()
-	palt()
-end
-
 function draw_cpu_only_overlay()
-	cursor(100, 0, 7)
-	local cpu = round(stat(1) * 100)
-	print("cpu:" .. cpu)
+	cursor(100, 0, 5)
+	print("cpu:" .. round(stat(1) * 100))
 end
 
 function draw_debug_overlay()
-	local section = road[cars[1].section_idx]
-	local cpu = round(stat(1) * 100)
-	local mem = round(stat(0) * 100 / 2048)
-	local car_x = cars[1].x
 
-	cursor(88, 0, 7)
-	print("cpu:" .. cpu)
-	print("mem:" .. mem)
+	-- local section = road[cars[1].section_idx]
+
+	cursor(88, 0, 5)
+	print("cpu:" .. round(stat(1) * 100))
+	print("mem:" .. round(stat(0) * 100 / 2048))
 	print(cars[1].section_idx .. "," .. cars[1].segment_idx .. ',' .. cars[1].subseg)
-	print('carx:' .. car_x)
+	print('carx:' .. cars[1].x)
+
+	print('st:' .. cars[1].sprite_turn)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then
 		print('cam:' .. cam_x .. ',' .. cam_dy .. ',' .. cam_dz)
