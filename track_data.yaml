@@ -137,7 +137,7 @@ tracks:
     length_km: 3.34
     length_scale: 1
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
-    track_width: 2
+    track_width: 2.5
     city_bg: true
     gndcol1: 6
     gndcol2: 7
@@ -168,7 +168,7 @@ tracks:
     - {length: 10, angle: 12, pitch: -0.5}  # 5: Mirabeau Haute
     - {length: 4, angle: -3, pitch: -0.5}
     - {length: 10, pitch: -0.5}
-    - {length: 8, angle: -16, pitch: -0.25}  # 6: Hairpin
+    - {length: 10, angle: -16, pitch: -0.25}  # 6: Hairpin
     - {length: 8, pitch: -0.5}
     - {length: 8, angle: 9, pitch: -0.5}  # 7: Mirabeau Bas
     - {length: 10, pitch: -0.75}

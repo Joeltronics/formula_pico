@@ -72,7 +72,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 
 	-- Road
 
-	local w1, w2 = track_width*scale1, track_width*scale2
+	local w1, w2 = road.track_width*scale1, road.track_width*scale2
 
 	filltrapz(x1, y1, w1, x2, y2, w2, 5)
 
@@ -136,7 +136,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 end
 
 function get_tunnel_rect(x, y, scale)
-	local w, h = (2*track_width + 0.4)*scale, 4*scale
+	local w, h = (2*road.track_width + 0.4)*scale, 4*scale
 	local x1, y1, x2, y2 = ceil(x - w/2), ceil(y - h), ceil(x + w/2), ceil(y)
 	return x1, y1, x2, y2
 end
@@ -275,15 +275,16 @@ function draw_road()
 
 	-- Starting coords
 
-	cam_x = 0.75 * cars[1].x
+	-- TODO: if off track, move camera even further to make sure care is in frame
+	cam_x = cam_x_scale * cars[1].x
 
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
-	-- local cx, cy, cz = skew(track_width*cam_x, 0, subseg, xd, yd)
+	-- local cx, cy, cz = skew(road.track_width*cam_x, 0, subseg, xd, yd)
 	-- local x, y, z = -cx, -cy + cam_dy, -cz + cam_dz
 	-- Option 2
 	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
-	local x, y, z = -cx - track_width*cam_x, -cy + cam_dy, -cz + cam_dz
+	local x, y, z = -cx - road.track_width*cam_x, -cy + cam_dy, -cz + cam_dz
 
 	-- sprites
 	local sp = {}
@@ -360,7 +361,7 @@ function draw_road()
 		-- Advance
 		xd += section.tu
 		yd -= section.dpitch
-		sect, seg, _ = advance(sect, seg)
+		sect, seg = advance(sect, seg)
 		section = road[sect]
 		x1, y1, scale1 = x2, y2, scale2
 		ptnl = tnl

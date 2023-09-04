@@ -27,8 +27,7 @@ function advance(section_idx, segment_idx)
 		section_idx += 1
 		if (section_idx > #road) section_idx = 1
 	end
-	if (section_idx == 1 and segment_idx == 1) totseg = 1
-	return section_idx, segment_idx, road[section_idx].sumct + segment_idx
+	return section_idx, segment_idx
 end
 
 function reverse(section_idx, segment_idx)
@@ -38,5 +37,5 @@ function reverse(section_idx, segment_idx)
 		if (section_idx == 0) section_idx = #road
 		segment_idx = road[section_idx].length
 	end
-	return section_idx, segment_idx, road[section_idx].sumct + segment_idx
+	return section_idx, segment_idx
 end

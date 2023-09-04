@@ -28,6 +28,7 @@ wall_max_speed = 0.25
 speed_to_kph = 350
 
 cam_dy, cam_dz = 2, 2
+cam_x_scale = 0.75
 
 -- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
 draw_distance = 90
@@ -72,6 +73,8 @@ total_segment_count = nil
 --
 -- Other runtime globals
 --
+
+frozen = false
 
 -- TODO: rename "track"
 road = nil  -- Setting this also acts as "game started" flag
