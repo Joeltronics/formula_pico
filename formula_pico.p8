@@ -6,6 +6,7 @@ __lua__
 -- License: CC BY-NC-SA 4.0
 
 #include generated_data.lua
+#include init_track.lua
 #include globals.lua
 #include bg_objects.lua
 #include utils.lua
