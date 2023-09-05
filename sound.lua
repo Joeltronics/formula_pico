@@ -80,7 +80,7 @@ function update_sound()
 
 	-- Slow down SFX at high speeds for less audible stepping
 	local sfx_speed = sfx_speed_by_gear[1]
-	if (cars[1].accelerating) sfx_speed = sfx_speed_by_gear[cars[1].gear]
+	if (cars[1].engine_accel_brake > 0) sfx_speed = sfx_speed_by_gear[cars[1].gear]
 	set_speed(2, sfx_speed)
 	set_speed(3, sfx_speed)
 
@@ -114,7 +114,7 @@ function update_sound()
 	else
 		local harmonic = fundamental + engine_harmonic_interval
 		local harm_instr, harm_vol = 4, 2 -- engine braking
-		if (cars[1].accelerating) harm_instr, harm_vol = 1, 2 -- driving
+		if (cars[1].engine_accel_brake > 0) harm_instr, harm_vol = 1, 2 -- driving
 		set_note(3, 0, make_note(harmonic_prev, harm_instr, harm_vol, 2))
 		set_note(3, 1, make_note(harmonic, harm_instr, harm_vol, 1))
 		set_note(3, 2, make_note(harmonic, harm_instr, harm_vol, 2))

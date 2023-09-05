@@ -22,6 +22,11 @@ coast_decel_rel = 255/256
 coast_decel_abs = 1/2048
 brake_decel = 1/128
 
+steer_dx_max = 1/32
+steer_accum_incr_rate_accel_brake = 1/32
+steer_accum_incr_rate_coast = 3/64
+steer_accum_decr_rate = 1/8
+
 grass_max_speed = 0.125
 wall_max_speed = 0.25
 

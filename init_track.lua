@@ -66,7 +66,13 @@ function init_track()
 
 		section.tnl = section.tnl or false
 
-		section.wall = section.wall or 2 * road.half_width
+		if section.wall then
+			section.wall_is_invisible = false
+		else
+			section.wall = 2 * road.half_width
+			section.wall_is_invisible = true
+		end
+
 		-- TODO: why is this 2x needed?
 		if (section.tnl) section.wall = road.half_width + 2*shoulder_width
 

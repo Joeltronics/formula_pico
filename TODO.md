@@ -1,6 +1,7 @@
 ## Gameplay
 
-Improve cornering logic
+Improve steering/cornering logic
+* See comments in the code
 
 Improve racing line & max speed calculation
 * Do it in the Python data generation script

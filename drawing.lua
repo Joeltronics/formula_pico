@@ -244,16 +244,22 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		end
 	end
 
+	local sprite_turn = car.sprite_turn
+
+	local d_center = x - 64
+	if (abs(d_center) > 16) sprite_turn -= sgn(d_center)
+	if (abs(d_center) > 48) sprite_turn -= sgn(d_center)
+
 	add_bg_sprite(
 		sprite_list, sumct, seg,
 		{
 			img={
-				24 * ceil(abs(min(car.sprite_turn, 4))),
+				24 * min(4, ceil(abs(sprite_turn))),
 				0, 24, 16},
 			siz={car_width, car_height},
 			palt=11,
 			palette=car.palette,
-			flip=car.sprite_turn < 0,
+			flip=sprite_turn < 0,
 		},
 		0, x, y, scale, clp)
 end

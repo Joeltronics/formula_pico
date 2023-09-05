@@ -46,7 +46,8 @@ function init_cars(team_idx, ghost, num_other_cars)
 			palette=palette,
 			ai=ai,
 			ghost=is_ghost,
-			accelerating=false,
+			engine_accel_brake=0,
+			steer_accum=0,
 			heading=start_heading,
 			sprite_turn=0,
 			finished=false,
@@ -136,10 +137,9 @@ function tick_debug()
 	end
 end
 
-function tick_car(car, accel_brake, steering)
+function tick_car(car, accel_brake_input, steering_input)
 
-	local car_x = car.x
-	local car_x_prev = car_x
+	local car_x, car_x_prev = car.x, car.x
 	local section_idx, segment_idx, segment_total = car.section_idx, car.segment_idx, car.segment_total
 	local speed, gear = car.speed, car.gear
 	local half_width = road.half_width
@@ -192,24 +192,35 @@ function tick_car(car, accel_brake, steering)
 		-- TODO
 	end
 
+	-- Only steer when moving (but ramp this effect up from 0)
+	local steering_scale = min(16*speed, 1)
+	local steering_actual = steering_input * steering_scale
+
 	if not frozen then
-		car.accelerating = false
 		if speed > section_max_speed then
 			-- Brake (to section speed)
 			speed = max(speed - brake_decel, section_max_speed)
 
-		elseif car.ai or accel_brake > 0 then
+			if section_max_speed == 1 then
+				car.engine_accel_brake = 1
+			else
+				car.engine_accel_brake = -1
+			end
+
+		elseif car.ai or accel_brake_input > 0 then
 			-- Accelerate
 			speed = min(speed + accel, section_max_speed)
-			car.accelerating = true
+			car.engine_accel_brake = 1
 
-		elseif accel_brake < 0 then
+		elseif accel_brake_input < 0 then
 			-- Brake (to zero)
 			speed = max(speed - brake_decel, 0)
+			car.engine_accel_brake = -1
 		else
 			-- Coast
 			-- TODO: this should be affected by slope even more than regular acceleration is
 			speed = max(speed*coast_decel_rel - coast_decel_abs, 0)
+			car.engine_accel_brake = 0
 		end
 
 		gear = min(speed, 0.99) * #accel_by_gear + 1
@@ -221,47 +232,82 @@ function tick_car(car, accel_brake, steering)
 
 		-- Steering & corners
 
+		-- TODO: compensate for corners, i.e. push toward outside of corners
+
 		if car.ai then
-			car_x = 0.0  -- TODO: steer, following racing line
+			-- TODO: steer, following racing line
+			steering_actual = 0
 		else
-			-- Steering: only when moving (or going up)
-			-- TODO: compensate for corners, i.e. push toward outside of corners
-			if steering ~= 0 then
-				if speed > 0 then
-					car_x += steering * min(8*speed, 1) / 48
+			--[[ Steering accumulator:
+			Don't just start turning immediately; add some acceleration in the X axis
+			This essentially represents that the car isn't pointing in quite the same direction as the track
+			It also just feels a bit more realistic
+			Also to penalize turning while accelerating/braking
+			]]
+			local steer_accum = car.steer_accum
+
+			if speed == 0 then
+				steer_accum = 0
+			else
+				if sgn0(steering_actual) ~= sgn0(steer_accum) then
+					steer_accum = toward_zero(steer_accum, steer_accum_decr_rate)
 				end
+
+				local steer_accum_incr_rate = steer_accum_incr_rate_coast
+				if (accel_brake_input ~= 0) steer_accum_incr_rate = steer_accum_incr_rate_accel_brake
+
+				steer_accum = clip_num(steer_accum + steering_actual * steer_accum_incr_rate, -1, 1)
 			end
+			car_x += steer_dx_max * steer_accum * steering_scale
+			car.steer_accum = steer_accum
 		end
 	end
 
 	-- TODO: make wall distance changes gradual from 1 section to next
 	local wall_clip = section.wall - 0.5*car_width
-	car_x = max(-wall_clip, min(wall_clip, car_x))
-	-- TODO: add very slight "bounce back from wall" physics
-
+	if section.wall_is_invisible then
+		if abs(car_x) > wall_clip then
+			car.steer_accum = 0
+		end
+	elseif abs(car_x) >= wall_clip then
+		-- Bounce back from wall slightly
+		car.steer_accum = -sgn(car_x)
+	end
+	car_x = clip_num(car_x, -wall_clip, wall_clip)
 	car.x = car_x
+	local dx = car_x - car_x_prev
 
-	-- Car direction to draw
-	-- Based on:
-	--    - Did we move left/right
-	--    - Is road turning
-	--    - Are we near edge of screen
+	-- Base car direction to draw
+	-- (Extra may be added at draw time to account for position on screen)
 
-	local car_sprite_turn = car_x - car_x_prev
-	if (car_sprite_turn ~= 0) car_sprite_turn = sgn(car_sprite_turn)
+	-- Did we move left/right?
+	local car_sprite_turn = sgn0(dx)
+ 
+	-- Is accumulator saturated?
+	if (abs(car.steer_accum) >= 1) car_sprite_turn += sgn(car.steer_accum)
 
+	-- Is road turning?
 	if (abs(tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
-	-- TODO: this should happen at drawing time; also it should be relative to cam_x
-	if (abs(car_x) > 0.5*half_width) car_sprite_turn -= sgn(car_x)
+	-- TODO: 2nd level, if turning sharply
+
 	car.sprite_turn = car_sprite_turn
 
 	-- Move forward
 
 	-- TODO:
 	--   - Adjust relative to tu and x position, i.e. inside of section is faster, outside is slower
-	--   - Increment slightly less while steering, but compensated for tu
-	--   - Faster while turning into section
-	local dz = 0.5 * speed_scale * speed
+	--   - Faster while turning into section?
+
+	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
+	-- But also account for steering & accel input, to account for slight loss of grip (and penalize weaving)
+
+	-- Reusing speed var here - it's already been applied to car above
+	speed *= 0.5 * speed_scale
+
+	-- local dz = sqrt(max(0, speed*speed - dx*dx)) -- accurate; not necessarily more realistic feeling
+	local dz = max(0, speed - 0.25*abs(dx)) -- simplified
+
+	if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_actual)/64)
 
 	if (frozen) dz = 0
 
@@ -300,14 +346,14 @@ function game_tick()
 		tick_debug()
 	end
 
-	local steering, accel_brake = 0, 0
-	if (btn(0)) steering -= 1
-	if (btn(1)) steering += 1
-	if (btn(2)) accel_brake += 1
-	if (btn(3)) accel_brake -= 1
+	local steering_input, accel_brake_input = 0, 0
+	if (btn(0)) steering_input -= 1
+	if (btn(1)) steering_input += 1
+	if (btn(2)) accel_brake_input += 1
+	if (btn(3)) accel_brake_input -= 1
 
 	for car in all(cars) do
-		tick_car(car, accel_brake, steering)
+		tick_car(car, accel_brake_input, steering_input)
 	end
 
 	-- TODO: don't do this on every update; only if there was an overtake

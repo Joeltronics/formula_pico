@@ -3,6 +3,22 @@ function round(val)
 	return flr(val + 0.5)
 end
 
+function sgn0(val)
+	return val == 0 and 0 or sgn(val)
+end
+
+function clip_num(val, minval, maxval)
+	return max(minval, min(maxval, val))
+end
+
+function toward_zero(val, inc)
+	if val >= 0 then
+		return max(0, val - inc)
+	else
+		return min(0, val + inc)
+	end
+end
+
 function print_centered(text, x, y, col)
 	print(text, x - 2*#text, y, col)
 end
