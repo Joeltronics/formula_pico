@@ -311,8 +311,7 @@ function draw_road()
 	-- Starting coords
 
 	-- TODO: if off track, move camera even further to make sure car is in frame
-	-- TODO: as with car draw coords below, figure out why 0.5 is necessary
-	cam_x = cam_x_scale * 0.5 * cars[1].x
+	cam_x = cam_x_scale * cars[1].x * (2 / road.track_width)
 
 	-- TODO: figure out which is the better way to do this
 	-- Option 1

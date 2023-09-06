@@ -42,6 +42,9 @@ center_line_width = 3/32
 car_width, car_height = 0.75, 0.5
 
 cam_dy, cam_dz = 2, 2
+
+-- At 0, the camera is always centered on track and the car moves
+-- At 1, the car is always centered on track and the camera moves
 cam_x_scale = 0.75
 
 -- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
