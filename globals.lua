@@ -81,6 +81,7 @@ debug = true
 print_cpu = true
 enable_sound = true
 draw_racing_line = true
+brake_assist = true
 collisions = false
 total_segment_count = nil
 

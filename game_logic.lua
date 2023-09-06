@@ -161,7 +161,7 @@ function clip_wall(car, section)
 
 	-- TODO: make wall distance changes gradual from 1 section to next
 
-	local car_x, wall_clip = car.x, section.wall - 0.5*car_width
+	local car_x, wall_clip = car.x, section.wall_clip
 
 	car.touched_wall = false
 
@@ -212,71 +212,87 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	local speed, gear, car_x = car.speed, car.gear, car.x
 
-	local section_max_speed = section.max_speed_pre_apex
-	if (section.apex_seg and car.segment_idx >= section.apex_seg) section_max_speed = section.max_speed_post_apex
+	local limit_speed = 1
+	local section_recommended_speed = section.max_speed_pre_apex
+	if (section.apex_seg and car.segment_idx >= section.apex_seg) section_recommended_speed = section.max_speed_post_apex
 
 	-- Special check, for now while still not having a proper cornering grip model:
 	-- hard-limit speed at apex, in case of insufficient braking
 	-- TODO: change this to understeer instead
-	if (section.apex_seg and car.segment_idx == section.apex_seg) speed = min(speed, section.max_speed_pre_apex)
+	if ((brake_assist or car.ai) and section.apex_seg and car.segment_idx == section.apex_seg) speed = min(speed, section.max_speed_pre_apex)
 
 	local accel = accel_by_gear[flr(gear)]
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
 
-	if abs(car_x) >= section.wall then
+	local decel = brake_decel
+
+	if abs(car_x) >= section.wall_clip then
 		-- Touching wall
 		-- Decrease max speed significantly
 		-- Slower acceleration
 		-- Faster braking
 		-- Increase coasting deceleration significantly
 		-- Increase tire deg
-		section_max_speed = min(section_max_speed, wall_max_speed)
-		-- TODO
+		limit_speed = min(limit_speed, wall_max_speed)
+		decel *= 4
+		-- TODO: more parameters
+	end
 
-	elseif abs(car_x) >= road.half_width then
+	if abs(car_x) >= road.half_width then
 		-- On grass
 		-- Decrease max speed significantly
-		-- Slower acceleration
-		-- Slower braking
+		-- Slower acceleration (unless in 1st gear)
+		-- Faster deceleration while above limit, but otherwise slower braking
 		-- Increase coasting deceleration significantly
-		section_max_speed = min(section_max_speed, grass_max_speed)
-		-- TODO
+		limit_speed = min(limit_speed, grass_max_speed)
+		if (gear > 1) accel *= 0.5
+		decel *= 2
+		-- TODO: more parameters
 
 	elseif abs(car_x) >= 0.75 * road.half_width then
 		-- On curb
 		-- Max speed unaffected
-		-- Decrease acceleration
-		-- Decrease braking
+		-- Slower acceleration (unless in 1st gear)
+		-- Slower braking
 		-- Increase coasting deceleration
 		-- Increase tire deg slightly
-
-		-- TODO
+		if (gear > 1) accel *= 0.5
+		-- TODO: more parameters
 	end
 
 	-- Apply acceleration
 
-	if speed > section_max_speed then
+	if speed > limit_speed then
 		-- Brake (to section speed)
-		speed = max(speed - brake_decel, section_max_speed)
+		speed = max(speed - decel, limit_speed)
 
-		if section_max_speed == 1 then
+		if limit_speed == 1 then
 			car.engine_accel_brake = 1
 		else
 			car.engine_accel_brake = -1
 		end
 
+	elseif (brake_assist or car.ai) and speed > section_recommended_speed then
+		-- Brake (to recommended speed)
+		accel_brake_input = -1
+		speed = max(speed - decel, section_recommended_speed)
+		car.engine_accel_brake = -1
+
 	elseif car.ai or accel_brake_input > 0 then
 		-- Accelerate
-		speed = min(speed + accel, section_max_speed)
+		accel_brake_input = 1
+		speed = min(speed + accel, limit_speed)
 		car.engine_accel_brake = 1
 
 	elseif accel_brake_input < 0 then
 		-- Brake (to zero)
 		speed = toward_zero(speed, brake_decel)
 		car.engine_accel_brake = -1
+
 	else
 		-- Coast
 		-- TODO: this should be affected by slope even more than regular acceleration is
+		-- (which isn't currently at all, but should be in the future)
 		speed = max(speed*coast_decel_rel - coast_decel_abs, 0)
 		car.engine_accel_brake = 0
 	end
@@ -287,6 +303,8 @@ function tick_car_speed(car, section, accel_brake_input)
 	if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
 
 	car.speed, car.gear, car.rpm = speed, gear, rpm
+
+	return accel_brake_input
 end
 
 function tick_car_steering(car, steering_input, accel_brake_input)
@@ -370,9 +388,9 @@ function tick_car(car, accel_brake_input, steering_input)
 		return
 	end
 
-	tick_car_speed(car, section, accel_brake_input)
+	local accel_brake_input_actual = tick_car_speed(car, section, accel_brake_input)
 
-	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input)
+	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input_actual)
 
 	clip_wall(car, section)
 
@@ -394,8 +412,9 @@ function game_tick()
 	local steering_input, accel_brake_input = 0, 0
 	if (btn(0)) steering_input -= 1
 	if (btn(1)) steering_input += 1
-	if (btn(2)) accel_brake_input += 1
-	if (btn(3)) accel_brake_input -= 1
+	-- If pressing both gas & brakes, brakes take priority
+	if (btn(2) or btn(4)) accel_brake_input = 1
+	if (btn(3) or btn(5)) accel_brake_input = -1
 
 	for car in all(cars) do
 		tick_car(car, accel_brake_input, steering_input)

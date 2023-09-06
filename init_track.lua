@@ -76,6 +76,8 @@ function init_track()
 		-- TODO: why is this 2x needed?
 		if (section.tnl) section.wall = road.half_width + 2*shoulder_width
 
+		section.wall_clip = section.wall - 0.5*car_width
+
 		if (section.bgl) section.bgl = bg_objects[section.bgl]
 		if (section.bgc) section.bgc = bg_objects[section.bgc]
 		if (section.bgr) section.bgr = bg_objects[section.bgr]
