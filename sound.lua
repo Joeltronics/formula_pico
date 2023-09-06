@@ -63,7 +63,11 @@ function update_sound()
 
 	if (not enable_sound) return
 
-	if cars[1].speed == 0 then
+	local player_car = cars[1]
+
+	local touched_wall, off_track = player_car.touched_wall, abs(player_car.x) >= road.half_width
+
+	if player_car.speed == 0 then
 		-- Idling
 		sfx(-1, 1)
 		harmonic_prev = -1
@@ -73,14 +77,14 @@ function update_sound()
 	end
 
 	-- TODO: scale linearly by frequency, not pitch (need to take log - or use lookup table)
-	local fundamental = flr(cars[1].rpm * 36)
+	local fundamental = flr(player_car.rpm * 36)
 
 	-- TODO: there's probably a rare glitch here, if acceleration/off-track state changes but not fundamental
-	if (fundamental == fundamental_prev) return
+	if (fundamental == fundamental_prev and not (off_track or touched_wall)) return
 
 	-- Slow down SFX at high speeds for less audible stepping
 	local sfx_speed = sfx_speed_by_gear[1]
-	if (cars[1].engine_accel_brake > 0) sfx_speed = sfx_speed_by_gear[cars[1].gear]
+	if (player_car.engine_accel_brake > 0) sfx_speed = sfx_speed_by_gear[player_car.gear]
 	set_speed(2, sfx_speed)
 	set_speed(3, sfx_speed)
 
@@ -90,7 +94,7 @@ function update_sound()
 	sfx(2, 0)
 	fundamental_prev = fundamental
 
-	local section = road[cars[1].section_idx]
+	local section = road[player_car.section_idx]
 
 	-- Add echo in tunnel
 	if section.tnl ~= tnl_prev then
@@ -101,16 +105,18 @@ function update_sound()
 		tnl_prev = section.tnl
 	end
 
-	local car_x = cars[1].x
-	if abs(car_x) >= section.wall then
+	if touched_wall then
 		-- Touching wall
 		-- TODO: different sound effect from grass
+		-- TODO: make this effect last for a few ticks?
 		if (harmonic_prev ~= -3) sfx(1, 1)
 		harmonic_prev = -3
-	elseif abs(car_x) >= road.half_width then
+
+	elseif off_track then
 		-- Off the track
 		if (harmonic_prev ~= -3) sfx(1, 1)
 		harmonic_prev = -3
+
 	else
 		local harmonic = fundamental + engine_harmonic_interval
 		local harm_instr, harm_vol = 4, 2 -- engine braking

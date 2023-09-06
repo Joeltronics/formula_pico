@@ -246,6 +246,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 
 	local sprite_turn = car.sprite_turn
 
+	-- TODO: don't have to add integers, can add fractional amount
 	local d_center = x - 64
 	if (abs(d_center) > 16) sprite_turn -= sgn(d_center)
 	if (abs(d_center) > 48) sprite_turn -= sgn(d_center)

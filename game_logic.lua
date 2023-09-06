@@ -52,6 +52,7 @@ function init_cars(team_idx, ghost, num_other_cars)
 			sprite_turn=0,
 			finished=false,
 			in_pit=false,
+			touched_wall=false,
 		})
 
 		del(teams, team_idx)
@@ -137,27 +138,87 @@ function tick_debug()
 	end
 end
 
-function tick_car(car, accel_brake_input, steering_input)
+function update_sprite_turn(car, section, dx)
+	-- Base car direction to draw
+	-- (Extra may be added at draw time to account for position on screen)
 
-	local car_x, car_x_prev = car.x, car.x
-	local section_idx, segment_idx, segment_total = car.section_idx, car.segment_idx, car.segment_total
-	local speed, gear = car.speed, car.gear
-	local half_width = road.half_width
+	-- TODO: these don't all have to be integers, can add fractional amount
+
+	-- Did we move left/right?
+	local car_sprite_turn = sgn0(dx)
+ 
+	-- Is accumulator saturated?
+	if (abs(car.steer_accum) >= 1) car_sprite_turn += sgn(car.steer_accum)
+
+	-- Is road turning?
+	if (abs(section.tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
+	-- TODO: 2nd level, if turning sharply
+
+	car.sprite_turn = car_sprite_turn
+end
+
+function clip_wall(car, section)
+
+	-- TODO: make wall distance changes gradual from 1 section to next
+
+	local car_x, wall_clip = car.x, section.wall - 0.5*car_width
+
+	car.touched_wall = false
+
+	if section.wall_is_invisible then
+		if abs(car_x) > wall_clip then
+			-- Hit an invisible wall - immediately set to drive parallel to wall
+			car.steer_accum = 0
+		end
+
+	elseif abs(car_x) >= wall_clip then
+		-- Hit a visible wall - bounce back slightly (set accumulator to opposite direction)
+		car.steer_accum = -sgn(car_x)
+		car.touched_wall = true
+	end
+
+	car.x = clip_num(car_x, -wall_clip, wall_clip)
+end
+
+function calculate_dz(car, section, steering_input_scaled, dx)
+
+	local speed, car_x = car.speed * speed_scale, car.x
+
+	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
+
+	-- local dz = sqrt(max(0, speed*speed - dx*dx)) -- accurate; not necessarily more realistic feeling
+	local dz = max(0, speed - 0.25*abs(dx)) -- simplified
+
+	-- Also account for steering & accel input, to account for slight loss of grip (and penalize weaving)
+
+	if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_input_scaled)/64)
+
+	-- Scale for corners - i.e. inside of corner has smaller distance to travel
+
+	if (section.angle ~= 0) then
+		local track_center_radius = section.length / abs(section.angle * twopi)
+		local car_radius = max(0, track_center_radius + (sgn(car_x) == sgn(section.angle) and -car_x or car_x))
+		dz *= (track_center_radius + turn_radius_compensation_offset) / (car_radius + turn_radius_compensation_offset)
+	end
+
+	return dz
+end
+
+function tick_car_speed(car, section, accel_brake_input)
 
 	-- Determine acceleration & speed
-	-- TODO: look ahead for braking point, slow down; can also speed up after apex
-	-- TODO: slow down on curb & grass
+
 	-- TODO: also factor in slope
 
-	local section = road[section_idx]
+	local speed, gear, car_x = car.speed, car.gear, car.x
 
-	local tu = section.tu
 	local section_max_speed = section.max_speed_pre_apex
-	if (section.apex_seg and segment_idx >= section.apex_seg) section_max_speed = section.max_speed_post_apex
+	if (section.apex_seg and car.segment_idx >= section.apex_seg) section_max_speed = section.max_speed_post_apex
 
-	-- Special check: hard-limit speed at apex, in case of insufficient braking
+	-- Special check, for now while still not having a proper cornering grip model:
+	-- hard-limit speed at apex, in case of insufficient braking
 	-- TODO: change this to understeer instead
-	if (section.apex_seg and segment_idx == section.apex_seg) speed = min(speed, section.max_speed_pre_apex)
+	if (section.apex_seg and car.segment_idx == section.apex_seg) speed = min(speed, section.max_speed_pre_apex)
 
 	local accel = accel_by_gear[flr(gear)]
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
@@ -172,7 +233,7 @@ function tick_car(car, accel_brake_input, steering_input)
 		section_max_speed = min(section_max_speed, wall_max_speed)
 		-- TODO
 
-	elseif abs(car_x) >= half_width then
+	elseif abs(car_x) >= road.half_width then
 		-- On grass
 		-- Decrease max speed significantly
 		-- Slower acceleration
@@ -181,7 +242,7 @@ function tick_car(car, accel_brake_input, steering_input)
 		section_max_speed = min(section_max_speed, grass_max_speed)
 		-- TODO
 
-	elseif abs(car_x) >= 0.75 * half_width then
+	elseif abs(car_x) >= 0.75 * road.half_width then
 		-- On curb
 		-- Max speed unaffected
 		-- Decrease acceleration
@@ -192,135 +253,86 @@ function tick_car(car, accel_brake_input, steering_input)
 		-- TODO
 	end
 
-	-- Only steer when moving (but ramp this effect up from 0)
-	local steering_scale = min(16*speed, 1)
-	local steering_actual = steering_input * steering_scale
+	-- Apply acceleration
 
-	if not frozen then
-		if speed > section_max_speed then
-			-- Brake (to section speed)
-			speed = max(speed - brake_decel, section_max_speed)
+	if speed > section_max_speed then
+		-- Brake (to section speed)
+		speed = max(speed - brake_decel, section_max_speed)
 
-			if section_max_speed == 1 then
-				car.engine_accel_brake = 1
-			else
-				car.engine_accel_brake = -1
-			end
-
-		elseif car.ai or accel_brake_input > 0 then
-			-- Accelerate
-			speed = min(speed + accel, section_max_speed)
+		if section_max_speed == 1 then
 			car.engine_accel_brake = 1
-
-		elseif accel_brake_input < 0 then
-			-- Brake (to zero)
-			speed = toward_zero(speed, brake_decel)
+		else
 			car.engine_accel_brake = -1
-		else
-			-- Coast
-			-- TODO: this should be affected by slope even more than regular acceleration is
-			speed = max(speed*coast_decel_rel - coast_decel_abs, 0)
-			car.engine_accel_brake = 0
 		end
 
-		gear = min(speed, 0.99) * #accel_by_gear + 1
-		local rpm = gear % 1
-		gear = flr(gear)
-		if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
+	elseif car.ai or accel_brake_input > 0 then
+		-- Accelerate
+		speed = min(speed + accel, section_max_speed)
+		car.engine_accel_brake = 1
 
-		car.speed, car.gear, car.rpm = speed, gear, rpm
+	elseif accel_brake_input < 0 then
+		-- Brake (to zero)
+		speed = toward_zero(speed, brake_decel)
+		car.engine_accel_brake = -1
+	else
+		-- Coast
+		-- TODO: this should be affected by slope even more than regular acceleration is
+		speed = max(speed*coast_decel_rel - coast_decel_abs, 0)
+		car.engine_accel_brake = 0
+	end
 
-		-- Steering & corners
+	gear = min(speed, 0.99) * #accel_by_gear + 1
+	local rpm = gear % 1
+	gear = flr(gear)
+	if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
 
-		-- TODO: compensate for corners, i.e. push toward outside of corners
+	car.speed, car.gear, car.rpm = speed, gear, rpm
+end
 
-		if car.ai then
-			-- TODO: steer, following racing line
-			steering_actual = 0
-		else
-			--[[ Steering accumulator:
-			Don't just start turning immediately; add some acceleration in the X axis
-			This essentially represents that the car isn't pointing in quite the same direction as the track
-			It also just feels a bit more realistic
-			Also to penalize turning while accelerating/braking
-			]]
-			local steer_accum = car.steer_accum
+function tick_car_steering(car, steering_input, accel_brake_input)
 
-			if speed == 0 then
-				steer_accum = 0
-			else
-				if sgn0(steering_actual) ~= sgn0(steer_accum) then
-					steer_accum = toward_zero(steer_accum, steer_accum_decr_rate)
-				end
+	-- TODO: compensate for corners, i.e. push toward outside of corners
 
-				local steer_accum_incr_rate = steer_accum_incr_rate_coast
-				if (accel_brake_input ~= 0) steer_accum_incr_rate = steer_accum_incr_rate_accel_brake
+	-- Only steer when moving (but ramp this effect up from 0)
+	local steering_scale = min(16*car.speed, 1)
+	local steering_input_scaled = steering_input * steering_scale
 
-				steer_accum = clip_num(steer_accum + steering_actual * steer_accum_incr_rate, -1, 1)
-			end
-			car_x += steer_dx_max * steer_accum * steering_scale
-			car.steer_accum = steer_accum
+	-- TODO: steer, following racing line
+	if (car.ai) return steering_input_scaled
+
+	--[[ Steering accumulator:
+	Don't just start turning immediately; add some acceleration in the X axis
+	This essentially represents that the car isn't pointing in quite the same direction as the track
+	It also just feels a bit more realistic
+	Also to penalize turning while accelerating/braking
+	]]
+	local steer_accum = car.steer_accum
+
+	if speed == 0 then
+		steer_accum = 0
+	else
+		if sgn0(steering_input_scaled) ~= sgn0(steer_accum) then
+			steer_accum = toward_zero(steer_accum, steer_accum_decr_rate)
 		end
+
+		local steer_accum_incr_rate = steer_accum_incr_rate_coast
+		if (accel_brake_input ~= 0) steer_accum_incr_rate = steer_accum_incr_rate_accel_brake
+
+		steer_accum = clip_num(steer_accum + steering_input_scaled * steer_accum_incr_rate, -1, 1)
 	end
+	car.x += steer_dx_max * steer_accum * steering_scale
+	car.steer_accum = steer_accum
 
-	-- TODO: make wall distance changes gradual from 1 section to next
-	local wall_clip = section.wall - 0.5*car_width
-	if section.wall_is_invisible then
-		if abs(car_x) > wall_clip then
-			car.steer_accum = 0
-		end
-	elseif abs(car_x) >= wall_clip then
-		-- Bounce back from wall slightly
-		car.steer_accum = -sgn(car_x)
-	end
-	car_x = clip_num(car_x, -wall_clip, wall_clip)
-	car.x = car_x
-	local dx = car_x - car_x_prev
+	return steering_input_scaled
+end
 
-	-- Base car direction to draw
-	-- (Extra may be added at draw time to account for position on screen)
+function tick_car_forward(car, dz)
 
-	-- Did we move left/right?
-	local car_sprite_turn = sgn0(dx)
- 
-	-- Is accumulator saturated?
-	if (abs(car.steer_accum) >= 1) car_sprite_turn += sgn(car.steer_accum)
-
-	-- Is road turning?
-	if (abs(tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
-	-- TODO: 2nd level, if turning sharply
-
-	car.sprite_turn = car_sprite_turn
-
-	-- Determine amount to move forward
-
-	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
-	-- But also account for steering & accel input, to account for slight loss of grip (and penalize weaving)
-
-	-- Reusing speed var here - it's already been applied to car above
-	speed *= 0.5 * speed_scale
-
-	-- local dz = sqrt(max(0, speed*speed - dx*dx)) -- accurate; not necessarily more realistic feeling
-	local dz = max(0, speed - 0.25*abs(dx)) -- simplified
-
-	if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_actual)/64)
-
-	-- Scale for corners - i.e. inside of corner has smaller distance to travel
-
-	if (section.angle ~= 0) then
-		local track_center_radius = section.length / abs(section.angle * twopi)
-		local car_radius = max(0, track_center_radius + (sgn(car_x) == sgn(section.angle) and -car_x or car_x))
-		dz *= (track_center_radius + turn_radius_compensation_offset) / (car_radius + turn_radius_compensation_offset)
-	end
-
-	-- Finally, update everything
-
-	if (frozen) dz = 0
+	local section_idx, segment_idx, subseg = car.section_idx, car.segment_idx, car.subseg + dz
 
 	car.heading -= road[section_idx].angle_per_seg * dz
 	car.heading %= 1.0
 
-	local subseg = car.subseg + dz
 	while subseg >= 1 do
 		subseg -= 1
 		section_idx, segment_idx = advance(section_idx, segment_idx)
@@ -333,6 +345,7 @@ function tick_car(car, accel_brake_input, steering_input)
 		end
 	end
 	assert (subseg < 1)
+
 	while subseg < 0 do
 		subseg += 1
 		section_idx, segment_idx = reverse(section_idx, segment_idx)
@@ -342,8 +355,34 @@ function tick_car(car, accel_brake_input, steering_input)
 		end
 	end
 	assert(subseg >= 0 and subseg < 1)
+
 	car.section_idx, car.segment_idx, car.subseg = section_idx, segment_idx, subseg
 	car.segment_total = road[car.section_idx].sumct + car.segment_idx
+end
+
+function tick_car(car, accel_brake_input, steering_input)
+
+	local section, car_x_prev = road[car.section_idx], car.x
+
+	if frozen then
+		clip_wall(car, section)
+		update_sprite_turn(car, section, 0)
+		return
+	end
+
+	tick_car_speed(car, section, accel_brake_input)
+
+	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input)
+
+	clip_wall(car, section)
+
+	local dx = car.x - car_x_prev
+
+	local dz = calculate_dz(car, section, steering_input_scaled, dx)
+
+	tick_car_forward(car, dz)
+
+	update_sprite_turn(car, section, dx)
 end
 
 function game_tick()

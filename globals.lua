@@ -6,10 +6,7 @@
 pi    = 3.14159265359
 twopi = 6.28318530718
 
-speed_scale = 1
--- speed_scale = 0.25
--- speed_scale = 0.125
--- speed_scale = 0.0625
+speed_scale = 0.5
 
 -- Acceleration, by gear
 -- TOOD: make it 7 gears, but have gear 1 be twice as long
