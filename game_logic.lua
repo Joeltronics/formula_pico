@@ -214,7 +214,7 @@ function tick_car(car, accel_brake_input, steering_input)
 
 		elseif accel_brake_input < 0 then
 			-- Brake (to zero)
-			speed = max(speed - brake_decel, 0)
+			speed = toward_zero(speed, brake_decel)
 			car.engine_accel_brake = -1
 		else
 			-- Coast
@@ -292,11 +292,7 @@ function tick_car(car, accel_brake_input, steering_input)
 
 	car.sprite_turn = car_sprite_turn
 
-	-- Move forward
-
-	-- TODO:
-	--   - Adjust relative to tu and x position, i.e. inside of section is faster, outside is slower
-	--   - Faster while turning into section?
+	-- Determine amount to move forward
 
 	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
 	-- But also account for steering & accel input, to account for slight loss of grip (and penalize weaving)
@@ -308,6 +304,16 @@ function tick_car(car, accel_brake_input, steering_input)
 	local dz = max(0, speed - 0.25*abs(dx)) -- simplified
 
 	if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_actual)/64)
+
+	-- Scale for corners - i.e. inside of corner has smaller distance to travel
+
+	if (section.angle ~= 0) then
+		local track_center_radius = section.length / abs(section.angle * twopi)
+		local car_radius = max(0, track_center_radius + (sgn(car_x) == sgn(section.angle) and -car_x or car_x))
+		dz *= (track_center_radius + turn_radius_compensation_offset) / (car_radius + turn_radius_compensation_offset)
+	end
+
+	-- Finally, update everything
 
 	if (frozen) dz = 0
 

@@ -3,6 +3,9 @@
 -- (including a few values which can be changed while debugging)
 --
 
+pi    = 3.14159265359
+twopi = 6.28318530718
+
 speed_scale = 1
 -- speed_scale = 0.25
 -- speed_scale = 0.125
@@ -26,6 +29,8 @@ steer_dx_max = 1/32
 steer_accum_incr_rate_accel_brake = 1/32
 steer_accum_incr_rate_coast = 3/64
 steer_accum_decr_rate = 1/8
+
+turn_radius_compensation_offset = 0.125
 
 grass_max_speed = 0.125
 wall_max_speed = 0.25
