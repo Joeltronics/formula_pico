@@ -163,8 +163,6 @@ function clip_wall(car, section)
 
 	local car_x, wall_clip = car.x, section.wall_clip
 
-	car.touched_wall = false
-
 	if section.wall_is_invisible then
 		if abs(car_x) > wall_clip then
 			-- Hit an invisible wall - immediately set to drive parallel to wall
@@ -344,6 +342,11 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 	return steering_input_scaled
 end
 
+function tick_car_corner(car, section, dz)
+	if (car.ai) return  -- TODO: apply this to AI cars once they steer
+	car.x -= turn_dx_scale * dz * section.tu
+end
+
 function tick_car_forward(car, dz)
 
 	local section_idx, segment_idx, subseg = car.section_idx, car.segment_idx, car.subseg + dz
@@ -382,6 +385,8 @@ function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
 
+	car.touched_wall = false
+
 	if frozen then
 		clip_wall(car, section)
 		update_sprite_turn(car, section, 0)
@@ -391,16 +396,18 @@ function tick_car(car, accel_brake_input, steering_input)
 	local accel_brake_input_actual = tick_car_speed(car, section, accel_brake_input)
 
 	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input_actual)
-
 	clip_wall(car, section)
 
 	local dx = car.x - car_x_prev
+
+	update_sprite_turn(car, section, dx)
 
 	local dz = calculate_dz(car, section, steering_input_scaled, dx)
 
 	tick_car_forward(car, dz)
 
-	update_sprite_turn(car, section, dx)
+	tick_car_corner(car, section, dz)
+	clip_wall(car, section)
 end
 
 function game_tick()

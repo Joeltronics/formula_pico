@@ -29,6 +29,8 @@ steer_accum_decr_rate = 1/8
 
 turn_radius_compensation_offset = 0.125
 
+turn_dx_scale = 1
+
 grass_max_speed = 0.125
 wall_max_speed = 0.25
 

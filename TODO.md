@@ -1,7 +1,15 @@
 ## Gameplay
 
 Improve steering/cornering logic
-* Does not currently push toward outside of corners
+* Figure out direction on-track in real units (currently represented by abstract turn accumulator)
+	- Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right
+* When being pushed toward outside of turn, also affect on-track direciton/turn accumulator
+* Smarter dx/dz tradeoff logic
+	- Essentially base it on GG diagram
+	- Kind of already operates this way, but need to determine both together rather than one then other
+	- Also needs on-track direction to be in real units to do this properly
+* Mini brake assist: when holding both gas & brake, brake, but only down to racing line speed
+	- Need to make sure this can't be exploited, i.e. if starting this before braking point then start braking right away even if technically the current racing line speed isn't yet reduced
 
 Improve racing line & max speed calculation
 * Do it in the Python data generation script
