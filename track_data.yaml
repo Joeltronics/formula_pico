@@ -130,10 +130,125 @@ tracks:
     - {length: 30, angle: 0.125}
     - {length: 16, pitch: 0.125}
 
+  - name: uk
+    length_km: 5.9
+    length_scale: 2
+    start_heading: 0.125  # North-East
+    angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
+    sections:
+    - {length: 8, pitch: 0.125}  # start/finish
+    - {length: 36, pitch: 0.125}
+    - {length: 4, angle: 4, pitch: 0.125}  # 1 Abbey
+    - {length: 6, angle: 3, pitch: 0.125}
+    - {length: 4, pitch: 0.125}
+    - {length: 12, angle: -6, pitch: 0.125}  # 2
+    - {length: 20, pitch: 0.125}
+    - {length: 8, angle: 10, pitch: 0.125}  # 3
+    - {length: 8, pitch: 0.125}
+    - {length: 10, angle: -13}  # 4
+    - {length: 6}
+    - {length: 10, angle: -2}  # 5
+    - {length: 8, angle: -4}
+    - {length: 30}
+    - {length: 15}
+    - {length: 15, pitch: -0.25}
+    - {length: 4, angle: -4}  # 6 Brooklands
+    - {length: 8, angle: -4}
+    - {length: 4, angle: -4}
+    - {length: 4}
+    - {length: 20, angle: 18}  # 7 Luffield
+    - {length: 18}
+    - {length: 24, angle: 5}  # 8 Woodcote
+    - {length: 32, pitch: 0.125}
+    - {length: 8, angle: 2, pitch: 0.125}  # 9 Copse
+    - {length: 8, angle: 4, pitch: 0.0625}
+    - {length: 8, angle: 2, pitch: 0.0625}
+    - {length: 20, pitch: 0.125}
+    - {length: 20, angle: 1}
+    - {length: 12, pitch: -0.125}
+    - {length: 8, angle: -3, pitch: -0.125}  # 10 Maggots
+    - {length: 4, pitch: -0.125}
+    - {length: 6, angle: 5}  # 11
+    - {length: 8, pitch: 0.125}
+    - {length: 14, angle: -6, pitch: -0.125}  # 12 Becketts
+    - {length: 18, angle: 11, pitch: -0.125}  # 13 Chapel
+    - {length: 4, pitch: -0.125}
+    - {length: 4, angle: -4, pitch: -0.125}  # 14
+    - {length: 52, pitch: -0.25}
+    - {length: 20, pitch: 0.5}
+    - {length: 20, angle: 11, pitch: 0.25}  # 15 Stowe
+    - {length: 20, angle: -2, pitch: -0.5}
+    - {length: 16}
+    - {length: 8, angle: -8}  # 16 Vale
+    - {length: 8, angle: 8}  # 17 Club
+    - {length: 8}
+    - {length: 10, angle: 4}  # 18
+    - {length: 4, angle: 4}
+    - {length: 8}
+
+  - name: japan
+    length_km: 5.81
+    length_scale: 2
+    start_heading: 0.75  # South
+    angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
+    city_bg: true
+    sections:
+    - {length: 8, pitch: -0.25}  # start/finish
+    - {length: 42, pitch: -0.25}
+    - {length: 8, angle: 5, pitch: -0.25}  # 1
+    - {length: 4, pitch: -0.125}
+    - {length: 12, angle: 12}  # 2
+    - {length: 8, pitch: 0.125}
+    - {length: 8, angle: -6}  # 3
+    - {length: 4}
+    - {length: 8, angle: 7}  # 4
+    - {length: 4}
+    - {length: 8, angle: -7}  # 5
+    - {length: 6}
+    - {length: 12, angle: 10}  # 6
+    - {length: 6, pitch: 0.5}
+    - {length: 8, angle: -8, pitch: 0.125}  # 7
+    - {length: 4}
+    - {length: 24, angle: -6}  # Still 7
+    - {length: 10}
+    - {length: 4, angle: 4}  # 8
+    - {length: 10}
+    - {length: 7, angle: 8}  # 9
+    - {length: 10}
+    - {length: 4, tnl: true}
+    - {length: 4}
+    - {length: 8, pitch: 0.25}
+    - {length: 10, angle: 3, pitch: 0.125}  # 10
+    - {length: 6, pitch: 0.125}
+    - {length: 8, angle: -15}  # 11 (Hairpin)
+    - {length: 12}
+    - {length: 8, angle: 4}  # 12
+    - {length: 12, angle: 3, pitch: -0.125}
+    - {length: 4}
+    - {length: 16, angle: 4, pitch: 0.125}
+    - {length: 8}
+    - {length: 6, angle: -4} # 13
+    - {length: 10, angle: -4}
+    - {length: 4}
+    - {length: 8, angle: -8}  # 14
+    - {length: 8, angle: -2}
+    - {length: 32, angle: -2.5, pitch: -0.25}
+    - {length: 40}  # TODO: walls for bridge
+    - {length: 6, angle: -3}  # 15 (130R)
+    - {length: 6}
+    - {length: 16, angle: -2.5}  # Still 15
+    - {length: 12, pitch: 0.125}
+    - {length: 4, angle: 8}  # 16
+    - {length: 2}
+    - {length: 4, angle: -8}  # 17
+    - {length: 7, pitch: -0.125}
+    - {length: 6, angle: 4, pitch: -0.25}  # 18
+    - {length: 12, angle: 4, pitch: -0.25}
+    - {length: 4, pitch: -0.25}
+
   - name: monaco
     # TODO: walls
-    # TODO: while the scale is accurate in terms of realism compared to other tracks,
-    # it feels too short - likely want to scale up a bit
+    # TODO: scale is accurate vs other trakcs, but it feels too short - scale up a bit?
     length_km: 3.34
     length_scale: 1
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
