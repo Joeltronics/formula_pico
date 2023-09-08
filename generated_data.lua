@@ -2,7 +2,7 @@
 -- To change, edit track_data.yaml and run generate_data.py
 start_heading=0.25
 track_width=3
-shoulder_width=0.125
+shoulder_half_width=0.125
 tracks={
 {
 	name="austria",

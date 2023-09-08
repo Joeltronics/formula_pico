@@ -99,7 +99,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	if detail then
 		local linecol = 7
 		if (sumct % 2 == 0) linecol = 8
-		local sw1, sw2 = shoulder_width*scale1, shoulder_width*scale2
+		local sw1, sw2 = shoulder_half_width*scale1, shoulder_half_width*scale2
 		filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
 		filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
 	else

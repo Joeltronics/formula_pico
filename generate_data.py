@@ -193,7 +193,7 @@ class Track:
 			sections: list[Section],
 			start_heading: float,
 			track_width: float,
-			shoulder_width: float,
+			shoulder_half_width: float,
 			street: bool = False,
 			tree_bg: bool = False,
 			city_bg: bool = False,
@@ -207,7 +207,7 @@ class Track:
 		self.start_heading: float = start_heading
 		self.end_heading: float = None
 		self.track_width: float = track_width
-		self.shoulder_width: float = shoulder_width
+		self.shoulder_half_width: float = shoulder_half_width
 
 		self.street = street
 		self.tree_bg = tree_bg
@@ -367,8 +367,8 @@ class Track:
 			ret['start_heading'] = self.start_heading
 		if self.track_width != defaults['track_width']:
 			ret['track_width'] = self.track_width
-		if self.shoulder_width != defaults['shoulder_width']:
-			ret['shoulder_width'] = self.shoulder_width
+		if self.shoulder_half_width != defaults['shoulder_half_width']:
+			ret['shoulder_half_width'] = self.shoulder_half_width
 
 		if self.street:
 			ret['street'] = self.street
@@ -499,7 +499,7 @@ def draw_track(track, scale=16):
 	name = track.name
 	sections = track.sections
 	track_width = track.track_width
-	shoulder_width = track.shoulder_width
+	shoulder_half_width = track.shoulder_half_width
 
 	filename_svg = MAP_DIR_OUT / f"{name}.svg"
 	filename_png = MAP_DIR_OUT / f"{name}.png"
@@ -621,8 +621,8 @@ def draw_track(track, scale=16):
 
 		for idx, (section, segment) in enumerate(iterate_segments(sections)):
 			curb_color = PALETTE[8] if (idx % 2 == 0) else PALETTE[7]
-			polygon(segment.points(track_width, track_width + shoulder_width), curb_color, stroke=0.5)
-			polygon(segment.points(-track_width, -track_width - shoulder_width), curb_color, stroke=0.5)
+			polygon(segment.points(track_width - shoulder_half_width, track_width + shoulder_half_width), curb_color, stroke=0.5)
+			polygon(segment.points(-track_width + shoulder_half_width, -track_width - shoulder_half_width), curb_color, stroke=0.5)
 
 		# Apexes
 
@@ -658,7 +658,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	length_scale = yaml_track.get('length_scale', yaml_defaults.get('length_scale', 1))
 	angle_scale = yaml_track.get('angle_scale', yaml_defaults.get('angle_scale', 1.0))
 	track_width = yaml_track.get('track_width', yaml_defaults['track_width'])
-	shoulder_width = yaml_track.get('shoulder_width', yaml_defaults['shoulder_width'])
+	shoulder_half_width = yaml_track.get('shoulder_half_width', yaml_defaults['shoulder_half_width'])
 
 	sections = [Section(**s) for s in yaml_track['sections']]
 	for section in sections:
@@ -674,7 +674,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		sections=sections,
 		start_heading=start_heading,
 		track_width=track_width,
-		shoulder_width=shoulder_width,
+		shoulder_half_width=shoulder_half_width,
 		street=yaml_track.get('street', False),
 		city_bg=yaml_track.get('city_bg', False),
 		tree_bg=yaml_track.get('tree_bg', False),
