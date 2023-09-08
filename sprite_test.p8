@@ -1,0 +1,201 @@
+pico-8 cartridge // http://www.pico-8.com
+version 41
+__lua__
+
+#include utils.lua
+
+sprite_turn = 0
+max_sprite_turn = 4
+x = 64
+y = 112
+scale = 1
+
+row_zidx = 0
+num_rows = 14
+
+rotate = false
+rotate_counter = 0
+sprite_turn_dir = 1
+
+palette = {[0]=0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+
+palette_main_idx = 8
+palette_accent_idx = 14
+palette_dark_idx = 2
+palette_floor_idx = 13
+
+function do_load()
+	reload(0, 0, 0x4300, "formula_pico.p8")
+end
+
+function do_save()
+	cstore()
+	cstore(0, 0, 0x4300, "formula_pico.p8")
+end
+
+function _init()
+	do_load()
+end
+
+function _update60()
+
+	-- Up/Down
+	if btnp(2) then
+		row_zidx -= 1
+		if (row_zidx == 5 or row_zidx == 11) row_zidx -= 1
+	end
+	if (btnp(3)) then
+		row_zidx += 1
+		if (row_zidx == 5 or row_zidx == 11) row_zidx += 1
+	end
+	row_zidx %= num_rows
+
+	-- Left/Right
+	local incr = 0
+	if (btnp(0)) incr -= 1
+	if (btnp(1)) incr += 1
+
+	if (incr ~= 0) or btnp(4) then
+		if (row_zidx == 0) sprite_turn = clip_num(sprite_turn + incr, -max_sprite_turn, max_sprite_turn)
+		if (row_zidx == 1) rotate = not rotate
+		if (row_zidx == 2) scale = clip_num(scale + 0.125 * incr, 0.125, 4)
+		if (row_zidx == 3) x += 0.25 * incr
+		if (row_zidx == 4) y += 0.25 * incr
+	
+		if (row_zidx == 6) palette[palette_main_idx] = (palette[palette_main_idx] + 16 + incr) % 32 - 16
+		if (row_zidx == 7) palette[palette_accent_idx] = (palette[palette_accent_idx] + 16 + incr) % 32 - 16
+		if (row_zidx == 8) palette[palette_dark_idx] = (palette[palette_dark_idx] + 16 + incr) % 32 - 16
+		if (row_zidx == 9) palette[palette_floor_idx] = (palette[palette_floor_idx] + 16 + incr) % 32 - 16
+		if (row_zidx == 10 and btnp(4)) palette = {[0]=0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15}
+		-- if (row_zidx == 10 and btnp(4)) palette[palette_main_idx] = palette_main_idx
+
+		if (row_zidx == 12 and btnp(4)) do_load()
+		if (row_zidx == 13 and btnp(4)) do_save()
+	end
+
+	if rotate then
+		rotate_counter = (rotate_counter + 1) % 10
+
+		if (rotate_counter == 0) then
+			if (abs(sprite_turn) == max_sprite_turn) sprite_turn_dir = -sprite_turn_dir
+			sprite_turn += sprite_turn_dir
+		end
+	end
+end
+
+function _draw()
+	cls(5)
+
+	print(' sprite_turn: ' .. sprite_turn, 0)
+	print(' rotate: ' .. (rotate and 'true' or 'false'))
+	print(' scale: ' .. scale)
+	print(' x: ' .. x)
+	print(' y: ' .. y)
+	print('')
+	print(' palette main:   \#' ..  digit_to_hex_char(palette_main_idx) .. palette[palette_main_idx])
+	print(' palette accent: \#' ..  digit_to_hex_char(palette_accent_idx) .. palette[palette_accent_idx])
+	print(' palette dark:   \#' ..  digit_to_hex_char(palette_dark_idx) .. palette[palette_dark_idx])
+	print(' palette floor:  \#' ..  digit_to_hex_char(palette_floor_idx) .. palette[palette_floor_idx])
+	print(' reset palette')	
+	print('')
+	print(' reload sprites')
+	print(' save')
+
+	print('>', 0, 6 * row_zidx)
+
+	palt(0, false)
+	palt(11, true)
+
+	pal(palette, 1)
+
+	for col = 0,15 do
+		rectfill(col*8, 120, (1+col)*8, 128, 128 + col)
+	end
+
+	local flip_x = sprite_turn < 0
+	local sx = 24 * min(max_sprite_turn, ceil(abs(sprite_turn)))
+
+	local w, h = 24 * scale, 16 * scale
+	local sprx = x - (12 * scale)
+	local spry = y - h
+
+	sspr(
+		sx, 0, 24, 16,
+		sprx, spry, w, h,
+		flip_x
+	)
+
+	-- palt()
+	-- pal()
+end
+
+__gfx__
+bbbbbbbbbb8888bbbbbbbbbbbbbbbbbbbbbb8888bbbbbbbbbbbbb000bbbb88888bbbbbbbbbbbbbb000bbbb888bbbbbbbbbbbbbbb000bbb888bbbbbbbbbbbbbbb
+bbb000bbb88ee88bbb000bbbbbbbb000bbb88e888bbb000bbbbb06558bb88e8888bb000bbbbbbb06550bb88e88bb000bbbbbbbb06550b88e88bb000bbbbbbbbb
+bb065588888ee888885560bbbbbb06558888ee8888885560bbbb00008888ee8888885560bbbbbb00008888e888805560bbbbbeb0000888e888805560bbbbbbbb
+bb000e88888ee88888e000bbbbbb0e008888e88888e80006bbbbe0008888e8888e880006bbbbbe0000888e8888800006bbbbbe5550088e8888800006bbbbbbbb
+bb000e555555555555e000bbbbbb0e555555555555ee0006bbbbe555555555555ee80006bbbbbe555555e8888e800006bbbbbe00055558888e800006bbbbbbbb
+bb000e000000000000e000bbbbbbbe000000000000ee0000bbbbe000000000000eeb0000bbbbbe00000055555ee00000bbbbbe00000005555ee00000bbbbbbbb
+bbb00e088000000880e00bbbbbbbbe0b8000000880eb000bbbbbe088000000880ebb000bbbbbbe08000000000eeb000bbb000b08800000000eeb000bbbbbbbbb
+bbbbbb088880088880bbbbbbbbbbbb088880088880bbbbbbbb000088880088880bbbbbbbbb000008880088880ebbbbbbb0665008880088880ebbbbbbbbbbbbbb
+b0000088888558888800000bb0000088888558888800000b0066558888558888800000bb0066508888558888800000bb060008888558888800000bbbbbbbbbbb
+00665588882662888855660000665588882662888855660006000088826628888555600b06000888826628880555600b0000088826628880555600bbbbbbbbbb
+06000088826006288800006006000088826006288800000000000088260062888000065b00000888260062880000005000000222600628800000050bbbbbbbbb
+00000088226006228800000000000088226006228800000600000022260062228000006b00000222260062220000056500000ddd600622200000565bbbbbbbbb
+000000222226622222000000000000222226622222000006000000dddd6622222000006b00000ddddd662222000005650000000bd66222200000565bbbbbbbbb
+000000dddddddddddd000000000000dddddddddddd0000000000000bbbddddddd000005b0000000bbbdddddd00000050b00000bbbbddddd00000050bbbbbbbbb
+000000bbbbbbbbbbbb000000000000bbbbbbbbbbbb000000b00000bbbbbbbbbbb000000bb00000bbbbbbbbbb0000000bbbbbbbbbbbbbbbb0000000bbbbbbbbbb
+b00000bbbbbbbbbbbb00000bb00000bbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbbb00000bbbbbbbbbbbbbbbbbb00000bbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+0003000000000000444444440000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00007777000077770000777700007777
+0003000000000000455599940000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00007777000077770000777700007777
+0033000000000000495559940000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00007777000077770000777700007777
+0033300000000000499555940000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb00007777000077770000777700007777
+0033300000000000499955540000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb77770000777700007777000077770000
+033b300000000000499555940000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb77770000777700007777000077770000
+03bb300000000000495559940000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb77770000777700007777000077770000
+03bb330000000000455599940000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb66660000666600006666000066660000
+03bbbb3000000000444444440000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82bbbb28bbbbbbbbbbbbbbbbbbbbbbbb
+33bbb33300000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb882bb288bbbbbbbbbbbbbbbbbbbbbbbb
+33bbb33500000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82822828bbbbbbbbbbbbbbbbbbbbbbbb
+533b335500000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb8b2882b8bbbbbbbbbbbbbbbbbbbbbbbb
+0533335000000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb8b2882b8bbbbbbbbbbbbbbbbbbbbbbbb
+0055550000000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82822828bbbbbbbbbbbbbbbbbbbbbbbb
+0004400000000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb882bb288bbbbbbbbbbbbbbbbbbbbbbbb
+0004400000000000000660000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82bbbb28bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82bbbb28bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb882bb288bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82822828bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb8b2882b8bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb8b2882b8bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82822828bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb882bb288bbbbbbbbbbbbbbbbbbbbbbbb
+0000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82bbbb28bbbbbbbbbbbbbbbbbbbbbbbb
+0030b030b030003000dddd00ddd6605500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82bbbb28bbbbbbbbbbbbbbbbbbbbbbbb
+033bb33bb33b0330666dfff0dd66665500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb882bb288bbbbbbbbbbbbbbbbbbbbbbbb
+333b3333b33b33336c6dff66dd6cc65500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82822828bbbbbbbbbbbbbbbbbbbbbbbb
+333333b3333333b3666dff66dd66665500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb8b2882b8bbbbbbbbbbbbbbbbbbbbbbbb
+33bb33bb33bb3bbb6c6dff66dd6cc65500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb8b2882b8bbbbbbbbbbbbbbbbbbbbbbbb
+3bb553bb3bb533b5666dff66dd66665500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82822828bbbbbbbbbbbbbbbbbbbbbbbb
+b5553555b55555536c6dff66dd6cc65500000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb882bb288bbbbbbbbbbbbbbbbbbbbbbbb
+0343034330430340666dff66dd66660000000000000000000000000000000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb82bbbb28bbbbbbbbbbbbbbbbbbbbbbbb
+__sfx__
+490800040045200452004520045200402004020040200402004020040200402004020040200402004020040200402004020040200402004020040200400004000040000400004000040000400004000040000400
+4b06000b0067034671006712467100671306710c671186711c6713067134671000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+490802030025001251012520000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+910802031c1501d1511d1520000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

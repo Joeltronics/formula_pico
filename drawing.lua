@@ -282,7 +282,7 @@ function draw_bg_sprite(s)
 	local y2=ceil(s.y)
 
 	sspr(
-		s.img[1], s.img[2], s.img[3], s.img[4], -- sx, sy, sw, wh
+		s.img[1], s.img[2], s.img[3], s.img[4], -- sx, sy, sw, sh
 		x1, y1, x2-x1, y2-y1, -- dx, dy, dw, dh
 		s.flip_x  -- flip_x
 	)
