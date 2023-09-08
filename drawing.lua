@@ -255,7 +255,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		sprite_list, sumct, seg,
 		{
 			img={
-				24 * min(4, ceil(abs(sprite_turn))),
+				24 * min(3, ceil(abs(sprite_turn))),
 				0, 24, 16},
 			siz={car_width, car_height},
 			palt=11,

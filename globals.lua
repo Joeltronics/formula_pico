@@ -53,15 +53,15 @@ road_detail_draw_distance = 30
 sprite_draw_distance = 45
 
 palettes = {
-	-- main, accent, dark, floor
-	{ 8, 14, 2, 2, name='red' },
-	{ 1, 8, 0, 0, name='blue' },
-	{ 3, 11, 5, 0, name='green' },
-	{ 10, 0, 5, 0, name='yellow' },
-	{ 9, 12, 4, 4, name='orange' },
-	{ 14, 7, 2, 2, name='pink' },
-	{ 6, 7, 5, 0, name='silver' },
-	{ 0, 11, 5, 0, name='black' }, -- TODO: recolor rear wing
+	-- main, accent, wing top, wing rear, dark, floor
+	{ 8, 14, 5, 0, 2, 2, name='red' },
+	{ 1, 8, 5, 0, 0, 0, name='blue' },
+	{ 0, 11, 5, 1, 1, 1, name='black' },
+	{ 9, 12, 5, 0, 4, 4, name='orange' },
+	{ 3, 11, 5, 0, 5, 0, name='green' },
+	{ 10, 0, 5, 0, 5, 0, name='yellow' },
+	{ 14, 7, 5, 0, 2, 2, name='pink' },
+	{ 6, 7, 5, 0, 5, 0, name='silver' },
 }
 
 palette_ghost = {

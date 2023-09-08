@@ -20,8 +20,10 @@ function init_cars(team_idx, ghost, num_other_cars)
 		palette = {
 			[8]=palette[1],  -- main
 			[14]=palette[2],  -- accent 1
-			[2]=palette[3],  -- dark
-			[13]=palette[4],  -- floor
+			[12]=palette[3],  -- wing top
+			[1]=palette[4],  -- wing back
+			[2]=palette[5],  -- dark
+			[13]=palette[6],  -- floor
 		}
 
 		local ai = zidx ~= 0
