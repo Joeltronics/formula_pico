@@ -13,30 +13,30 @@ tracks:
     sections:
     - {length: 8}  # start/finish
     - {length: 40}
-    - {length: 6, angle: 0.25} # 1
+    - {turn_num: 1, length: 6, angle: 0.25}
     - {length: 6, angle: -0.0625, has_apex: False}
     - {length: 16}
     - {length: 28, angle: 0.0625}
     - {length: 8, pitch: 0.5}
-    - {length: 20, angle: -0.125, pitch: 0.75}  # 2
+    - {turn_num: 2, length: 20, angle: -0.125, pitch: 0.75}
     - {length: 16, pitch: 1}
-    - {length: 8, angle: 0.375}  # 3; high point
+    - {turn_num: 3, length: 8, angle: 0.375}  # high point
     - {length: 8}
     - {length: 20, angle: 0.0625, pitch: -0.25}
     - {length: 48, pitch: -0.5}
-    - {length: 8, angle: 0.3125, pitch: -0.25}  # 4
+    - {turn_num: 4, length: 8, angle: 0.3125, pitch: -0.25}
     - {length: 2, pitch: -0.25}
-    - {length: 18, angle: 0.1875, pitch: -0.25}  # 5
+    - {turn_num: 5, length: 18, angle: 0.1875, pitch: -0.25}
     - {length: 12}
-    - {length: 20, angle: -0.375, pitch: -0.125}  # 6
+    - {turn_num: 6, length: 20, angle: -0.375, pitch: -0.125}
     - {length: 20, pitch: -0.5}
-    - {length: 20, angle: -0.3125}  # 7
+    - {turn_num: 7, length: 20, angle: -0.3125}
     - {length: 4}
-    - {length: 20, angle: 0.1875}  # 8
+    - {turn_num: 8, length: 20, angle: 0.1875}
     - {length: 30, pitch: 0.125}
-    - {length: 12, angle: 0.1875}  # 9
+    - {turn_num: 9, length: 12, angle: 0.1875}
     - {length: 10, pitch: -0.125}
-    - {length: 6, angle: 0.1875}  # 10; low point
+    - {turn_num: 10, length: 6, angle: 0.1875}  # low point
     - {length: 6}
     - {length: 8, angle: 0.0625}
     - {length: 15}
@@ -48,48 +48,48 @@ tracks:
     sections:
     - {length: 8}  # start/finish; heading 0.25
     - {length: 20}
-    - {length: 8, angle: 0.375}  # la source; heading 0.615
+    - {turn_num: 1, length: 8, angle: 0.375}  # La Source
     - {length: 16, pitch: -0.5}
-    - {length: 16, angle: 0.075} # 2; heading 0.7
+    - {turn_num: 2, length: 16, angle: 0.075}
     - {length: 16, pitch: -0.25}
-    - {length: 4, angle: -0.15} # , gndcol: 12} # 3: eau rouge; heading 0.55
-    - {length: 16, angle: 0.3, pitch: 2} # 4: raidillon; heading 0.85
-    - {length: 16, angle: -0.15} # 5; heading 0.7
+    - {turn_num: 3, length: 4, angle: -0.15} # , gndcol: 12}  # Eau Rouge
+    - {turn_num: 4, length: 16, angle: 0.3, pitch: 2}  # Raidillon
+    - {turn_num: 5, length: 16, angle: -0.15}
     - {length: 16, pitch: 1, bgl: tree7}
-    - {length: 16, angle: 0.05, pitch: 0.5, bgl: tree4, bgr: tree7} # 6; heading 0.75
+    - {turn_num: 6, length: 16, angle: 0.05, pitch: 0.5, bgl: tree4, bgr: tree7}
     - {length: 48, bgl: tree3, pitch: 0.5, bgr: tree4} # kemmel straight
-    - {length: 8, angle: 0.25} # 7; high point
+    - {turn_num: 7, length: 8, angle: 0.25}  # high point
     - {length: 4}
-    - {length: 8, angle: -0.25} # 8
+    - {turn_num: 8, length: 8, angle: -0.25}
     - {length: 8, pitch: -0.25}
-    - {length: 8, angle: 0.25, pitch: -0.25} # 9
+    - {turn_num: 9, length: 8, angle: 0.25, pitch: -0.25}
     - {length: 32, pitch: -0.75}
-    - {length: 24, angle: 0.5, pitch: -0.25} # 10
+    - {turn_num: 10, length: 24, angle: 0.5, pitch: -0.25}
     - {length: 8, pitch: -0.5}
-    - {length: 8, angle: -0.25, pitch: -0.5} # 11
+    - {turn_num: 11, length: 8, angle: -0.25, pitch: -0.5}
     - {length: 36, pitch: -0.75}
-    - {length: 12, angle: -0.2, pitch: -0.5} # 12: pouhon
+    - {turn_num: 12, length: 12, angle: -0.2, pitch: -0.5}  # Pouhon
     - {length: 4, pitch: -0.5}
     - {length: 18, angle: -0.175, pitch: -0.5}
     - {length: 24, pitch: -0.75}
-    - {length: 16, angle: 0.25, pitch: -0.25} # 13
+    - {turn_num: 13, length: 16, angle: 0.25, pitch: -0.25}
     - {length: 4}
-    - {length: 16, angle: -0.25} # 14
+    - {turn_num: 14, length: 16, angle: -0.25}
     - {length: 12}
-    - {length: 8, angle: 0.25} # 15
+    - {turn_num: 15, length: 8, angle: 0.25}
     - {length: 8, pitch: -0.25}
-    - {length: 12, angle: 0.25} # 16; low point
+    - {turn_num: 16, length: 12, angle: 0.25}  # Low point
     - {length: 8, pitch: 0.25}
     - {length: 32, angle: 0.125, pitch: 0.25}
     - {length: 18, pitch: 0.25}
-    - {length: 12, angle: -0.125, pitch: 0.25} # 17: blanchimont
+    - {turn_num: 17, length: 12, angle: -0.125, pitch: 0.25} # Blanchimont
     - {length: 16, pitch: 0.25}
-    - {length: 12, angle: -0.125, pitch: 0.25} # 18
+    - {turn_num: 18, length: 12, angle: -0.125, pitch: 0.25}
     - {length: 8, pitch: 1}
     - {length: 10, pitch: 1, angle: 0.0625}
     - {length: 8, pitch: 1}
-    - {length: 6, angle: 0.25} # 19: chicane
-    - {length: 6, angle: -0.3125} # 20
+    - {turn_num: 19, length: 6, angle: 0.25}
+    - {turn_num: 20, length: 6, angle: -0.3125}
     - {length: 12}
 
   - name: "italy"
@@ -99,21 +99,21 @@ tracks:
     sections:
     - {length: 8, pitch: 0.125}  # start/finish; heading 0.25
     - {length: 46, pitch: 0.125}
-    - {length: 6, angle: 0.25} # 1: chicane
-    - {length: 8, angle: -0.375} # 2
-    - {length: 16, angle: 0.125}
-    - {length: 8, pitch: 0.125}  # heading 0.25
-    - {length: 44, angle: 0.2} # 3: curva grande; heading 0.45
+    - {turn_num: 1, length: 6, angle: 0.25} # Rettifilo
+    - {turn_num: 2, length: 8, angle: -0.375}
+    - {turn_num: 2, length: 16, angle: 0.125}
+    - {length: 8, pitch: 0.125}
+    - {turn_num: 3, length: 44, angle: 0.2} # Curva Grande
     - {length: 16}
     - {length: 16, pitch: 0.5}
-    - {length: 6, angle: -0.25} # 4: chicane
-    - {length: 6, angle: 0.25} # 5; heading 0.45
+    - {turn_num: 4, length: 6, angle: -0.25}
+    - {turn_num: 5, length: 6, angle: 0.25}
     - {length: 12}
-    - {length: 12, angle: 0.25} # 6: lesmo
+    - {turn_num: 6, length: 12, angle: 0.25} # Lesmo 1
     - {length: 12}
-    - {length: 12, angle: 0.2} # 7
+    - {turn_num: 7, length: 12, angle: 0.2} # Lesmo 2
     - {length: 12}
-    - {length: 12, angle: -0.075} # serraglio
+    - {length: 12, angle: -0.075} # Serraglio
     - {length: 8}
     - {length: 8}
     - {length: 8, pitch: -0.75}
@@ -121,14 +121,14 @@ tracks:
     - {length: 8}
     - {length: 8, pitch: 0.75}
     - {length: 8}
-    - {length: 8, angle: -0.125} # 8 :ascari
-    - {length: 8, angle: 0.2} # 9
-    - {length: 8, angle: -0.15} # 10
+    - {turn_num: 8, length: 8, angle: -0.125} # Ascari
+    - {turn_num: 9, length: 8, angle: 0.2}
+    - {turn_num: 10, length: 8, angle: -0.15}
     - {length: 72, pitch: -0.25}
-    - {length: 12, angle: 0.25} # 11: parabolica
-    - {length: 16, angle: 0.125}
-    - {length: 30, angle: 0.125}
-    - {length: 16, pitch: 0.125}
+    - {turn_num: 11, length: 12, angle: 0.25} # Parabolica
+    - {turn_num: 11, length: 16, angle: 0.125}
+    - {turn_num: 11, length: 30, angle: 0.125}
+    - {turn_num: 11, length: 16, pitch: 0.125}
 
   - name: uk
     length_km: 5.9
@@ -138,52 +138,52 @@ tracks:
     sections:
     - {length: 8, pitch: 0.125}  # start/finish
     - {length: 36, pitch: 0.125}
-    - {length: 4, angle: 4, pitch: 0.125}  # 1 Abbey
-    - {length: 6, angle: 3, pitch: 0.125}
+    - {turn_num: 1, length: 4, angle: 4, pitch: 0.125}  # Abbey
+    - {turn_num: 1, length: 6, angle: 3, pitch: 0.125}
     - {length: 4, pitch: 0.125}
-    - {length: 12, angle: -6, pitch: 0.125}  # 2
+    - {turn_num: 2, length: 12, angle: -6, pitch: 0.125} 
     - {length: 20, pitch: 0.125}
-    - {length: 8, angle: 10, pitch: 0.125}  # 3
+    - {turn_num: 3, length: 8, angle: 10, pitch: 0.125}
     - {length: 8, pitch: 0.125}
-    - {length: 10, angle: -13}  # 4
+    - {turn_num: 4, length: 10, angle: -13}
     - {length: 6}
-    - {length: 10, angle: -2}  # 5
+    - {turn_num: 5, length: 10, angle: -2}
     - {length: 8, angle: -4}
     - {length: 30}
     - {length: 15}
     - {length: 15, pitch: -0.25}
-    - {length: 4, angle: -4}  # 6 Brooklands
-    - {length: 8, angle: -4}
-    - {length: 4, angle: -4}
+    - {turn_num: 6, length: 4, angle: -4}  # Brooklands
+    - {turn_num: 6, length: 8, angle: -4}
+    - {turn_num: 6, length: 4, angle: -4}
     - {length: 4}
-    - {length: 20, angle: 18}  # 7 Luffield
+    - {turn_num: 7, length: 20, angle: 18}  # Luffield
     - {length: 18}
-    - {length: 24, angle: 5}  # 8 Woodcote
+    - {turn_num: 8, length: 24, angle: 5}  # Woodcote
     - {length: 32, pitch: 0.125}
-    - {length: 8, angle: 2, pitch: 0.125}  # 9 Copse
-    - {length: 8, angle: 4, pitch: 0.0625}
-    - {length: 8, angle: 2, pitch: 0.0625}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125}  # Copse
+    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625}
     - {length: 20, pitch: 0.125}
     - {length: 20, angle: 1}
     - {length: 12, pitch: -0.125}
-    - {length: 8, angle: -3, pitch: -0.125}  # 10 Maggots
+    - {turn_num: 10, length: 8, angle: -3, pitch: -0.125}  # Maggots
     - {length: 4, pitch: -0.125}
-    - {length: 6, angle: 5}  # 11
+    - {turn_num: 11, length: 6, angle: 5}
     - {length: 8, pitch: 0.125}
-    - {length: 14, angle: -6, pitch: -0.125}  # 12 Becketts
-    - {length: 18, angle: 11, pitch: -0.125}  # 13 Chapel
+    - {turn_num: 12, length: 14, angle: -6, pitch: -0.125}  # Becketts
+    - {turn_num: 13, length: 18, angle: 11, pitch: -0.125}  # Chapel
     - {length: 4, pitch: -0.125}
-    - {length: 4, angle: -4, pitch: -0.125}  # 14
+    - {turn_num: 14, length: 4, angle: -4, pitch: -0.125}
     - {length: 52, pitch: -0.25}
     - {length: 20, pitch: 0.5}
-    - {length: 20, angle: 11, pitch: 0.25}  # 15 Stowe
+    - {turn_num: 15, length: 20, angle: 11, pitch: 0.25}  # Stowe
     - {length: 20, angle: -2, pitch: -0.5}
     - {length: 16}
-    - {length: 8, angle: -8}  # 16 Vale
-    - {length: 8, angle: 8}  # 17 Club
+    - {turn_num: 16, length: 8, angle: -8}  # Vale
+    - {turn_num: 17, length: 8, angle: 8}  # Club
     - {length: 8}
-    - {length: 10, angle: 4}  # 18
-    - {length: 4, angle: 4}
+    - {turn_num: 18, length: 10, angle: 4}
+    - {turn_num: 18, length: 4, angle: 4}
     - {length: 8}
 
   - name: japan
@@ -195,55 +195,55 @@ tracks:
     sections:
     - {length: 8, pitch: -0.25}  # start/finish
     - {length: 42, pitch: -0.25}
-    - {length: 8, angle: 5, pitch: -0.25}  # 1
+    - {turn_num: 1, length: 8, angle: 5, pitch: -0.25}
     - {length: 4, pitch: -0.125}
-    - {length: 12, angle: 12}  # 2
+    - {turn_num: 2, length: 12, angle: 12}
     - {length: 8, pitch: 0.125}
-    - {length: 8, angle: -6}  # 3
+    - {turn_num: 3, length: 8, angle: -6}
     - {length: 4}
-    - {length: 8, angle: 7}  # 4
+    - {turn_num: 4, length: 8, angle: 7}
     - {length: 4}
-    - {length: 8, angle: -7}  # 5
+    - {turn_num: 5, length: 8, angle: -7}
     - {length: 6}
-    - {length: 12, angle: 10}  # 6
+    - {turn_num: 6, length: 12, angle: 10}
     - {length: 6, pitch: 0.5}
-    - {length: 8, angle: -8, pitch: 0.125}  # 7
-    - {length: 4}
-    - {length: 24, angle: -6}  # Still 7
+    - {turn_num: 7, length: 8, angle: -8, pitch: 0.125}
+    - {turn_num: 7, length: 4}
+    - {turn_num: 7, length: 24, angle: -6}
     - {length: 10}
-    - {length: 4, angle: 4}  # 8
+    - {turn_num: 8, length: 4, angle: 4}  # Degner
     - {length: 10}
-    - {length: 7, angle: 8}  # 9
+    - {turn_num: 9, length: 7, angle: 8}
     - {length: 10}
     - {length: 4, tnl: true}
     - {length: 4}
     - {length: 8, pitch: 0.25}
-    - {length: 10, angle: 3, pitch: 0.125}  # 10
+    - {turn_num: 10, length: 10, angle: 3, pitch: 0.125}
     - {length: 6, pitch: 0.125}
-    - {length: 8, angle: -15}  # 11 (Hairpin)
+    - {turn_num: 11, length: 8, angle: -15}  # Hairpin
     - {length: 12}
-    - {length: 8, angle: 4}  # 12
+    - {turn_num: 12, length: 8, angle: 4}
     - {length: 12, angle: 3, pitch: -0.125}
     - {length: 4}
     - {length: 16, angle: 4, pitch: 0.125}
     - {length: 8}
-    - {length: 6, angle: -4} # 13
-    - {length: 10, angle: -4}
+    - {turn_num: 1, length: 6, angle: -4} # Spoon
+    - {turn_num: 1, length: 10, angle: -4}
     - {length: 4}
-    - {length: 8, angle: -8}  # 14
-    - {length: 8, angle: -2}
+    - {turn_num: 14, length: 8, angle: -8}
+    - {turn_num: 14, length: 8, angle: -2}
     - {length: 32, angle: -2.5, pitch: -0.25}
     - {length: 40}  # TODO: walls for bridge
-    - {length: 6, angle: -3}  # 15 (130R)
-    - {length: 6}
-    - {length: 16, angle: -2.5}  # Still 15
+    - {turn_num: 15, length: 6, angle: -3}  # 130R
+    - {turn_num: 15, length: 6}
+    - {turn_num: 15, length: 16, angle: -2.5}
     - {length: 12, pitch: 0.125}
-    - {length: 4, angle: 8}  # 16
+    - {turn_num: 16, length: 4, angle: 8}
     - {length: 2}
-    - {length: 4, angle: -8}  # 17
+    - {turn_num: 17, length: 4, angle: -8}
     - {length: 7, pitch: -0.125}
-    - {length: 6, angle: 4, pitch: -0.25}  # 18
-    - {length: 12, angle: 4, pitch: -0.25}
+    - {turn_num: 18, length: 6, angle: 4, pitch: -0.25}
+    - {turn_num: 18, length: 12, angle: 4, pitch: -0.25}
     - {length: 4, pitch: -0.25}
 
   - name: monaco
@@ -264,7 +264,7 @@ tracks:
     - {length: 4, pitch: 0.25}
     - {length: 4, angle: -2, pitch: 0.25}
     - {length: 4, pitch: 0.25}
-    - {length: 8, angle: 8}  # 1: Sainte Devote
+    - {turn_num: 1, length: 8, angle: 8}  # Sainte Devote
     - {length: 12}
     - {length: 4, angle: -1, pitch: 1, has_apex: False}
     - {length: 24, pitch: 1}
@@ -272,62 +272,62 @@ tracks:
     - {length: 3, pitch: 1}
     - {length: 6, angle: -2, pitch: 1, has_apex: False}
     - {length: 3, pitch: 1}
-    - {length: 4, angle: 3, pitch: 0.25}  # 2: Beau Rivage
+    - {turn_num: 2, length: 4, angle: 3, pitch: 0.25}  # Beau Rivage
     - {length: 6, pitch: 0.25}
-    - {length: 10, angle: -4}  # 3: Massenet
-    - {length: 6, angle: -4}
-    - {length: 10, angle: -4}
+    - {turn_num: 3, length: 10, angle: -4}  # Massenet
+    - {turn_num: 3, length: 6, angle: -4}
+    - {turn_num: 3, length: 10, angle: -4}
     - {length: 12}
-    - {length: 10, angle: 8}  # 4: Casino
+    - {turn_num: 4, length: 10, angle: 8}  # Casino
     - {length: 12, pitch: -1}
     - {length: 20, pitch: -1}
-    - {length: 10, angle: 12, pitch: -0.5}  # 5: Mirabeau Haute
+    - {turn_num: 5, length: 10, angle: 12, pitch: -0.5}  # Mirabeau Haute
     - {length: 4, angle: -3, pitch: -0.5}
     - {length: 10, pitch: -0.5}
-    - {length: 10, angle: -16, pitch: -0.25}  # 6: Hairpin
+    - {turn_num: 6, length: 10, angle: -16, pitch: -0.25}  # Hairpin
     - {length: 8, pitch: -0.5}
-    - {length: 8, angle: 9, pitch: -0.5}  # 7: Mirabeau Bas
+    - {turn_num: 7, length: 8, angle: 9, pitch: -0.5}  # Mirabeau Bas
     - {length: 10, pitch: -0.75}
     - {length: 4, angle: 2, has_apex: False}
     - {length: 2}
-    - {length: 8, angle: 8}  # 8: Portier
+    - {turn_num: 8, length: 8, angle: 8}  # Portier
     - {length: 8}
     - {length: 16, tnl: true}  # Tunnel
     - {length: 4, angle: 1, tnl: true}
     - {length: 4, tnl: true}
-    - {length: 20, angle: 4, tnl: true}  # 9
+    - {turn_num: 9, length: 20, angle: 4, tnl: true}
     - {length: 28, tnl: true}
     - {length: 4, pitch: -0.5}  # Tunnel exit
     - {length: 10, angle: 1.5, pitch: -0.5}
     - {length: 16}
-    - {length: 4, angle: -8}  # 10: Nouvelle Chicane
+    - {turn_num: 10, length: 4, angle: -8}  # Nouvelle Chicane
     - {length: 2}
-    - {length: 4, angle: 8}
+    - {length: 4, angle: 8}  # Not numbered
     - {length: 4}
-    - {length: 4, angle: 4}  # 11: Chicane exit
-    - {length: 2}
-    - {length: 4, angle: -4}
+    - {turn_num: 11, length: 4, angle: 4}  # Chicane exit
+    - {turn_num: 11, length: 2}
+    - {turn_num: 11, length: 4, angle: -4}
     - {length: 20}
-    - {length: 9, angle: -5}  # 12: Tabac
+    - {turn_num: 12, length: 9, angle: -5}  # Tabac
     - {length: 12, angle: -3, has_apex: False}
-    - {length: 4, angle: -4}  # 13: Louis Chiron
+    - {turn_num: 13, length: 4, angle: -4}  # Louis Chiron
     - {length: 2}
-    - {length: 4, angle: 4}  # 14
+    - {turn_num: 14, length: 4, angle: 4}
     - {length: 20}
-    - {length: 4, angle: 8}  # 15
+    - {turn_num: 15, length: 4, angle: 8}
     - {length: 2}
-    - {length: 4, angle: -8}  # 16
+    - {turn_num: 16, length: 4, angle: -8}
     - {length: 8}
     - {length: 16, angle: -4}
     - {length: 4}
     - {length: 8, angle: 3}
-    - {length: 8, angle: 8}  # 17: Rascasse
+    - {turn_num: 17, length: 8, angle: 8}  # Rascasse
     - {length: 4, pitch: 0.25}
     - {length: 4, angle: 1.5, pitch: 0.25, has_apex: False}
     - {length: 6, pitch: 0.25}
-    - {length: 6, angle: 8}  # 18: Anthony Noghes
+    - {turn_num: 18, length: 6, angle: 8}  # Anthony Noghes
     - {length: 2}
-    - {length: 4, angle: -3}  # 19
+    - {turn_num: 19, length: 4, angle: -3}
     - {length: 10}
     - {length: 10, angle: 2, has_apex: False}
     - {length: 12}

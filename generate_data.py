@@ -51,7 +51,7 @@ class Color(namedtuple('Color', ['r', 'g', 'b'])):
 		return cls(r=r, g=g, b=b)
 
 
-PALETTE = [Color.from_hex(c) for c in [
+PALETTE: Final = [Color.from_hex(c) for c in [
 	'#000000',
 	'#1D2B53',
 	'#7E2553',
@@ -69,6 +69,10 @@ PALETTE = [Color.from_hex(c) for c in [
 	'#FF77A8',
 	'#FFCCAA',
 ]]
+
+BLACK: Final = PALETTE[0]
+WHITE: Final = PALETTE[7]
+RED: Final = PALETTE[8]
 
 
 class Point(namedtuple('Point', ['x', 'y'])):
@@ -141,6 +145,7 @@ class Segment:
 @dataclass
 class Section:
 	length: int
+	turn_num: int | None = None
 	angle: float = 0.0
 	# start_heading: float  # TODO
 	tnl: bool = False
@@ -153,6 +158,10 @@ class Section:
 	bgr: str = ''
 	bgc: str = ''
 	segments: list[Segment] = field(default_factory=list)
+
+	def __post_init__(self):
+		if self.length < 1:
+			raise ValueError(f'Section length must be at least 1 ({self.length=})')
 
 	def to_lua_dict(self) -> dict:
 		ret = dict(length=self.length)
@@ -522,8 +531,8 @@ def draw_track(track, scale=16):
 
 		c = cairo.Context(surface)
 
+		# Fill with ground color 1
 		c.set_source_rgb(*PALETTE[track.gndcol1 if track.gndcol1 is not None else 3])
-
 		c.paint()
 
 		# Without stroke, there's a slight gap between each segment; stroke=2 is workaround for this
@@ -560,6 +569,37 @@ def draw_track(track, scale=16):
 			c.set_line_width(stroke)
 			c.stroke()
 
+		def text(
+				t, /,
+				coord: Point,
+				color: tuple[float, float, float]=WHITE,
+				size=1,
+				font_family="sans_serif",
+				bold=False,
+				italic=False,
+				center_h=True,
+				center_v=True,
+				):
+
+			t = str(t)
+
+			weight = cairo.FontWeight.BOLD if bold else cairo.FontWeight.NORMAL
+			slant = cairo.FontSlant.ITALIC if italic else cairo.FontSlant.NORMAL
+			c.select_font_face(font_family, slant, weight)
+			c.set_font_size(size * scale)
+			c.set_source_rgb(color[0], color[1], color[2])
+
+			x, y = to_screen(coord) * scale
+			if center_h or center_v:
+				_, _, w, h, _, _ = c.text_extents(t)
+				if center_h:
+					x -= w/2
+				if center_v:
+					y += h/2
+
+			c.move_to(x, y)
+			c.show_text(t)
+
 		# Ground
 
 		for idx, (section, segment) in enumerate(iterate_segments(sections)):
@@ -595,13 +635,13 @@ def draw_track(track, scale=16):
 			polygon(segment.points(-track_width, track_width), PALETTE[roadcol], stroke=2)
 
 			if track.street and (idx % 4 == 0):
-				polygon(segment.points(-3/32, 3/32), PALETTE[7], stroke=0)
+				polygon(segment.points(-3/32, 3/32), WHITE, stroke=0)
 
 		# Line across start of each section
 
 		for section in sections:
 			points = section.segments[0].points(-track_width, track_width)
-			line([points[0], points[1]], color=PALETTE[0])
+			line([points[0], points[1]], color=BLACK)
 
 		# Start/Finish Line
 
@@ -615,20 +655,19 @@ def draw_track(track, scale=16):
 			p0 + n0*track_width,
 			p1 + n1*track_width,
 			p1 - n1*track_width,
-		], color=PALETTE[0])
+		], color=BLACK)
 
 		# Curbs
 
 		for idx, (section, segment) in enumerate(iterate_segments(sections)):
-			curb_color = PALETTE[8] if (idx % 2 == 0) else PALETTE[7]
+			curb_color = RED if (idx % 2 == 0) else WHITE
 			polygon(segment.points(track_width - shoulder_half_width, track_width + shoulder_half_width), curb_color, stroke=0.5)
 			polygon(segment.points(-track_width + shoulder_half_width, -track_width - shoulder_half_width), curb_color, stroke=0.5)
 
-		# Apexes
+		# Apexes & turn numbers
 
-		for section in sections:
-			if section.apex is None:
-				continue
+		for section in (s for s in sections if s.apex is not None):
+
 			assert 0 <= section.apex < len(section.segments)
 			apex_seg = section.segments[section.apex]
 			seg_corners = apex_seg.points(-track_width, track_width)
@@ -638,6 +677,9 @@ def draw_track(track, scale=16):
 				apex_point = seg_corners[1]
 
 			circle(apex_point, radius=1, color=(0, 0, 1))
+
+			if section.turn_num:
+				text(section.turn_num, apex_point, bold=True)
 
 		# TODO: draw rest of racing line
 
