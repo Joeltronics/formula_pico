@@ -13,19 +13,28 @@ import numpy as np
 SQRT_2: Final = sqrt(2)
 COS_45: Final = 1 / SQRT_2
 
+HALF_PI: Final = np.pi/2
+
 DEFAULT_TICK_SIZE: Final = 1e-3
 
 
 @dataclass
 class RacingLine:
 	label: str | None = None
+
 	grip: float | None = None
+
 	time: np.ndarray | None = None
-	position: np.ndarray | None = None
-	velocity: np.ndarray | None = None
-	acceleration: np.ndarray | None = None
-	acceleration_forward: np.ndarray | None = None
-	acceleration_lateral: np.ndarray | None = None
+
+	distance: np.ndarray | None = None  # Distance along track, relative to center of corner
+	x_position: np.ndarray | None = None  # Lateral position, relative to center of track
+	angle_rel_degrees: np.ndarray | None = None  # Angle relative to track direction, in degrees
+
+	position: np.ndarray | None = None  # Position, complex (X, Y)
+	velocity: np.ndarray | None = None  # Velocity, complex (X, Y)
+	acceleration: np.ndarray | None = None  # Total acceleration, complex (X, Y)
+	acceleration_forward: np.ndarray | None = None  # Forward acceleration, complex (X, Y)
+	acceleration_lateral: np.ndarray | None = None  # Lateral acceleration, complex (X, Y)
 
 
 """
@@ -65,9 +74,11 @@ def plot_corner(ax, *, track_width, entrance_len, exit_len, radius_center):
 
 def calculate_racing_line(
 		radius: float,
+		*,
+		track_width: float,
+		radius_center: float,
 		start: tuple[float, float] | None = None,
 		apex_angle_degrees: float = 45,
-		*,
 		radius_post_apex: float | None = None,
 		tick_size: float = DEFAULT_TICK_SIZE,
 		grip: float = 1.0,
@@ -83,6 +94,9 @@ def calculate_racing_line(
 	if start is None:
 		start = (-radius, 0)
 
+	track_half_width = track_width / 2
+	radius_inner = radius_center - track_half_width
+
 	apex_angle_rads = np.radians(90 - apex_angle_degrees)
 
 	# Calculate velocity so that acceleration is independent of radius
@@ -90,13 +104,6 @@ def calculate_racing_line(
 	# v = sqrt(a * r)
 	accel_mag = grip
 	velocity_mag_pre_apex = sqrt(accel_mag * radius)
-
-	if radius_post_apex is None:
-		velocity_mag_post_apex = velocity_mag_pre_apex
-	else:
-		velocity_mag_post_apex = sqrt(accel_mag * radius_post_apex)
-
-	velocity_mag_curr = velocity_mag_pre_apex
 
 	x, y = start
 
@@ -113,6 +120,12 @@ def calculate_racing_line(
 	acc_f_y = []
 	acc_l_x = []
 	acc_l_y = []
+
+	distance = []
+	x_position = []
+	angle_rel_degrees = []
+
+	turn_arc_length = HALF_PI * radius_center
 
 	while True:
 
@@ -145,6 +158,28 @@ def calculate_racing_line(
 		this_accel_mag = sqrt(atot_x*atot_x + atot_y*atot_y)
 		assert isclose(this_accel_mag, accel_mag, rel_tol=1e-2), f"{this_accel_mag=}, {accel_mag=}"  # TODO: This fails with rel_tol >= 1e-3, why?
 
+		if y < 0:
+			# Before start of turn, center line is up
+			center_angle = HALF_PI
+			d = y - 0.5*turn_arc_length
+			x_pos = -(x + radius_inner + track_half_width)
+
+		elif x > 0:
+			# After end of turn, center line is to the right
+			center_angle = 0
+			d = 0.5*turn_arc_length + x
+			x_pos = y - (radius_inner + track_half_width)
+
+		else:
+			# Mid-turn
+			r = sqrt(x*x + y*y)
+			angle_around_origin = atan2(y, x)
+			center_angle = angle_around_origin - HALF_PI
+			d = (np.pi*3/4 - angle_around_origin) * radius_center
+			x_pos = r - radius_center
+
+		angle_rel = (velocity_angle - center_angle)
+
 		pos_x.append(x)
 		pos_y.append(y)
 		vel_x.append(vx)
@@ -155,10 +190,9 @@ def calculate_racing_line(
 		acc_f_y.append(af_y)
 		acc_l_x.append(al_x)
 		acc_l_y.append(al_y)
-
-		# if after_apex:
-		# 	# TODO: don't just immediately jump velocity; increase forward acceleration instead
-		# 	velocity_mag_curr = velocity_mag_post_apex
+		distance.append(d)
+		x_position.append(x_pos)
+		angle_rel_degrees.append(np.degrees(angle_rel))
 
 		if velocity_angle < 0:
 			break
@@ -171,13 +205,10 @@ def calculate_racing_line(
 		velocity_mag = np.sqrt(vx*vx + vy*vy)
 
 		if radius_post_apex is None or velocity_angle >= apex_angle_rads:
-			# assert isclose(velocity_mag, velocity_mag_pre_apex, rel_tol=1e-6), f"{velocity_mag=}, {velocity_mag_pre_apex=}"
 			assert isclose(velocity_mag, velocity_mag, rel_tol=1e-3), f"{velocity_mag=}, {velocity_mag=}"
-		# FIXME: this shouldn't be necessary, but is due to immediate jump in velocity
-		# vx *= (velocity_mag_curr / velocity_mag)
-		# vy *= (velocity_mag_curr / velocity_mag)
 
-	assert len(pos_x) == len(pos_y) == len(vel_x) == len(vel_y) == len(acc_x) == len(acc_y) == len(acc_f_x) == len(acc_f_y) == len(acc_l_x) == len(acc_l_y)
+	assert len(pos_x) == len(pos_y) == len(vel_x) == len(vel_y) == len(acc_x) == len(acc_y) == len(acc_f_x) == \
+		len(acc_f_y) == len(acc_l_x) == len(acc_l_y) == len(distance) == len(x_position) == len(angle_rel_degrees)
 
 	position = np.array(pos_x) + 1j * np.array(pos_y)
 	velocity = np.array(vel_x) + 1j * np.array(vel_y)
@@ -190,6 +221,9 @@ def calculate_racing_line(
 	return RacingLine(
 		time=time,
 		grip=grip,
+		distance=np.array(distance),
+		x_position=np.array(x_position),
+		angle_rel_degrees=np.array(angle_rel_degrees),
 		position=position,
 		velocity=velocity,
 		acceleration=acceleration,
@@ -239,7 +273,7 @@ def calculate_geometric_racing_line(
 
 	start = (start_x, -start_x - radius)
 
-	return calculate_racing_line(radius, start, tick_size=tick_size, label=label, grip=grip)
+	return calculate_racing_line(radius, start=start, tick_size=tick_size, label=label, grip=grip, track_width=track_width, radius_center=radius_center)
 
 
 def calculate_compound_racing_line(
@@ -276,12 +310,14 @@ def calculate_compound_racing_line(
 
 	return calculate_racing_line(
 		r_pre,
-		start,
+		start=start,
 		radius_post_apex=r_post,
 		apex_angle_degrees=apex_angle_degrees,
 		tick_size=tick_size,
 		label=label,
 		grip=grip,
+		track_width=track_width,
+		radius_center=radius_center,
 	)
 
 
@@ -303,9 +339,9 @@ def main():
 	# Racing lines
 
 	racing_lines_constant_grip = [
-		calculate_racing_line(radius_inner, label='Inside', tick_size=args.tick),
-		calculate_racing_line(radius_outer, label='Outside', tick_size=args.tick),
-		calculate_racing_line(radius_center, label='Center', tick_size=args.tick),
+		calculate_racing_line(radius_inner, label='Inside', tick_size=args.tick, track_width=track_width, radius_center=radius_center),
+		calculate_racing_line(radius_outer, label='Outside', tick_size=args.tick, track_width=track_width, radius_center=radius_center),
+		calculate_racing_line(radius_center, label='Center', tick_size=args.tick, track_width=track_width, radius_center=radius_center),
 		calculate_geometric_racing_line(
 			track_width=track_width, radius_center=radius_center, label='Geometric', tick_size=args.tick),
 		calculate_compound_racing_line(
@@ -326,54 +362,60 @@ def main():
 		for grip in [0.5, 0.75, 1, 1.5, 2]
 	]
 
-	# racing_lines_varying_grip = [
-	# 	calculate_geometric_racing_line(track_width=track_width, radius_center=radius_center, grip=grip, label=f'Grip={grip:g}')
-	# 	for grip in [0.5, 0.75, 1, 1.5, 2]
-	# ]
-
 	for racing_lines, title in [
 			(racing_lines_constant_grip, 'Racing lines, constant grip'),
 			(racing_lines_geo_varying_grip, 'Geometric line, varying Grip'),
 			(racing_lines_late_apex_varying_grip, 'Late apex (60$\degree$), varying Grip'),
 			]:
 
-		fig, axes = plt.subplots(nrows=4, ncols=2)
+		fig, axes = plt.subplots(nrows=4, ncols=3)
 		fig.suptitle(title)
 
 		ax_pos = axes[0, 0]
-		ax_radius = axes[1, 0]
 		ax_gg = axes[2, 0]
+		ax_acc_t = axes[3, 0]
 
-		ax_vel = axes[0, 1]
-		ax_acc_f = axes[1, 1]
-		ax_acc_l = axes[2, 1]
-		ax_acc_t = axes[3, 1]
+		ax_d = axes[0, 1]
+		ax_vel = axes[1, 1]
+		ax_acc_f = axes[2, 1]
+		ax_acc_l = axes[3, 1]
+
+		ax_radius = axes[0, 2]
+		ax_x = axes[1, 2]
+		ax_angle = axes[2, 2]
 
 		plot_corner(
 			ax_pos,
 			track_width=track_width, entrance_len=entrance_len, exit_len=exit_len, radius_center=radius_center)
 
 		for racing_line in racing_lines:
+			label = racing_line.label
 			t = racing_line.time
+			d = racing_line.distance
 			x = np.real(racing_line.position)
 			y = np.imag(racing_line.position)
 			vel = np.abs(racing_line.velocity)
 			acc = np.abs(racing_line.acceleration)
 			acc_l = np.abs(racing_line.acceleration_lateral)
 			acc_f = np.abs(racing_line.acceleration_forward)
-			ax_pos.plot(x, y, label=racing_line.label)
-			ax_vel.plot(t, vel, label=racing_line.label)
-			ax_acc_t.plot(t, acc, label=racing_line.label)
-			ax_acc_l.plot(t, acc_l, label=racing_line.label)
-			ax_acc_f.plot(t, acc_f, label=racing_line.label)
+
+			ax_pos.plot(x, y, label=label)
+			ax_vel.plot(t, vel, label=label)
+			ax_acc_t.plot(t, acc, label=label)
+			ax_acc_l.plot(t, acc_l, label=label)
+			ax_acc_f.plot(t, acc_f, label=label)
+
+			ax_d.plot(t, d, label=label)
+			ax_x.plot(d, racing_line.x_position, label=label)
+			ax_angle.plot(d, racing_line.angle_rel_degrees, label=label)
 
 			# Also add points for what acceleration would be before & after corner
 			gg_x = list(acc_l) + [0, 0]
 			gg_y = list(acc_f) + [-racing_line.grip, racing_line.grip]
-			ax_gg.scatter(gg_x, gg_y, label=racing_line.label)
+			ax_gg.scatter(gg_x, gg_y, label=label)
 
 			radius = np.square(vel) / acc_l
-			ax_radius.plot(t, radius, label=racing_line.label)
+			ax_radius.plot(d, radius, label=label)
 
 		ax_pos.set_xticks(np.arange(-track_width - radius_inner, exit_len + 1, 1))
 		ax_pos.set_yticks(np.arange(-entrance_len, radius_inner + track_width + 1, 1))
@@ -382,8 +424,9 @@ def main():
 		for ax in [ax_pos, ax_gg]:
 			ax.axis('equal')
 
-		for ax in [ax_pos, ax_vel, ax_acc_l, ax_acc_f, ax_acc_t, ax_radius, ax_gg]:
-			ax.grid()
+		for row in axes:
+			for ax in row:
+				ax.grid()
 
 		ax_radius.set_ylabel('Radius $(v^2/a_L)$')
 		ax_vel.set_ylabel('Velocity')
@@ -391,14 +434,17 @@ def main():
 		ax_acc_f.set_ylabel('Forward acceleration')
 		ax_acc_t.set_ylabel('Total acceleration')
 
-		ax_radius.set_xlabel('Time')
-		# ax_vel.set_xlabel('Time')
-		# ax_acc_l.set_xlabel('Time')
-		# ax_acc_f.set_xlabel('Time')
-		ax_acc_t.set_xlabel('Time')
+		ax_d.set_ylabel('Distance')
+
+		ax_x.set_ylabel('X displacement')
+		ax_angle.set_ylabel('Angle ($\degree$)')
 
 		ax_gg.set_xlabel('Lateral g')
 		ax_gg.set_ylabel('Forward g')
+
+		ax_acc_t.set_xlabel('Time')
+		axes[-1, 1].set_xlabel('Time')
+		axes[-1, 2].set_xlabel('Distance (relative to corner center)')
 
 	plt.show()
 
