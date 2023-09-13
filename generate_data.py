@@ -13,6 +13,8 @@ import cairo
 from PIL import Image, ImageDraw
 import yaml
 
+from common import Point
+
 TWO_PI: Final = 2.0 * PI
 EPS: Final = 1e-9
 
@@ -73,41 +75,6 @@ PALETTE: Final = [Color.from_hex(c) for c in [
 BLACK: Final = PALETTE[0]
 WHITE: Final = PALETTE[7]
 RED: Final = PALETTE[8]
-
-
-class Point(namedtuple('Point', ['x', 'y'])):
-	__slots__ = ()
-
-	def __add__(self, other: 'Point') -> 'Point':
-		return Point(self.x + other.x, self.y + other.y)
-
-	def __sub__(self, other: 'Point') -> 'Point':
-		return Point(self.x - other.x, self.y - other.y)
-
-	def __mul__(self, val: float) -> 'Point':
-		return Point(self.x * val, self.y * val)
-
-	def __rmul__(self, val: float) -> 'Point':
-		return Point(val * self.x, val * self.y)
-
-	def __truediv__(self, val: float) -> 'Point':
-		return Point(self.x / val, self.y / val)
-
-	def __pos__(self) -> 'Point':
-		return self
-
-	def __neg__(self) -> 'Point':
-		return Point(-self.x, -self.y)
-
-	def magnitude(self) -> float:
-		return sqrt(self.x ** 2 + self.y ** 2)
-
-	def normalized(self) -> 'Point':
-		mag = self.magnitude()
-		return self / mag if mag else Point(0, 0)
-
-	def normal(self) -> 'Point':
-		return Point(-self.y, self.x).normalized()
 
 
 def float_round_pico8_precision(val: float):

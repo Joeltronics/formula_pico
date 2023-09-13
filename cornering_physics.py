@@ -11,6 +11,8 @@ from matplotlib import pyplot as plt
 from matplotlib.patches import Rectangle, Polygon
 import numpy as np
 
+from common import Point, calculate_racing_line_radius
+
 
 SQRT_2: Final = sqrt(2)
 COS_45: Final = 1 / SQRT_2
@@ -20,42 +22,6 @@ TWO_PI: Final = 2*np.pi
 HALF_PI: Final = np.pi/2
 
 DEFAULT_TICK_SIZE: Final = 1e-3
-
-
-# TODO: de-duplicate this from generate_data.py
-class Point(namedtuple('Point', ['x', 'y'])):
-	__slots__ = ()
-
-	def __add__(self, other: 'Point') -> 'Point':
-		return Point(self.x + other.x, self.y + other.y)
-
-	def __sub__(self, other: 'Point') -> 'Point':
-		return Point(self.x - other.x, self.y - other.y)
-
-	def __mul__(self, val: float) -> 'Point':
-		return Point(self.x * val, self.y * val)
-
-	def __rmul__(self, val: float) -> 'Point':
-		return Point(val * self.x, val * self.y)
-
-	def __truediv__(self, val: float) -> 'Point':
-		return Point(self.x / val, self.y / val)
-
-	def __pos__(self) -> 'Point':
-		return self
-
-	def __neg__(self) -> 'Point':
-		return Point(-self.x, -self.y)
-
-	def magnitude(self) -> float:
-		return sqrt(self.x ** 2 + self.y ** 2)
-
-	def normalized(self) -> 'Point':
-		mag = self.magnitude()
-		return self / mag if mag else Point(0, 0)
-
-	def normal(self) -> 'Point':
-		return Point(-self.y, self.x).normalized()
 
 
 @dataclass
@@ -383,63 +349,25 @@ def calculate_racing_line(
 	if apex_angle_degrees is None:
 		apex_angle_degrees = 0.5 * turn_angle_degrees
 
-	if not 0 < apex_angle_degrees < min(turn_angle_degrees, 90):
+	if not (0 < apex_angle_degrees <= 90 and apex_angle_degrees < turn_angle_degrees):
 		raise ValueError(f'{apex_angle_degrees=}, {turn_angle_degrees=}')
 
-	radius_inner = radius_center - track_width / 2
+	angle_post_apex_degrees = turn_angle_degrees - apex_angle_degrees
 
-	start_x = -track_width - radius_inner
-
-	r"""
-	Math for radius pre-apex:
-
-	Need to calculate circle which is tangent to x = start.x, and goes through apex
-
-	Essentially we need to solve for triangle:
-
-	             (apex)
-	               *
-	             / |  \   R
-	           /   |     \
-	         /     |        \   - theta
-	(start) *------*----------*
-	        |  a   |  (R-a)   |
-	        |        R        |
-
-	cos(theta) = (R - a) / R
-	R * cos(theta) = R - a
-	a = R - R * cos(theta)
-	a = (1 - cos(theta)) * R
-	R = a / (1 - cos(theta))
-
-	a = apex.x - start.x
-	start.x = -track_width - r_inner
-	apex.x = -r_inner * cos(theta)
-
-	a = -r_inner * cos(theta) + track_width + r_inner
-	a = track_width + r_inner - r_inner * cos(theta)
-	a = track_width + r_inner * (1 - cos(theta))
-
-	Then for post-apex, it's the same but using the remaining turn angle as theta
-	"""
-
-	angle_pre_apex_rads = radians(apex_angle_degrees)
-	angle_post_apex_rads = radians(turn_angle_degrees - apex_angle_degrees)
-	cos_pre_apex = cos(angle_pre_apex_rads)
-	sin_pre_apex = sin(angle_pre_apex_rads)
-	cos_post_apex = cos(angle_post_apex_rads)
-
-	a_pre = track_width + radius_inner * (1 - cos_pre_apex)
-	a_post = track_width + radius_inner * (1 - cos_post_apex)
-
-	r_pre = a_pre / (1 - cos_pre_apex)
-	r_post = a_post / (1 - cos_post_apex)
-
-	start = (start_x, (radius_inner - r_pre)*sin_pre_apex)
+	r_pre, start_x, start_y = calculate_racing_line_radius(
+		track_width=track_width,
+		radius_track_center=radius_center,
+		apex_angle_degrees=apex_angle_degrees,
+	)
+	r_post, _, _ = calculate_racing_line_radius(
+		track_width=track_width,
+		radius_track_center=radius_center,
+		apex_angle_degrees=angle_post_apex_degrees,
+	)
 
 	return calculate_racing_line_with_radius(
 		r_pre,
-		start=start,
+		start=(start_x, start_y),
 		radius_post_apex=r_post,
 		turn_angle_degrees=turn_angle_degrees,
 		apex_angle_degrees=apex_angle_degrees,
@@ -519,17 +447,13 @@ def main():
 		calculate_racing_line_with_radius(radius_outer, label='Outside', turn_angle_degrees=135, **kwargs),
 		calculate_racing_line_with_radius(radius_center, label='Center', turn_angle_degrees=135, **kwargs),
 		calculate_racing_line(turn_angle_degrees=135, label='Geometric', **kwargs),
-		# TODO: make this 90
-		calculate_racing_line(turn_angle_degrees=135, apex_angle_degrees=85, label='Late apex (85$\degree$)', **kwargs),
+		calculate_racing_line(turn_angle_degrees=135, apex_angle_degrees=90, label='Late apex (90$\degree$)', **kwargs),
 	]
 	racing_lines_180 = [
 		calculate_racing_line_with_radius(radius_inner, label='Inside', turn_angle_degrees=180, **kwargs),
 		calculate_racing_line_with_radius(radius_outer, label='Outside', turn_angle_degrees=180, **kwargs),
 		calculate_racing_line_with_radius(radius_center, label='Center', turn_angle_degrees=180, **kwargs),
-		# TODO: This is the correct geo racing line, but roll this functionality into calculate_racing_line()
-		calculate_racing_line_with_radius(
-			radius_outer, label='Geometric', turn_angle_degrees=180,
-			start=(-radius_outer, -track_width), **kwargs),
+		calculate_racing_line(turn_angle_degrees=180, apex_angle_degrees=90, label='Geometric', **kwargs),
 	]
 
 	for turn_angle, this_track_width, racing_lines, title in [
