@@ -111,16 +111,23 @@ class Segment:
 
 @dataclass
 class Section:
+	# Basic stats
 	length: int
 	turn_num: int | None = None
 	angle: float = 0.0
 	# start_heading: float  # TODO
-	tnl: bool = False
 	pitch: float = 0.0
+	tnl: bool = False
+
+	# Racing line
+	max_speed_kph: float | None = None
+	has_apex: bool | None = None
+	apex_idx: int | None = None
+	# x: float | None = None
+
+	# Ground & background info
 	gndcol1: int | None = None
 	gndcol2: int | None = None
-	has_apex: bool | None = None
-	apex: int | None = None
 	bgl: str = ''
 	bgr: str = ''
 	bgc: str = ''
@@ -256,17 +263,17 @@ class Track:
 				angle_sum += abs(section.angle)
 				if angle_sum > (half_angle - EPS):
 					t = (half_angle - angle_sum_prev) / abs(section.angle)
-					section.apex = round(t * section.length)
-					assert 0 <= section.apex <= section.length
+					section.apex_idx = round(t * section.length)
+					assert 0 <= section.apex_idx <= section.length
 					break
 
 			# If apex ended up at end of a section, then put it on first segment of next section instead
 			for idx in range(len(turn)):
 				section = turn[idx]
-				if section.apex == section.length:
+				if section.apex_idx == section.length:
 					assert idx < len(turn) - 1
-					turn[idx + 1].apex = 0
-					section.apex = None
+					turn[idx + 1].apex_idx = 0
+					section.apex_idx = None
 
 			turn = []
 
@@ -633,10 +640,10 @@ def draw_track(track, scale=16):
 
 		# Apexes & turn numbers
 
-		for section in (s for s in sections if s.apex is not None):
+		for section in (s for s in sections if s.apex_idx is not None):
 
-			assert 0 <= section.apex < len(section.segments)
-			apex_seg = section.segments[section.apex]
+			assert 0 <= section.apex_idx < len(section.segments)
+			apex_seg = section.segments[section.apex_idx]
 			seg_corners = apex_seg.points(-track_width, track_width)
 			if section.angle > 0:
 				apex_point = seg_corners[0]
