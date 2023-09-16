@@ -49,8 +49,8 @@ end
 
 function set_flags(sfx, noiz, buzz, detune, reverb, dampen)
 	local byte = 1 -- tracker mode
-	if (noiz) byte += 2
-	if (buzz) byte += 4
+	byte += noiz * 2
+	byte += buzz * 4
 	byte += detune * 8
 	byte += reverb * 24
 	byte += dampen * 72
