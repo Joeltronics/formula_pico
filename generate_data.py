@@ -13,13 +13,15 @@ import cairo
 from PIL import Image, ImageDraw
 import yaml
 
-from common import Point
+from common import lerp, sgn, Point
 
 TWO_PI: Final = 2.0 * PI
 EPS: Final = 1e-9
 
-MINIMAP_MAX_WIDTH = 32
-MINIMAP_MAX_HEIGHT = 48
+SPEED_KPH_SCALE: Final = 350
+
+MINIMAP_MAX_WIDTH: Final = 32
+MINIMAP_MAX_HEIGHT: Final = 48
 
 DATA_FILENAME_IN: Final = Path('track_data.yaml')
 DATA_FILENAME_OUT: Final = Path('generated_data.lua')
@@ -89,6 +91,10 @@ class Segment:
 	center_start: Point
 	center_end: Point
 
+	max_speed: float
+	racing_line_start_x: float
+	racing_line_end_x: float
+
 	normal_start: Point | None = None
 	normal_end: Point | None = None
 
@@ -121,9 +127,13 @@ class Section:
 
 	# Racing line
 	max_speed_kph: float | None = None
+	max_speed_pre_apex: float | None = None
+	max_speed_post_apex: float | None = None
 	has_apex: bool | None = None
 	apex_idx: int | None = None
-	# x: float | None = None
+	entrance_x: float | None = None
+	apex_x: float | None = None
+	exit_x: float | None = None  # Only for temporary calculations, not exported to Lua
 
 	# Ground & background info
 	gndcol1: int | None = None
@@ -133,32 +143,79 @@ class Section:
 	bgc: str = ''
 	segments: list[Segment] = field(default_factory=list)
 
+	@property
+	def angle_per_seg(self):
+		return self.angle / self.length
+
 	def __post_init__(self):
 		if self.length < 1:
 			raise ValueError(f'Section length must be at least 1 ({self.length=})')
 
 	def to_lua_dict(self) -> dict:
+
 		ret = dict(length=self.length)
-		for attr_name in ['angle', 'tnl', 'pitch', 'gndcol1', 'gndcol2', 'bgl', 'bgr', 'bgc']:
-			if (val := getattr(self, attr_name, None)):
+
+		FIELDS_IF_NON_DEFAULT = [
+			'entrance_x',
+			'pitch',
+			'angle',
+			'max_speed_pre_apex',
+			'apex_x',
+			'max_speed_post_apex',
+			'tnl',
+			'gndcol1',
+			'gndcol2',
+			'bgl',
+			'bgr',
+			'bgc',
+		]
+		default = Section(length=1)
+		for attr_name in FIELDS_IF_NON_DEFAULT:
+			val = getattr(self, attr_name)
+			if val != getattr(default, attr_name):
 				ret[attr_name] = val
+
+		# if self.max_speed_kph is not None:
+		# 	ret['max_speed_pre_apex'] = self.max_speed_kph / SPEED_KPH_SCALE
+
+		if (self.apex_idx is not None) and (self.apex_idx < self.length):
+			ret['apex_seg'] = self.apex_idx + 1
+
 		return ret
 
 	def to_lua_compressed(self) -> str:
 
-		items = [to_lua_str(self.length)]
+		vals_uncompressed = self.to_lua_dict()
 
-		# TODO: if angle but no pitch, could put key=value in 2nd slot
+		# TODO: this should wrap self.to_lua_dict()
 
-		if self.angle or self.pitch:
-			items.append(to_lua_str(self.pitch))
+		FIELDS = [
+			'length',
+			'entrance_x',
+			'pitch',
+			'angle',
+			'max_speed_pre_apex',
+			'apex_seg',
+			'apex_x',
+			'max_speed_post_apex',
+		]
+		items = [vals_uncompressed.pop(field_name, None) for field_name in FIELDS]
 
-		if self.angle:
-			items.append(to_lua_str(self.angle))
+		# Leave off items at the end that are at default value
+		last_needed_idx = None
+		for idx, val in enumerate(items):
+			if val is not None:
+				last_needed_idx = idx
 
-		for attr_name in ['tnl', 'gndcol1', 'gndcol2', 'bgl', 'bgr', 'bgc']:
-			if (val := getattr(self, attr_name, None)):
-				items.append(f'{attr_name}={to_lua_str(val, quote_strings=False)}')
+		items = items[:(last_needed_idx + 1)]
+
+		# TODO: can put key=value into slots that are None
+		# e.g. if angle but no pitch, could put key=value into pitch slot instead of needing to append
+
+		items = [to_lua_str(item) for item in items]
+
+		for k, v in vals_uncompressed.items():
+			items.append(f'{k}={to_lua_str(v, quote_strings=False)}')
 
 		return ','.join(items)
 
@@ -213,7 +270,9 @@ class Track:
 
 		# TODO: auto adjust last section length so it matches up to start as close as possible
 
-		self._calculate_apexes()
+		# TODO: use the new logic
+		self._calculate_racing_line_original_logic()
+		# self._calculate_apexes()
 
 		self._make_segments()
 
@@ -243,6 +302,114 @@ class Track:
 		self.minimap_offset_x = int(ceil(self.x_max * self.minimap_scale))
 		# Offset from vertical center of screen to put bottom of minimap at center of screen
 		self.minimap_offset_y = int(round(-self.y_min * self.minimap_scale))
+
+	@staticmethod
+	def _corner_exit_entrance_original_logic(section: Section) -> float:
+		"""
+		Bad original logic, ported from Lua
+		"""
+		direction = sgn(section.angle)
+		if section.max_speed_pre_apex < 0.5:
+			# Low speed
+			return -0.75 * direction
+		elif section.max_speed_pre_apex < 0.75:
+			# Med speed
+			return -0.25 * direction
+		else:
+			# High speed
+			return 0.5 * direction
+
+	def _calculate_racing_line_original_logic(self):
+		"""
+		Bad original logic, ported from Lua
+		"""
+
+		BRAKE_DECEL = 1/128
+
+		# Max speed
+
+		for section in self.sections:
+			max_speed = min(1.25 - abs(32 * section.angle_per_seg), 1)
+			max_speed = max(max_speed, 0.25)
+			max_speed = max_speed ** 2
+			section.max_speed_pre_apex = max_speed
+		del section
+
+		# Apex, entrance, exit
+
+		for idx in range(len(self.sections)):
+			section0 = self.sections[idx]
+			section1 = self.sections[(idx + 1) % len(self.sections)]
+
+			section0.max_speed_post_apex = section1.max_speed_pre_apex
+
+			if section0.angle == 0:
+				# Straight, apex indicates braking point
+				# apex will be updated later once we know next section entrance & apex
+				pass
+
+			elif section1.angle != 0 and ((section0.angle > 0) == (section1.angle > 0)):
+				# 2 corners of same direction in a row
+				# Apex is at end of first
+				# TODO: apex isn't necessarily in the middle of the two - could be double-apex, or just early or late
+				# TODO: special logic for more than 2 section segments in a row
+				section0.apex_idx = section0.length - 1
+				section0.apex_x = 0.9 * sgn(section0.angle)
+				section0.exit_x = section0.apex_x
+
+				section1.apex_idx = 0
+				section1.apex_x = section0.apex_x
+				section1.entrance_x = section0.apex_x
+
+				section0.entrance_x = self._corner_exit_entrance_original_logic(section0)
+				section1.exit_x = self._corner_exit_entrance_original_logic(section1)
+
+			elif section0.apex_idx is None:
+				# Standalone section, or 2 corners changing direction (e.g. chicane)
+				# Apex is in middle
+				section0.apex_idx = section0.length // 2 - 1
+				section0.apex_x = 0.9 * sgn(section0.angle)
+				section0.entrance_x = self._corner_exit_entrance_original_logic(section0)
+				section0.exit_x = section0.entrance_x
+		del section0, section1
+
+		# Consolidate entrances & exits
+
+		for idx in range(len(self.sections)):
+			section0 = self.sections[idx]
+			section1 = self.sections[(idx + 1) % len(self.sections)]
+
+			if (section0.exit_x is not None) and (section1.entrance_x is not None):
+				section0.exit_x = 0.5 * (section0.exit_x + section1.entrance_x)
+				section1.entrance_x = section0.exit_x
+			elif section0.exit_x:
+				section1.entrance_x = section0.exit_x
+			elif section1.entrance_x:
+				section0.exit_x = section1.entrance_x
+			else:
+				section0.exit_x = section1.entrance_x = 0
+
+			if section0.apex_x is None:
+
+				section0.apex_idx = section0.length - 1
+				section0.apex_x = section0.exit_x
+
+				if section1.max_speed_pre_apex < 0.99:
+
+					assert section1.apex_idx is not None, f"{section1.max_speed_pre_apex=}"
+
+					# Use apex to indicate braking point
+					decel_needed = 1.0 - section1.max_speed_pre_apex
+					# FIXME: this isn't right! brake_decel is per frame, not per segment;
+					# frames per segment depends on speed!
+					decel_segments = decel_needed / (8 * BRAKE_DECEL)
+					decel_segments -= 0.5*(section1.apex_idx + 1)
+					decel_segments = max(0, ceil(decel_segments))
+					section0.apex_idx = max(1, section0.length - decel_segments - 1)
+					section0.apex_x = section0.exit_x
+
+			assert section0.apex_idx is not None
+			assert section0.apex_x is not None
 
 	def _calculate_apexes(self):
 
@@ -306,13 +473,22 @@ class Track:
 
 		self.segments = []
 
-		for idx, section in enumerate(self.sections):
+		for section_idx, section in enumerate(self.sections):
 			try:
 				length = section.length
-				angle = section.angle
-				angle_per_seg = angle / length
+				angle_per_seg = section.angle_per_seg
 
-				for _ in range(length):
+				assert section.apex_idx is not None
+				assert section.entrance_x is not None
+				assert section.apex_x is not None
+				assert section.exit_x is not None
+				length_pre_apex = section.apex_idx
+				# TODO: is this off by 1?
+				length_post_apex = section.length - section.apex_idx
+				dx_pre_apex = (section.apex_x - section.entrance_x) / length_pre_apex if length_pre_apex else 0
+				dx_post_apex = (section.exit_x - section.apex_x) / length_post_apex if length_post_apex else 0
+
+				for idx in range(length):
 					# Angle units:
 					# The game uses are +right / -left, with 1 = full circle
 					# Direction is backwards from Cartesian coordinates, so subtract instead of adding
@@ -323,13 +499,32 @@ class Track:
 					y += segment_length_units * sin(TWO_PI * heading)
 					center_end = Point(x, y)
 
+					idx_post_apex = idx - section.apex_idx
+					if idx_post_apex < 0:
+						# Before apex
+						max_speed = section.max_speed_pre_apex
+						racing_line_start_x = section.entrance_x + idx * dx_pre_apex
+						racing_line_end_x = section.entrance_x + (idx + 1) * dx_pre_apex
+					else:
+						# After apex
+						max_speed = section.max_speed_post_apex
+						racing_line_start_x = section.apex_x + idx_post_apex * dx_post_apex
+						racing_line_end_x = section.apex_x + (idx_post_apex + 1) * dx_post_apex
+
 					seg = Segment(
-						idx=len(self.segments), angle=angle_per_seg, center_start=center_start, center_end=center_end)
+						idx=len(self.segments),
+						angle=angle_per_seg,
+						center_start=center_start,
+						center_end=center_end,
+						max_speed=max_speed,
+						racing_line_start_x=racing_line_start_x,
+						racing_line_end_x=racing_line_end_x,
+					)
 					self.segments.append(seg)
 					section.segments.append(seg)
 
 			except Exception as ex:
-				raise Exception(f'Failed to parse track "{self.name}" corner {idx}: {ex}') from ex
+				raise Exception(f'Failed to parse track "{self.name}" corner {section_idx}: {ex}') from ex
 
 		self.end_heading = heading
 
@@ -638,9 +833,31 @@ def draw_track(track, scale=16):
 			polygon(segment.points(track_width - shoulder_half_width, track_width + shoulder_half_width), curb_color, stroke=0.5)
 			polygon(segment.points(-track_width + shoulder_half_width, -track_width - shoulder_half_width), curb_color, stroke=0.5)
 
+		# Racing line
+
+		for _, segment in iterate_segments(sections):
+
+			if segment.max_speed == 1:
+				color = (0, 1, 0)
+			else:
+				color = (
+					sqrt(lerp(1, 0, segment.max_speed)),
+					sqrt(lerp(0, 0.75, segment.max_speed)),
+					0
+				)
+
+			# TODO: why is this subtraction instead of addition?
+			line([
+					segment.center_start - segment.normal_start * track_width * segment.racing_line_start_x,
+					segment.center_end - segment.normal_end * track_width * segment.racing_line_end_x
+				], color=color)
+
 		# Apexes & turn numbers
 
 		for section in (s for s in sections if s.apex_idx is not None):
+
+			if section.angle == 0:
+				continue
 
 			assert 0 <= section.apex_idx < len(section.segments)
 			apex_seg = section.segments[section.apex_idx]
@@ -654,8 +871,6 @@ def draw_track(track, scale=16):
 
 			if section.turn_num:
 				text(section.turn_num, apex_point, bold=True)
-
-		# TODO: draw rest of racing line
 
 		# TODO: draw corner radius center?
 
@@ -721,7 +936,6 @@ def to_lua_str(val, indent=0, quote_strings=True) -> str:
 	indent_str = '\t' * indent
 
 	if val is None:
-		# Hopefully these values should be excluded in the first place, but in case they're not
 		return 'nil'
 
 	elif isinstance(val, bool):

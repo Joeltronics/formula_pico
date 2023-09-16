@@ -5,6 +5,14 @@ from math import sqrt, radians, sin, cos
 from typing import Iterable
 
 
+def sgn(value: float) -> int:
+	return 1 if value >= 0 else -1
+
+
+def lerp(x0: float, x1: float, t: float) -> float:
+	return (1 - t) * x0 + t * x1
+
+
 class Color(namedtuple('Color', ['r', 'g', 'b'])):
 	@classmethod
 	def from_hex(cls, hex_str: str):
