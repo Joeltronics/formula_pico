@@ -774,7 +774,7 @@ def main():
 	if DATA_FILENAME_OUT.exists():
 		DATA_FILENAME_OUT.unlink()
 
-	with open(DATA_FILENAME_OUT, 'w') as f:
+	with open(DATA_FILENAME_OUT, 'w', newline='\n') as f:
 
 		# Write common values
 

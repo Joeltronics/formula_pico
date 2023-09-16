@@ -18,13 +18,11 @@ function make_note(pitch, instr, vol, effect)
 end
 
 -- function get_note(sfx, time)
--- 	local addr = 0x3200 + 68*sfx + 2*time
--- 	return peek2(addr)
+-- 	return peek2(0x3200 + 68*sfx + 2*time)
 -- end
 
 function set_note(sfx, time, note)
-	local addr = 0x3200 + 68*sfx + 2*time
-	poke2(addr, note)
+	poke2(0x3200 + 68*sfx + 2*time, note)
 end
 
 function get_speed(sfx)
@@ -51,8 +49,8 @@ end
 
 function set_flags(sfx, noiz, buzz, detune, reverb, dampen)
 	local byte = 1 -- tracker mode
-	byte |= noiz and 2 or 0
-	byte |= buzz and 4 or 0
+	if (noiz) byte += 2
+	if (buzz) byte += 4
 	byte += detune * 8
 	byte += reverb * 24
 	byte += dampen * 72
