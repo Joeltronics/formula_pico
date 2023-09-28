@@ -14,10 +14,7 @@ function decompress_sections()
 					'entrance_x',
 					'pitch',
 					'angle',
-					'max_speed_pre_apex',
-					'apex_seg',
-					'apex_x',
-					'max_speed_post_apex'
+					'max_speed',
 				}
 				key = field_names[idx]
 				value = key_value[1]
@@ -46,12 +43,14 @@ function init_track()
 		section.pitch = section.pitch or 0
 		section.angle = section.angle or 0
 		section.entrance_x = section.entrance_x or 0
-		section.max_speed_pre_apex = section.max_speed_pre_apex or 1
-		section.apex_seg = section.apex_seg or section.length + 1
-		section.apex_x = section.apex_x or 0
-		section.max_speed_post_apex = section.max_speed_post_apex or 1
+		section.max_speed = section.max_speed or 1
 
 		-- Calculated values
+
+		if (racing_line_sine_interp) then
+			section.entrance_x = asin(section.entrance_x)
+			if (section.entrance_x >= 0.5) section.entrance_x -= 1
+		end
 
 		section.angle_per_seg = section.angle / section.length
 		section.tu = 16 * section.angle_per_seg
@@ -84,10 +83,6 @@ function init_track()
 
 		section0.dpitch = (section1.pitch - section0.pitch) / section0.length
 
-		section0.racing_line_dx_pre_apex = (section0.apex_x - section0.entrance_x) / (section0.apex_seg - 1)
-		section0.racing_line_dx_post_apex = 0
-		if section0.apex_seg <= section0.length then
-			section0.racing_line_dx_post_apex = (section1.entrance_x - section0.apex_x) / (section0.length - section0.apex_seg + 1)
-		end
+		section0.racing_line_dx = (section1.entrance_x - section0.entrance_x) / section0.length
 	end
 end

@@ -6,6 +6,8 @@
 pi    = 3.14159265359
 twopi = 6.28318530718
 
+racing_line_sine_interp = true
+
 speed_scale = 0.5
 
 -- Acceleration, by gear

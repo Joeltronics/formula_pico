@@ -213,13 +213,7 @@ function tick_car_speed(car, section, accel_brake_input)
 	local speed, gear, car_x = car.speed, car.gear, car.x
 
 	local limit_speed = 1
-	local section_recommended_speed = section.max_speed_pre_apex
-	if (section.apex_seg and car.segment_idx >= section.apex_seg) section_recommended_speed = section.max_speed_post_apex
-
-	-- Special check, for now while still not having a proper cornering grip model:
-	-- hard-limit speed at apex, in case of insufficient braking
-	-- TODO: change this to understeer instead
-	if ((brake_assist or car.ai) and section.apex_seg and car.segment_idx == section.apex_seg) speed = min(speed, section.max_speed_pre_apex)
+	local section_recommended_speed = section.max_speed
 
 	local accel = accel_by_gear[flr(gear)]
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)

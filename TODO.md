@@ -11,9 +11,6 @@ Improve steering/cornering logic
 * Mini brake assist: when holding both gas & brake, brake, but only down to racing line speed
 	- Need to make sure this can't be exploited, i.e. if starting this before braking point then start braking right away even if technically the current racing line speed isn't yet reduced
 
-Improve racing line & max speed calculation
-* Do it in the Python data generation script
-
 Add walls
 
 Race logic

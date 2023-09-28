@@ -11,6 +11,10 @@ function clip_num(val, minval, maxval)
 	return max(minval, min(maxval, val))
 end
 
+function asin(val)
+	return atan2(sqrt(1 - val*val), val)
+end
+
 function toward_zero(val, inc)
 	if val >= 0 then
 		return max(0, val - inc)

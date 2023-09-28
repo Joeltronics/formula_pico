@@ -126,24 +126,15 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	local col = 11
 	local speed = cars[1].speed
 
-	if seg < section.apex_seg then
-		-- Before apex
-		if (speed > section.max_speed_pre_apex) col = 8
-		if (speed == section.max_speed_pre_apex and section.max_speed_pre_apex < 0.99) col = 10
-		line(
-			x1 + w1*(section.entrance_x + seg*section.racing_line_dx_pre_apex), y1,
-			x2 + w2*(section.entrance_x + (seg - 1)*section.racing_line_dx_pre_apex), y2,
-			col)
-	else
-		-- After apex
-		if (speed > section.max_speed_post_apex) col = 8
-		if (speed == section.max_speed_post_apex and section.max_speed_post_apex < 0.99) col = 10
-		local past_apex = seg - section.apex_seg
-		line(
-			x1 + w1*(section.apex_x + (1 + past_apex)*section.racing_line_dx_post_apex), y1,
-			x2 + w2*(section.apex_x + past_apex*section.racing_line_dx_post_apex), y2,
-			col)
+	if (speed > section.max_speed) col = 8
+	if (speed == section.max_speed and section.max_speed < 0.99) col = 10
+
+	local dx1 = section.entrance_x + seg*section.racing_line_dx
+	local dx2 = section.entrance_x + (seg - 1)*section.racing_line_dx
+	if (racing_line_sine_interp) then
+		dx1, dx2 = sin(dx1), sin(dx2)
 	end
+	line(x1 + w1*dx1, y1, x2 + w2*dx2, y2, col)
 end
 
 function get_tunnel_rect(x, y, scale)
