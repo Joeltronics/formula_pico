@@ -212,8 +212,9 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	local speed, gear, car_x = car.speed, car.gear, car.x
 
+	local auto_brake = brake_assist or car.ai
+
 	local limit_speed = 1
-	local section_recommended_speed = section.max_speed
 
 	local accel = accel_by_gear[flr(gear)]
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
@@ -254,10 +255,10 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- TODO: more parameters
 	end
 
-	-- Apply acceleration
+	-- Apply acceleration/braking
 
 	if speed > limit_speed then
-		-- Brake (to section speed)
+		-- Wall or grass - brake to limit speed
 		speed = max(speed - decel, limit_speed)
 
 		if limit_speed == 1 then
@@ -266,11 +267,17 @@ function tick_car_speed(car, section, accel_brake_input)
 			car.engine_accel_brake = -1
 		end
 
-	elseif (brake_assist or car.ai) and speed > section_recommended_speed then
-		-- Brake (to recommended speed)
+	elseif auto_brake and need_to_brake(section, car.segment_idx, car.subseg, speed) then
+		-- Brake, to braking_speed
 		accel_brake_input = -1
-		speed = max(speed - decel, section_recommended_speed)
+		speed = max(speed - decel, section.braking_speed)
 		car.engine_accel_brake = -1
+
+	-- elseif auto_brake and speed > section.max_speed - 0.01 then
+	elseif auto_brake and speed > section.max_speed - accel then
+		-- Right at limit speed (typically mid-corner); maintain speed
+		accel_brake_input = 0
+		car.engine_accel_brake = 0
 
 	elseif car.ai or accel_brake_input > 0 then
 		-- Accelerate
@@ -279,7 +286,7 @@ function tick_car_speed(car, section, accel_brake_input)
 		car.engine_accel_brake = 1
 
 	elseif accel_brake_input < 0 then
-		-- Brake (to zero)
+		-- Brake, to zero
 		speed = toward_zero(speed, brake_decel)
 		car.engine_accel_brake = -1
 

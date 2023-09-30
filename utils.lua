@@ -59,3 +59,45 @@ function reverse(section_idx, segment_idx)
 	end
 	return section_idx, segment_idx
 end
+
+--[[
+	Braking distance:
+		Vf^2 = Vi^2  + 2 * a * d
+		d = (Vf^2 - Vi^2) / (2 * a)
+
+	brake_decel is positive deceleration, so we want -a:
+		d = (Vi^2 - Vf^2) / (2 * -a)
+
+	Speeds are scaled by speed_scale, so true speeds Vi & Vf are:
+		s = current speed, in game units
+		b = braking speed, in game units
+		C = speed_scale
+		Vi = s * C
+		Vf = b * C
+
+		d = ((s*C)^2 - (b*C)^2) / (2 * -a)
+		d = (s^2 - b^2) * C^2 / (2 * -a)
+
+		d = SCALE * (s^2 - b^2)
+		SCALE = C^2 / (2 * -a)
+]]
+
+braking_distance_scale = speed_scale * speed_scale / (2 * brake_decel)
+
+function braking_distance(curr_speed, brake_speed)
+	return braking_distance_scale * (curr_speed*curr_speed - brake_speed*brake_speed)
+end
+
+function distance_to_next_braking_point(section, seg, subseg)
+	return section.next_braking_distance + section.length - seg - subseg
+end
+
+function need_to_brake(section, seg, subseg, curr_speed)
+
+	if (curr_speed > section.max_speed) return true
+
+	local brake_speed = section.braking_speed
+	if (curr_speed <= brake_speed) return false
+
+	return braking_distance(curr_speed, brake_speed) >= distance_to_next_braking_point(section, seg, subseg)
+end

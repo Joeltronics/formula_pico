@@ -123,11 +123,12 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 
 	if (not draw_racing_line) return
 
-	local col = 11
 	local speed = cars[1].speed
 
-	if (speed > section.max_speed) col = 8
-	if (speed == section.max_speed and section.max_speed < 0.99) col = 10
+	local col = 11
+	if (section.max_speed < 0.999 and speed > section.max_speed - 0.01) col = 10
+	if (need_to_brake(section, seg, 0, speed)) col = 2
+	if (section.max_speed < 0.999 and speed > section.max_speed + 0.01) col = 8
 
 	local dx1 = section.entrance_x + seg*section.racing_line_dx
 	local dx2 = section.entrance_x + (seg - 1)*section.racing_line_dx
@@ -512,8 +513,6 @@ function draw_debug_overlay()
 	-- print('hw:' .. road.half_width)
 	-- print('wall:' .. section.wall)
 
-	print('st:' .. cars[1].sprite_turn)
-
 	if cam_dy ~= 2 or cam_dz ~= 2 then
 		print('cam:' .. cam_x .. ',' .. cam_dy .. ',' .. cam_dz)
 	else
@@ -522,4 +521,7 @@ function draw_debug_overlay()
 
 	-- local pitch = (section.pitch + section.dpitch*(segment_idx - 1))
 	-- print('pi:' .. pitch)
+
+	-- print('bd: ' .. braking_distance(cars[1].speed, section.braking_speed))
+	-- print('bp: ' .. distance_to_next_braking_point(section, cars[1].segment_idx, cars[1].subseg))
 end

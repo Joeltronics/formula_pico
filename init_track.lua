@@ -77,12 +77,25 @@ function init_track()
 		if (section.bgr) section.bgr = bg_objects[section.bgr]
 	end
 
-	for section_idx = 1, #road do
+	-- Now calculate parameters that depend on multiple sections
+	-- Iterate in reverse for the sake of braking speeds
+
+	-- This won't be accurate at the last sections, but this should be a straight where you wouldn't normally be braking
+	local next_braking_speed, next_braking_distance = 1, 0
+	for section_idx = #road, 1, -1 do
 		local section0 = road[section_idx]
 		local section1 = road[section_idx % #road + 1]
 
 		section0.dpitch = (section1.pitch - section0.pitch) / section0.length
 
 		section0.racing_line_dx = (section1.entrance_x - section0.entrance_x) / section0.length
+
+		if (section1.max_speed < section0.max_speed) then
+			next_braking_distance = 0
+			next_braking_speed = section1.max_speed
+		end
+		section0.braking_speed = min(section0.max_speed, next_braking_speed)
+		section0.next_braking_distance = next_braking_distance
+		next_braking_distance += section0.length
 	end
 end
