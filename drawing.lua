@@ -524,4 +524,5 @@ function draw_debug_overlay()
 
 	-- print('bd: ' .. braking_distance(cars[1].speed, section.braking_speed))
 	-- print('bp: ' .. distance_to_next_braking_point(section, cars[1].segment_idx, cars[1].subseg))
+	-- print('bs: ' .. round(speed_to_kph * section.braking_speed))
 end

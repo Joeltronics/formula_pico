@@ -8,8 +8,6 @@ Improve steering/cornering logic
 	- Essentially base it on GG diagram
 	- Kind of already operates this way, but need to determine both together rather than one then other
 	- Also needs on-track direction to be in real units to do this properly
-* Mini brake assist: when holding both gas & brake, brake, but only down to racing line speed
-	- Need to make sure this can't be exploited, i.e. if starting this before braking point then start braking right away even if technically the current racing line speed isn't yet reduced
 
 Add walls
 

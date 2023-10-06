@@ -245,6 +245,7 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- TODO: more parameters
 
 	elseif abs(car_x) >= 0.75 * road.half_width then
+		-- TODO: fine tune this value, 0.75 isn't great
 		-- On curb
 		-- Max speed unaffected
 		-- Slower acceleration (unless in 1st gear)
@@ -273,7 +274,6 @@ function tick_car_speed(car, section, accel_brake_input)
 		speed = max(speed - decel, section.braking_speed)
 		car.engine_accel_brake = -1
 
-	-- elseif auto_brake and speed > section.max_speed - 0.01 then
 	elseif auto_brake and speed > section.max_speed - accel then
 		-- Right at limit speed (typically mid-corner); maintain speed
 		accel_brake_input = 0
@@ -285,10 +285,24 @@ function tick_car_speed(car, section, accel_brake_input)
 		speed = min(speed + accel, limit_speed)
 		car.engine_accel_brake = 1
 
-	elseif accel_brake_input < 0 then
+	elseif accel_brake_input < -1 then
 		-- Brake, to zero
 		speed = toward_zero(speed, brake_decel)
 		car.engine_accel_brake = -1
+
+	elseif accel_brake_input < 0 then
+		-- Pressing both brake and accelerator
+		-- Auto brake, but with much larger braking distance than normal
+		if need_to_brake(section, car.segment_idx, car.subseg, speed, 8) then
+			-- Brake to braking speed
+			accel_brake_input = -1
+			speed = max(speed - decel, section.braking_speed)
+			car.engine_accel_brake = -1
+		else
+			-- Maintain speed
+			accel_brake_input = 0
+			car.engine_accel_brake = 0
+		end
 
 	else
 		-- Coast
@@ -309,8 +323,6 @@ function tick_car_speed(car, section, accel_brake_input)
 end
 
 function tick_car_steering(car, steering_input, accel_brake_input)
-
-	-- TODO: compensate for corners, i.e. push toward outside of corners
 
 	-- Only steer when moving (but ramp this effect up from 0)
 	local steering_scale = min(16*car.speed, 1)
@@ -422,9 +434,8 @@ function game_tick()
 	local steering_input, accel_brake_input = 0, 0
 	if (btn(0)) steering_input -= 1
 	if (btn(1)) steering_input += 1
-	-- If pressing both gas & brakes, brakes take priority
 	if (btn(2) or btn(4)) accel_brake_input = 1
-	if (btn(3) or btn(5)) accel_brake_input = -1
+	if (btn(3) or btn(5)) accel_brake_input -= 2
 
 	for car in all(cars) do
 		tick_car(car, accel_brake_input, steering_input)
