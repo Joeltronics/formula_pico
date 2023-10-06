@@ -1,9 +1,7 @@
 ## Gameplay features
 
-Add walls
-
 Race logic
-* Count laps
+* (Done) Count laps
 * Time laps
 * Start procedure
 

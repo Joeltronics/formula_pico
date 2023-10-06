@@ -58,6 +58,7 @@ function init_track()
 
 		section.tnl = section.tnl or false
 
+		section.wall = section.wall or road.wall
 		if section.wall then
 			section.wall_is_invisible = false
 		else
@@ -92,6 +93,11 @@ function init_track()
 		local section1 = road[section_idx % #road + 1]
 
 		section0.dpitch = (section1.pitch - section0.pitch) / section0.length
+
+		-- TODO: only need this to narrow gradually - can widen instantly
+		-- (like for tunnels)
+		section0.dwall = (section1.wall - section0.wall) / section0.length
+		if (section0.tnl) section0.dwall = 0
 
 		section0.racing_line_dx = (section1.entrance_x - section0.entrance_x) / section0.length
 

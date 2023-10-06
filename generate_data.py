@@ -100,9 +100,15 @@ class Segment:
 	normal_start: Point | None = None
 	normal_end: Point | None = None
 
-	def points(self, x1, x2):
+	def points(self, x1, x2, x1_far=None, x2_far=None):
 		if self.normal_start is None or self.normal_end is None:
 			raise ValueError('normal_start or normal_end is not yet set')
+
+		if x1_far is None:
+			x1_far = x1
+
+		if x2_far is None:
+			x2_far = x2
 
 		p0 = self.center_start
 		p1 = self.center_end
@@ -112,8 +118,8 @@ class Segment:
 		return [
 			p0 + n0 * x1,
 			p0 + n0 * x2,
-			p1 + n1 * x2,
-			p1 + n1 * x1,
+			p1 + n1 * x2_far,
+			p1 + n1 * x1_far,
 		]
 
 
@@ -124,6 +130,8 @@ class Section:
 	turn_num: int | None = None
 	angle: float = 0.0
 	# start_heading: float  # TODO
+	wall: float | None = None
+	dwall: float | None = None
 	pitch: float = 0.0
 	tnl: bool = False
 
@@ -165,6 +173,7 @@ class Section:
 			'pitch',
 			'angle',
 			'max_speed',
+			'wall',
 			'tnl',
 			'gndcol1',
 			'gndcol2',
@@ -237,6 +246,7 @@ class Track:
 			start_heading: float,
 			track_width: float,
 			shoulder_half_width: float,
+			wall: float | None = None,
 			street: bool = False,
 			tree_bg: bool = False,
 			city_bg: bool = False,
@@ -252,6 +262,7 @@ class Track:
 		self.track_width: float = track_width
 		self.shoulder_half_width: float = shoulder_half_width
 
+		self.wall = wall
 		self.street = street
 		self.tree_bg = tree_bg
 		self.city_bg = city_bg
@@ -272,6 +283,8 @@ class Track:
 		self.minimap_offset_y: int = None
 
 		# TODO: auto adjust last section length so it matches up to start as close as possible
+
+		self._set_dwall()
 
 		# TODO: use the new logic
 		# self._calculate_racing_line_original_logic()
@@ -305,6 +318,22 @@ class Track:
 		self.minimap_offset_x = int(ceil(self.x_max * self.minimap_scale))
 		# Offset from vertical center of screen to put bottom of minimap at center of screen
 		self.minimap_offset_y = int(round(-self.y_min * self.minimap_scale))
+
+	def _set_dwall(self):
+		for idx in range(len(self.sections)):
+			sec0 = self.sections[idx]
+			sec1 = self.sections[(idx + 1) % len(self.sections)]
+
+			wall0 = sec0.wall or self.wall
+			wall1 = sec1.wall or self.wall
+
+			if sec0.tnl:
+				wall0 = self.track_width/2 + self.shoulder_half_width
+
+			if sec1.tnl:
+				wall1 = self.track_width/2 + self.shoulder_half_width
+
+			sec0.dwall = (wall1 - wall0) / sec0.length
 
 	@staticmethod
 	def _corner_exit_entrance_original_logic(section: Section) -> float:
@@ -549,6 +578,9 @@ class Track:
 		if self.shoulder_half_width != defaults['shoulder_half_width']:
 			ret['shoulder_half_width'] = self.shoulder_half_width
 
+		if self.wall:
+			ret['wall'] = self.wall
+
 		if self.street:
 			ret['street'] = self.street
 
@@ -774,8 +806,6 @@ def draw_track(track, scale=16):
 
 		for idx, (section, segment) in enumerate(iterate_segments(sections)):
 
-			# TODO: track.gndcol1/track.gndcol2/section.gndcol1/section.gndcol2
-
 			if section.gndcol1 is not None:
 				gndcol1 = section.gndcol1
 			elif track.gndcol1 is not None:
@@ -833,6 +863,23 @@ def draw_track(track, scale=16):
 			curb_color = RED if (idx % 2 == 0) else WHITE
 			polygon(segment.points(track_width - shoulder_half_width, track_width + shoulder_half_width), curb_color, stroke=0.5)
 			polygon(segment.points(-track_width + shoulder_half_width, -track_width - shoulder_half_width), curb_color, stroke=0.5)
+
+		# Walls
+
+		# for idx, (section, segment) in enumerate(iterate_segments(sections)):
+		idx = -1
+		for section_idx, section in enumerate(sections):
+			for segment_idx, segment in enumerate(section.segments):
+				idx += 1
+				if not section.tnl:
+					# TODO: do not make wall further than corner radius
+					wall_color = PALETTE[7] if ((idx % 6) >= 3) else PALETTE[6]
+					wall_start_0 = 2*((section.wall or track.wall) + section.dwall * segment_idx)
+					wall_start_1 = 2*((section.wall or track.wall) + section.dwall * (segment_idx + 1))
+					wall_end_0 = wall_start_0 + 1
+					wall_end_1 = wall_start_1 + 1
+					polygon(segment.points(wall_start_0, wall_end_0, wall_start_1, wall_end_1), wall_color, stroke=0.5)
+					polygon(segment.points(-wall_start_0, -wall_end_0, -wall_start_1, -wall_end_1), wall_color, stroke=0.5)
 
 		# Racing line
 
@@ -910,6 +957,8 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	angle_scale = yaml_track.get('angle_scale', yaml_defaults.get('angle_scale', 1.0))
 	track_width = yaml_track.get('track_width', yaml_defaults['track_width'])
 	shoulder_half_width = yaml_track.get('shoulder_half_width', yaml_defaults['shoulder_half_width'])
+	# TODO: make walls optional
+	wall = yaml_track.get('wall', yaml_defaults['wall'])
 
 	sections = [Section(**s) for s in yaml_track['sections']]
 	for section in sections:
@@ -926,6 +975,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		start_heading=start_heading,
 		track_width=track_width,
 		shoulder_half_width=shoulder_half_width,
+		wall=wall,
 		street=yaml_track.get('street', False),
 		city_bg=yaml_track.get('city_bg', False),
 		tree_bg=yaml_track.get('tree_bg', False),

@@ -2,6 +2,7 @@
 
 start_heading: 0.25
 track_width: 3
+wall: 4
 shoulder_half_width: 0.125
 
 tracks:
@@ -11,8 +12,8 @@ tracks:
     length_scale: 2
     tree_bg: true
     sections:
-    - {length: 8, x: 0}  # start/finish
-    - {length: 32, x: -0.25}
+    - {length: 8, x: 0, wall: 2}  # start/finish
+    - {length: 32, x: -0.25, wall: 2}
     - {turn_num: 1, length: 8, x: -1, speed: 140}
     - {turn_num: 1, length: 3, angle: 0.125, x: 0.25, speed: 140}
     - {turn_num: 1, length: 3, angle: 0.125, x: 1, speed: 140}
@@ -67,8 +68,8 @@ tracks:
     length_scale: 2
     tree_bg: true
     sections:
-    - {length: 8, x: 0.5}  # start/finish; heading 0.25
-    - {length: 14, x: 0}
+    - {length: 8, x: 0.5, wall: 2}  # start/finish; heading 0.25
+    - {length: 14, x: 0, wall: 2}
     - {length: 6, x: -1, speed: 95}
     - {turn_num: 1, length: 4, angle: 0.1875, x: 0.25, speed: 95}  # La Source
     - {turn_num: 1, length: 4, angle: 0.1875, x: 1, speed: 95}
@@ -83,11 +84,11 @@ tracks:
     - {turn_num: 4, length: 8, angle: 0.15, pitch: 2, x: 1}
     - {turn_num: 5, length: 8, angle: -0.075, x: 0}
     - {turn_num: 5, length: 8, angle: -0.075, x: -1}
-    - {length: 16, pitch: 1, x: -0.25, bgl: tree7}
-    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 0.5, bgl: tree4, bgr: tree7}
-    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 1, bgl: tree4, bgr: tree7}
-    - {length: 40, pitch: 0.5, x: 0.25, bgl: tree3, bgr: tree4} # kemmel straight
-    - {length: 8, pitch: 0.125, x: -1, bgl: tree3, bgr: tree4}
+    - {length: 16, pitch: 1, x: -0.25}
+    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 0.5}
+    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 1}
+    - {length: 40, pitch: 0.5, x: 0.25} # kemmel straight
+    - {length: 8, pitch: 0.125, x: -1}
     - {turn_num: 7, length: 4, angle: 0.125, speed: 180, x: 0}  # high point
     - {turn_num: 7, length: 4, angle: 0.125, speed: 180, x: 1}
     - {length: 4, x: 0.25}
@@ -155,8 +156,8 @@ tracks:
     length_scale: 2
     tree_bg: true
     sections:
-    - {length: 8, x: 0.25, pitch: 0.125}  # start/finish; heading 0.25
-    - {length: 42, x: -0.25, pitch: 0.125}
+    - {length: 8, x: 0.25, pitch: 0.125, wall: 2}  # start/finish; heading 0.25
+    - {length: 42, x: -0.25, pitch: 0.125, wall: 2}
     - {length: 4, x: -1, pitch: 0.125, speed: 90}
     - {turn_num: 1, x: 0, length: 3, angle: 0.125, speed: 90} # Rettifilo
     - {turn_num: 1, x: 1, length: 3, angle: 0.125, speed: 90}
@@ -203,42 +204,44 @@ tracks:
     - {length: 6, x: -0.25, pitch: -0.25}
     - {length: 60, x: 1, pitch: -0.25}
     - {length: 6, x: -1, pitch: -0.25}
-    - {turn_num: 11, length: 6, x: 0, angle: 0.125, speed: 220} # Parabolica
-    - {turn_num: 11, length: 6, x: 1, angle: 0.125, speed: 220}
-    - {turn_num: 11, length: 16, x: 0.5, angle: 0.125}
-    - {turn_num: 11, length: 30, x: -0.25, angle: 0.125}
-    - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125}
+    - {turn_num: 11, length: 6, x: 0, angle: 0.125, speed: 220, wall: 6} # Parabolica
+    - {turn_num: 11, length: 6, x: 1, angle: 0.125, speed: 220, wall: 6}
+    - {turn_num: 11, length: 16, x: 0.5, angle: 0.125, wall: 6}
+    - {turn_num: 11, length: 30, x: -0.25, angle: 0.125, wall: 6}
+    - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall: 6}
 
   - name: uk
     length_km: 5.9
     length_scale: 2
     start_heading: 0.125  # North-East
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
+    wall: 6
     sections:
-    - {length: 8, pitch: 0.125}  # start/finish
-    - {length: 36, pitch: 0.125}
+    - {length: 8, pitch: 0.125, wall: 2}  # start/finish
+    - {length: 36, pitch: 0.125, wall: 2}
     - {turn_num: 1, length: 4, angle: 4, pitch: 0.125}  # Abbey
     - {turn_num: 1, length: 6, angle: 3, pitch: 0.125}
     - {length: 4, pitch: 0.125}
     - {turn_num: 2, length: 12, angle: -6, pitch: 0.125} 
     - {length: 20, pitch: 0.125}
-    - {turn_num: 3, length: 8, angle: 10, pitch: 0.125, speed: 125}
-    - {length: 8, pitch: 0.125}
-    - {turn_num: 4, length: 10, angle: -13, speed: 90}
-    - {length: 6}
-    - {turn_num: 5, length: 10, angle: -2}
+    - {turn_num: 3, length: 8, angle: 10, pitch: 0.125, speed: 125, wall: 4}
+    - {length: 8, pitch: 0.125, wall: 4}
+    - {turn_num: 4, length: 10, angle: -13, speed: 90, wall: 4}
+    - {length: 6, wall: 4}
+    - {turn_num: 5, length: 10, angle: -2, wall: 5}
     - {length: 8, angle: -4}
     - {length: 30}
     - {length: 15}
     - {length: 15, pitch: -0.25}
-    - {turn_num: 6, length: 4, angle: -4, speed: 190}  # Brooklands
-    - {turn_num: 6, length: 8, angle: -4, speed: 190}
-    - {turn_num: 6, length: 4, angle: -4}
-    - {length: 4}
-    - {turn_num: 7, length: 20, angle: 18, speed: 125}  # Luffield
-    - {length: 18}
-    - {turn_num: 8, length: 24, angle: 5}  # Woodcote
-    - {length: 32, pitch: 0.125}
+    - {turn_num: 6, length: 4, angle: -4, speed: 190, wall: 4}  # Brooklands
+    - {turn_num: 6, length: 8, angle: -4, speed: 190, wall: 4}
+    - {turn_num: 6, length: 4, angle: -4, wall: 4}
+    - {length: 4, wall: 4}
+    - {turn_num: 7, length: 20, angle: 18, speed: 125, wall: 4}  # Luffield
+    - {length: 18, wall: 4}
+    - {turn_num: 8, length: 24, angle: 5, wall: 4}  # Woodcote
+    - {length: 8, pitch: 0.125, wall: 2}
+    - {length: 24, pitch: 0.125, wall: 2}
     - {turn_num: 9, length: 8, angle: 2, pitch: 0.125}  # Copse
     - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625}
     - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625}
@@ -272,8 +275,8 @@ tracks:
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
     city_bg: true
     sections:
-    - {length: 8, pitch: -0.25}  # start/finish
-    - {length: 42, pitch: -0.25}
+    - {length: 8, pitch: -0.25, wall: 2}  # start/finish
+    - {length: 42, pitch: -0.25, wall: 2}
     - {turn_num: 1, length: 8, angle: 5, pitch: -0.25, speed: 290}
     - {length: 4, pitch: -0.125, speed: 195}
     - {turn_num: 2, length: 12, angle: 12, speed: 165}
@@ -312,8 +315,9 @@ tracks:
     - {turn_num: 14, length: 8, angle: -8, speed: 175}
     - {turn_num: 14, length: 8, angle: -2}
     - {length: 32, angle: -2.5, pitch: -0.25}
-    - {length: 40}  # TODO: walls for bridge
-    - {turn_num: 15, length: 6, angle: -3, speed: 275}  # 130R
+    - {length: 32}
+    - {length: 8, wall: 1.625}  # Bridge
+    - {turn_num: 15, length: 6, angle: -3, speed: 275, wall: 1.625}  # 130R
     - {turn_num: 15, length: 6}
     - {turn_num: 15, length: 16, angle: -2.5}
     - {length: 12, pitch: 0.125}
@@ -327,15 +331,16 @@ tracks:
 
   - name: monaco
     # TODO: walls
-    # TODO: scale is accurate vs other trakcs, but it feels too short - scale up a bit?
+    # TODO: scale is accurate vs other tracks, but it feels too short - scale up a bit?
     length_km: 3.34
     length_scale: 1
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
     track_width: 2.5
+    wall: 1.375
     street: true
     city_bg: true
-    gndcol1: 6
-    gndcol2: 7
+    gndcol1: 5
+    gndcol2: 6
     sections:
     - {length: 16, x: 0}  # start/finish
     - {length: 8, x: 0}
@@ -439,8 +444,8 @@ tracks:
     length_scale: 2
     tree_bg: true
     sections:
-    - {length: 8}
-    - {length: 12}
+    - {length: 8, wall: 1.625}
+    - {length: 12, wall: 1.625}
     - {length: 12, angle: -0.25, bgr: sign}
     - {length: 12, pitch: -0.75, bgl: tree3}
     - {length: 8, angle: 0.125, bgl: sign}
@@ -487,6 +492,7 @@ tracks:
 
   - name: "dragstrip"
     track_width: 4
+    wall: 8
     street: true
     city_bg: true
     gndcol1: 4

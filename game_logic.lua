@@ -42,6 +42,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			segment_idx=segment_idx,
 			segment_total=segment_idx,
 			subseg=0,
+			segment_plus_subseg=segment_idx,
 			speed=0,
 			gear=1,
 			rpm=0,
@@ -55,6 +56,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			finished=false,
 			in_pit=false,
 			touched_wall=false,
+			touched_wall_sound=false,
 		})
 
 		del(teams, team_idx)
@@ -138,6 +140,8 @@ function tick_debug()
 		if (key == '>') player_car.heading += 1/256
 		if (key == 'f') frozen = not frozen
 	end
+
+	player_car.segment_plus_subseg = player_car.segment_idx + player_car.subseg
 end
 
 function update_sprite_turn(car, section, dx)
@@ -161,9 +165,7 @@ end
 
 function clip_wall(car, section)
 
-	-- TODO: make wall distance changes gradual from 1 section to next
-
-	local car_x, wall_clip = car.x, section.wall_clip
+	local car_x, wall_clip = car.x, section.wall_clip + section.dwall * (car.segment_plus_subseg - 1)
 
 	if section.wall_is_invisible then
 		if abs(car_x) > wall_clip then
@@ -175,6 +177,7 @@ function clip_wall(car, section)
 		-- Hit a visible wall - bounce back slightly (set accumulator to opposite direction)
 		car.steer_accum = -sgn(car_x)
 		car.touched_wall = true
+		car.touched_wall_sound = true
 	end
 
 	car.x = clip_num(car_x, -wall_clip, wall_clip)
@@ -223,13 +226,15 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	local car_abs_x = abs(car.x)
 
-	if car_abs_x >= section.wall_clip then
+	local wall_clip = section.wall_clip + section.dwall * (car.segment_plus_subseg - 1)
+	if car.touched_wall then
 		-- Touching wall
 		-- Decrease max speed significantly
 		-- Slower acceleration
 		-- Faster braking
 		-- Increase coasting deceleration significantly
 		-- Increase tire deg
+		car.touched_wall = false
 		limit_speed = min(limit_speed, wall_max_speed)
 		decel *= 4
 		-- TODO: more parameters
@@ -271,7 +276,7 @@ function tick_car_speed(car, section, accel_brake_input)
 			car.engine_accel_brake = -1
 		end
 
-	elseif auto_brake and need_to_brake(section, car.segment_idx, car.subseg, speed) then
+	elseif auto_brake and need_to_brake(section, car.segment_plus_subseg, speed) then
 		-- Brake, to braking_speed
 		accel_brake_input = -1
 		speed = max(speed - decel, section.braking_speed)
@@ -296,7 +301,7 @@ function tick_car_speed(car, section, accel_brake_input)
 	elseif accel_brake_input < 0 then
 		-- Pressing both brake and accelerator
 		-- Auto brake, but with much larger braking distance than normal
-		if need_to_brake(section, car.segment_idx, car.subseg, speed, 8) then
+		if need_to_brake(section, car.segment_plus_subseg, speed, 8) then
 			-- Brake to braking speed
 			accel_brake_input = -1
 			speed = max(speed - decel, section.braking_speed)
@@ -390,6 +395,9 @@ end
 
 function tick_car_corner(car, section, dz)
 	if (car.ai) return  -- TODO: apply this to AI cars
+	-- TODO: scaling by tu is accurate compared to what is displayed on screen, but not necessarily geometric interpretation
+	-- should instead be based on section.angle_per_seg
+	-- Probably not a big deal right now, because tu is based on angle_per_seg in the first place
 	car.x -= turn_dx_scale * dz * section.tu
 end
 
@@ -423,15 +431,12 @@ function tick_car_forward(car, dz)
 	end
 	assert(subseg >= 0 and subseg < 1)
 
-	car.section_idx, car.segment_idx, car.subseg = section_idx, segment_idx, subseg
-	car.segment_total = road[car.section_idx].sumct + car.segment_idx
+	car.section_idx, car.segment_idx, car.subseg, car.segment_plus_subseg, car.segment_total = section_idx, segment_idx, subseg, segment_idx + subseg, road[section_idx].sumct + segment_idx
 end
 
 function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
-
-	car.touched_wall = false
 
 	if frozen then
 		clip_wall(car, section)
@@ -440,6 +445,8 @@ function tick_car(car, accel_brake_input, steering_input)
 	end
 
 	local accel_brake_input_actual = tick_car_speed(car, section, accel_brake_input)
+
+	-- TODO: clipping wall twice here isn't great, should only need to clip once
 
 	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input_actual)
 	clip_wall(car, section)

@@ -55,6 +55,7 @@ draw_distance = 90
 road_draw_distance = 90
 road_detail_draw_distance = 30
 sprite_draw_distance = 45
+wall_draw_distance = 60
 
 palettes = {
 	-- main, accent, wing top, wing rear, dark, floor

@@ -64,7 +64,8 @@ function update_sound()
 	local player_car = cars[1]
 
 	-- TODO: sound for on curb?
-	local touched_wall, off_track = player_car.touched_wall, abs(player_car.x) >= road.grass_x
+	local touched_wall, off_track = player_car.touched_wall_sound, abs(player_car.x) >= road.grass_x
+	player_car.touched_wall_sound = false
 
 	if player_car.speed == 0 then
 		-- Idling

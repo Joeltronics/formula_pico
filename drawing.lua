@@ -21,8 +21,12 @@ Colors:
 
 cam_x = 0
 
-function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
+function filltrapz(cx1, y1, w1, cx2, y2, w2, col, rotate90)
 	-- draw a trapezoid by stacking horizontal lines
+
+	if y2 < y1 then
+		cx1, y1, w1, cx2, y2, w2 = cx2, y2, w2, cx1, y1, w1
+	end
 
 	-- height
 	local h = y2 - y1
@@ -40,7 +44,11 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col)
 
 	local ymax = min(y2, 127)
 	while y <= ymax do
-		rectfill(x - w, y, x + w, y, col)
+		if rotate90 then
+			rectfill(y, x - w, y, x + w, col)
+		else
+			rectfill(x - w, y, x + w, y, col)
+		end
 		x += xd
 		w += wd
 		y += 1
@@ -65,7 +73,6 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 		draw_ground(y1, y2, sumct,
 			section.gndcol1 or road.gndcol1 or 3,
 			section.gndcol2 or road.gndcol2 or 11)
-		-- TODO: draw walls
 	end
 
 	if (y2 < y1 or distance > road_draw_distance) return
@@ -216,6 +223,55 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 	})
 end
 
+function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp, detail)
+
+	local col = section.wallcol1 or road.wallcol1 or 6
+	if ((sumct % 6) >= 3) col = section.wallcol1 or road.wallcol1 or 7
+
+	local wall1 = section.wall + section.dwall * (seg - 1)
+	local wall2 = section.wall + section.dwall * seg
+
+	add(sprite_list, {
+		is_wall=true,
+		col=col,
+		detail=detail,
+		distance_l1=wall1,
+		distance_l2=wall2,
+		distance_r1=wall1,
+		distance_r2=wall2,
+		x1=x1, y1=y1, scale1=scale1,
+		x2=x2, y2=y2, scale2=scale2,
+		clp={clp[1],clp[2],clp[3],clp[4]}
+	})
+end
+
+function draw_wall(s)
+
+	local x1l, x2l = s.x1 - 2*s.scale1*s.distance_l1, s.x2 - 2*s.scale2*s.distance_l2
+	local x1r, x2r = s.x1 + 2*s.scale1*s.distance_r1, s.x2 + 2*s.scale2*s.distance_r2
+
+	local h1, h2 = s.scale1 / 2, s.scale2 / 2
+	local cy1, cy2 = s.y1 - h1, s.y2 - h2
+
+	if s.detail then
+		-- Fill wall
+		filltrapz(cy1, x1r, h1, cy2, x2r, h2, s.col, true)
+		filltrapz(cy1, x1l, h1, cy2, x2l, h2, s.col, true)
+
+		-- Wall bottom
+		line(x1l, s.y1, x2l, s.y2, 6)
+		line(x1r, s.y1, x2r, s.y2, 6)
+	else
+		-- Wall center
+		line(x1l, cy1, x2l, cy2, s.col)
+		line(x1r, cy1, x2r, cy2, s.col)
+	end
+
+	-- Wall top
+	line(x1l, s.y1 - 2*h1, x2l, s.y2 - 2*h2, 6)
+	line(x1r, s.y1 - 2*h1, x2r, s.y2 - 2*h2, 6)
+end
+
 function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 
 	-- TODO: may want to offset drawing location by 1 pixel in some cases?
@@ -271,16 +327,20 @@ function draw_bg_sprite(s)
 
 	if (s.palette) pal(s.palette, 0)
 
-	local x1=ceil(s.x-s.w/2)
-	local x2=ceil(s.x+s.w/2)
-	local y1=ceil(s.y-s.h)
-	local y2=ceil(s.y)
+	if s.is_wall then
+		draw_wall(s)
+	else
+		local x1=ceil(s.x-s.w/2)
+		local x2=ceil(s.x+s.w/2)
+		local y1=ceil(s.y-s.h)
+		local y2=ceil(s.y)
 
-	sspr(
-		s.img[1], s.img[2], s.img[3], s.img[4], -- sx, sy, sw, sh
-		x1, y1, x2-x1, y2-y1, -- dx, dy, dw, dh
-		s.flip_x  -- flip_x
-	)
+		sspr(
+			s.img[1], s.img[2], s.img[3], s.img[4], -- sx, sy, sw, sh
+			x1, y1, x2-x1, y2-y1, -- dx, dy, dw, dh
+			s.flip_x  -- flip_x
+		)
+	end
 
 	if (s.palette) pal()
 	if (s.palt) palt()
@@ -322,6 +382,7 @@ function draw_road()
 
 	-- current clip region
 	local clp = {0, 0, 128, 128}
+	local clp_prev = {0, 0, 128, 128}
 	clip()
 
 	-- Draw road segments
@@ -387,6 +448,16 @@ function draw_road()
 				end
 			end
 		end
+
+		if i < wall_draw_distance and section.wall and not section.wall_is_invisible and not section.tnl then
+			-- TODO: I think there's an off by 1 error here
+			-- (Why do we have to use previous section's clip rectangle?)
+			-- Also visible at tunnel entrance/exit
+			add_wall(sp, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp_prev, i < road_detail_draw_distance)
+		end
+
+		-- TODO: setting this before add_wall doesn't work - why?!
+		clp_prev = {clp[1], clp[2], clp[3], clp[4]}
 
 		-- Reduce clip region
 		if tnl then
