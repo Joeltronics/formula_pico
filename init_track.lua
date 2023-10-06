@@ -32,6 +32,9 @@ function init_track()
 	road.track_width = road.track_width or track_width
 	road.half_width = 0.5 * road.track_width
 
+	road.curb_x = road.half_width - shoulder_half_width - car_half_width
+	road.grass_x = road.half_width + car_half_width
+
 	if (road.sections_compressed) decompress_sections()
 
 	total_segment_count = 0
@@ -67,10 +70,9 @@ function init_track()
 			section.wall_is_invisible = true
 		end
 
-		-- TODO: why is this 2x needed?
-		if (section.tnl) section.wall = road.half_width + 2*shoulder_half_width
+		if (section.tnl) section.wall = road.half_width + shoulder_half_width
 
-		section.wall_clip = section.wall - 0.5*car_width
+		section.wall_clip = section.wall - car_half_width
 
 		if (section.bgl) section.bgl = bg_objects[section.bgl]
 		if (section.bgc) section.bgc = bg_objects[section.bgc]

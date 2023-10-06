@@ -221,7 +221,9 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	local decel = brake_decel
 
-	if abs(car_x) >= section.wall_clip then
+	local car_abs_x = abs(car.x)
+
+	if car_abs_x >= section.wall_clip then
 		-- Touching wall
 		-- Decrease max speed significantly
 		-- Slower acceleration
@@ -233,7 +235,7 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- TODO: more parameters
 	end
 
-	if abs(car_x) >= road.half_width then
+	if car_abs_x >= road.grass_x then
 		-- On grass
 		-- Decrease max speed significantly
 		-- Slower acceleration (unless in 1st gear)
@@ -244,8 +246,7 @@ function tick_car_speed(car, section, accel_brake_input)
 		decel *= 2
 		-- TODO: more parameters
 
-	elseif abs(car_x) >= 0.75 * road.half_width then
-		-- TODO: fine tune this value, 0.75 isn't great
+	elseif car_abs_x >= road.curb_x then
 		-- On curb
 		-- Max speed unaffected
 		-- Slower acceleration (unless in 1st gear)

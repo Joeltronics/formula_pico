@@ -229,10 +229,13 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 			-- TODO: add smoke, or other indicator of scraping
 		end
 
-		if car_abs_x >= road.half_width then
+		if car_abs_x >= road.grass_x then
 			-- On grass; bumpy
 			y -= flr(rnd(2))
 			-- TODO: add "flinging grass" sprite
+		elseif car_abs_x >= road.curb_x then
+			-- On curb
+			y -= 1
 		end
 	end
 
@@ -249,7 +252,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 			img={
 				24 * min(3, ceil(abs(sprite_turn))),
 				0, 24, 16},
-			siz={car_width, car_height},
+			siz={car_draw_width, car_draw_height},
 			palt=11,
 			palette=car.palette,
 			flip=sprite_turn < 0,
@@ -353,7 +356,7 @@ function draw_road()
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
 		-- DEBUG
-		-- if (debug and i == 1) then
+		-- if (debug and i < 5) then
 		-- 	for n = -5, 5 do
 		-- 		line(x1 - n*scale1, y1, x2 - n*scale2, y2, 10)
 		-- 	end
