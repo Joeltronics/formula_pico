@@ -1,14 +1,14 @@
 
-function init_game(track_idx, team_idx, ghost, num_other_cars)
+function init_game(track_idx, team_idx, ghost, num_other_cars, ai_only)
 	road = tracks[track_idx]
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
-	init_cars(team_idx, ghost, num_other_cars)
+	init_cars(team_idx, ghost, num_other_cars, ai_only)
 	init_track()
 	init_minimap()
 end
 
-function init_cars(team_idx, ghost, num_other_cars)
+function init_cars(team_idx, ghost, num_other_cars, ai_only)
 
 	collisions = not ghost
 	cars = {}
@@ -26,7 +26,7 @@ function init_cars(team_idx, ghost, num_other_cars)
 			[13]=palette[6],  -- floor
 		}
 
-		local ai = zidx ~= 0
+		local ai = (zidx ~= 0) or ai_only
 
 		local segment_idx = 1 + zidx
 		local is_ghost = ghost and zidx == 1
@@ -259,6 +259,8 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	-- Apply acceleration/braking
 
+	-- FIXME: there's a bug here, once you hit max speed you can't brake
+
 	if speed > limit_speed then
 		-- Wall or grass - brake to limit speed
 		speed = max(speed - decel, limit_speed)
@@ -325,12 +327,40 @@ end
 
 function tick_car_steering(car, steering_input, accel_brake_input)
 
+	if car.ai then
+		local section = road[car.section_idx]
+
+		-- Look ahead by dz estimate (Won't know true dz until after steering)
+		-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
+		local dz_estimate = min(car.segment_idx + car.subseg + car.speed * speed_scale - 1, section.length)
+
+		local target_x = section.entrance_x + dz_estimate*section.racing_line_dx
+		if (racing_line_sine_interp) target_x = sin(target_x)
+		target_x *= road.half_width
+
+		local steer_strength = 1
+		-- TODO
+		-- local brake_dist = distance_to_next_braking_point(section, car.segment_plus_subseg)
+		-- if (brake_dist > 31) steer_strength = 0.5
+		-- if (brake_dist > 63) steer_strength = 0.25
+		-- if (brake_dist > 127) steer_strength = 0.125
+		-- if (abs(target_x - car.x) > 1) steer_strength = 1
+
+		if target_x < car.x - 0.01 then
+			steering_input = -steer_strength
+		elseif target_x > car.x + 0.01 then
+			steering_input = steer_strength
+		else
+			steering_input = 0
+			-- HACK: logic doesn't take accumulator into account, so we would overshoot
+			-- So Just reset the accumulator when we're at racing line
+			car.steer_accum = 0
+		end
+	end
+
 	-- Only steer when moving (but ramp this effect up from 0)
 	local steering_scale = min(16*car.speed, 1)
 	local steering_input_scaled = steering_input * steering_scale
-
-	-- TODO: steer, following racing line
-	if (car.ai) return steering_input_scaled
 
 	--[[ Steering accumulator:
 	Don't just start turning immediately; add some acceleration in the X axis
@@ -359,7 +389,7 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 end
 
 function tick_car_corner(car, section, dz)
-	if (car.ai) return  -- TODO: apply this to AI cars once they steer
+	if (car.ai) return  -- TODO: apply this to AI cars
 	car.x -= turn_dx_scale * dz * section.tu
 end
 

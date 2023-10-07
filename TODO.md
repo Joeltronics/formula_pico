@@ -1,13 +1,4 @@
-## Gameplay
-
-Improve steering/cornering logic
-* Figure out direction on-track in real units (currently represented by abstract turn accumulator)
-	- Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right
-* When being pushed toward outside of turn, also affect on-track direciton/turn accumulator
-* Smarter dx/dz tradeoff logic
-	- Essentially base it on GG diagram
-	- Kind of already operates this way, but need to determine both together rather than one then other
-	- Also needs on-track direction to be in real units to do this properly
+## Gameplay features
 
 Add walls
 
@@ -39,10 +30,27 @@ Add other cars
 	- No clipping yet
 2. (Done) Draw them on minimap
 3. (Done) Keep track of their rank and display it
-4. Have them follow racing line
+4. (Done) Have them follow racing line
 5. Add hitboxes/clipping
-6. Add AI & overtaking logic
+6. Add AI overtaking logic
 7. Pit stops & tire management for other cars as well
+
+## Gameplay improvements
+
+Improve steering/cornering logic
+* Figure out direction on-track in real units (currently represented by abstract turn accumulator)
+	- Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right
+* When being pushed toward outside of turn, also affect on-track direciton/turn accumulator
+* Smarter dx/dz tradeoff logic
+	- Essentially base it on GG diagram
+	- Kind of already operates this way, but need to determine both together rather than one then other
+	- Also needs on-track direction to be in real units to do this properly
+
+AI steering logic could stand to be improved
+* It only takes into account whether it's left/right of the racing line, it doesn't account for the direction of the racing line or otherwise look ahead
+* The simple logic means it often undershoots the racing line
+* It would also overshoot it, but for now there's a hack to immediately reset the accumulator to prevent this
+* "Push to outside of corners" logic does not currently apply to AI cars
 
 ## Graphics
 
@@ -59,7 +67,8 @@ Better off-track sprites and other stuff
 
 Improve start screen
 * Add some art
-* Select mode (practice, race, season, etc)
+* Preview car palette & track layout
+* Tidy it up
 
 More tracks
 
@@ -68,3 +77,4 @@ More sound improvements
 Optimization
 * Performance
 * Token count
+* Better data compression

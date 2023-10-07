@@ -50,11 +50,6 @@ function init_track()
 
 		-- Calculated values
 
-		if (racing_line_sine_interp) then
-			section.entrance_x = asin(section.entrance_x)
-			if (section.entrance_x >= 0.5) section.entrance_x -= 1
-		end
-
 		section.angle_per_seg = section.angle / section.length
 		section.tu = 16 * section.angle_per_seg
 
@@ -73,6 +68,14 @@ function init_track()
 		if (section.tnl) section.wall = road.half_width + shoulder_half_width
 
 		section.wall_clip = section.wall - car_half_width
+
+		section.entrance_x = clip_num(section.entrance_x, -section.wall_clip + 0.01, section.wall_clip - 0.01)
+		section.entrance_x = clip_num(section.entrance_x, -road.grass_x + 0.01, road.grass_x - 0.01)
+
+		if (racing_line_sine_interp) then
+			section.entrance_x = asin(section.entrance_x)
+			if (section.entrance_x >= 0.5) section.entrance_x -= 1
+		end
 
 		if (section.bgl) section.bgl = bg_objects[section.bgl]
 		if (section.bgc) section.bgc = bg_objects[section.bgc]

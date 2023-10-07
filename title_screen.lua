@@ -31,11 +31,10 @@ function update_title_screen()
 			-- 	num_other_cars = 1
 			-- 	ghost = true
 			-- elseif mode == 2 then
-			if mode == 1 then
-				num_other_cars = 7
-			end
+			if (mode >= 1) num_other_cars = 7
+			local ai_only = (mode == 2)
 
-			init_game(1 + track_zidx, 1 + team_zidx, ghost, num_other_cars)
+			init_game(1 + track_zidx, 1 + team_zidx, ghost, num_other_cars, ai_only)
 			return
 		else
 			row_zidx += 1
@@ -52,7 +51,7 @@ function update_title_screen()
 	if (btnp(1)) incr += 1
 
 	if incr ~= 0 then
-		if (row_zidx == 0) mode = (mode + incr) % 2
+		if (row_zidx == 0) mode = (mode + incr) % 3
 		if (row_zidx == 1) track_zidx = (track_zidx + incr) % #tracks
 		if (row_zidx == 2) team_zidx = (team_zidx + incr) % #palettes
 		if (row_zidx == 3) brake_assist = not brake_assist
@@ -77,6 +76,7 @@ function draw_title_screen()
 	if (mode == 0) mode_str = 'practice'
 	-- if (mode == 1) mode_str = 'time trial'
 	if (mode == 1) mode_str = 'race'
+	if (mode == 2) mode_str = 'ai only'
 
 	print_centered("mode: " .. mode_str, 64, 64, 7)
 	print_centered("track: " .. tracks[track_zidx+1].name, 64, 70, 7)

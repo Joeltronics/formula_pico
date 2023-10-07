@@ -467,20 +467,20 @@ tracks:
     tree_bg: true
     sections:
     - {length: 8, x: 0}
-    - {length: 12, x: -1}
-    - {length: 20, x: -1, gndcol1: 8, gndcol2: 2}
-    - {length: 20, x: -1, pitch: 1, gndcol1: 8, gndcol2: 2}
-    - {length: 20, x: -1, pitch: 1, gndcol1: 8, gndcol2: 2}
-    - {length: 15, x: -1}
+    - {length: 12, x: -0.875}
+    - {length: 20, x: -0.75, gndcol1: 8, gndcol2: 2}
+    - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
+    - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
+    - {length: 15, x: -0.75}
     - {length: 5, x: -1, speed: 100}
     - {length: 6, x: 0, speed: 100, angle: 0.25}
     - {length: 6, x: 1, speed: 100, angle: 0.25}
     - {length: 8, x: 0}
-    - {length: 12, x: -1}
-    - {length: 20, x: -1, gndcol1: 1, gndcol2: 12}
-    - {length: 20, x: -1, pitch: -1, gndcol1: 1, gndcol2: 12}
-    - {length: 20, x: -1, pitch: -1, gndcol1: 1, gndcol2: 12}
-    - {length: 15, x: -1}
+    - {length: 12, x: -0.875}
+    - {length: 20, x: -0.75, gndcol1: 1, gndcol2: 12}
+    - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
+    - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
+    - {length: 15, x: -0.75}
     - {length: 5, x: -1, speed: 100}
     - {length: 6, x: 0, speed: 100, angle: 0.25}
     - {length: 6, x: 1, speed: 100, angle: 0.25}
