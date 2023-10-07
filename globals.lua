@@ -73,6 +73,11 @@ palette_ghost = {
 	7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 6, 7, 6,
 }
 
+palette_race_start_light_out = {
+	[2]=1,
+	[8]=5,
+}
+
 --
 -- Globals that are effectively const after init
 --
@@ -98,7 +103,12 @@ total_segment_count = nil
 
 frozen = false
 
--- TODO: rename "track"
+-- TODO: rename to "track"
 road = nil  -- Setting this also acts as "game started" flag
 cars = {}
 car_positions = {}
+
+race_started = false
+race_start_counter = 0
+race_start_num_lights = 0
+race_start_random_delay = nil

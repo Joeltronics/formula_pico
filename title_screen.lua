@@ -33,8 +33,9 @@ function update_title_screen()
 			-- elseif mode == 2 then
 			if (mode >= 1) num_other_cars = 7
 			local ai_only = (mode == 2)
+			local is_race = num_other_cars > 1
 
-			init_game(1 + track_zidx, 1 + team_zidx, ghost, num_other_cars, ai_only)
+			init_game(1 + track_zidx, 1 + team_zidx, is_race, ghost, num_other_cars, ai_only)
 			return
 		else
 			row_zidx += 1

@@ -1,11 +1,15 @@
 
-function init_game(track_idx, team_idx, ghost, num_other_cars, ai_only)
+function init_game(track_idx, team_idx, is_race, ghost, num_other_cars, ai_only)
 	road = tracks[track_idx]
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
 	init_cars(team_idx, ghost, num_other_cars, ai_only)
 	init_track()
 	init_minimap()
+
+	race_started = not is_race
+	race_start_counter = 0
+	race_start_num_lights = 0
 end
 
 function init_cars(team_idx, ghost, num_other_cars, ai_only)
@@ -35,6 +39,9 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			palette = palette_ghost
 			segment_idx = 1
 		end
+		-- Start reaction time: 0.15 - 0.5 seconds (9-30 frames)
+		local start_delay_counter = 0
+		if (ai and not is_ghost) start_delay_counter = 9 + flr(rnd(21))
 		add(cars, {
 			x=0,
 			laps=-1,
@@ -57,6 +64,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			in_pit=false,
 			touched_wall=false,
 			touched_wall_sound=false,
+			start_delay_counter=start_delay_counter,
 		})
 
 		del(teams, team_idx)
@@ -114,28 +122,33 @@ function tick_debug()
 	while stat(30) do
 		local key = stat(31)
 		-- printh('"' .. key .. '"')
-		if (key == 'k') player_car.subseg += 0.25
-		if (key == 'j') player_car.subseg -= 0.25
-		if (key == '⌂') player_car.subseg += 1
-		if (key == '웃') player_car.subseg -= 1
-		if (key == ':') player_car.subseg = 0
-		if (key == 'h') player_car.x -= 0.25
-		if (key == 'l') player_car.x += 0.25
-		if (key == '♥') player_car.x -= 1
-		if (key == '⬅️') player_car.x += 1
+		if race_started then
+			if (key == 'k') player_car.subseg += 0.25
+			if (key == 'j') player_car.subseg -= 0.25
+			if (key == '⌂') player_car.subseg += 1
+			if (key == '웃') player_car.subseg -= 1
+			if (key == ':') player_car.subseg = 0
+			if (key == 'h') player_car.x -= 0.25
+			if (key == 'l') player_car.x += 0.25
+			if (key == '♥') player_car.x -= 1
+			if (key == '⬅️') player_car.x += 1
+			if (key == '`') player_car.speed = min(player_car.speed + 0.25, 2) -- turbo
+			if (key == '~') then
+				-- turbo for all cars
+				for car in all(cars) do
+					car.speed = min(car.speed + 0.25, 2)
+				end
+			end
+		else
+			if (key == '`' or key == '~') race_start_counter += 15
+		end
+
 		if (key == '7') cam_x_scale = max(cam_x_scale - 0.25, 0)
 		if (key == '8') cam_x_scale = min(cam_x_scale + 0.25, 1)
 		if (key == '9') cam_dy = max(cam_dy - 0.25, 0.25)
 		if (key == '0') cam_dy += 0.25
 		if (key == '-') cam_dz = max(cam_dz - 0.25, 0.25)
 		if (key == '=') cam_dz += 0.25
-		if (key == '`') player_car.speed = min(player_car.speed + 0.25, 2)  -- turbo
-		if (key == '~') then
-			-- turbo for all cars
-			for car in all(cars) do
-				car.speed = min(car.speed + 0.25, 2)
-			end
-		end
 		if (key == '<') player_car.heading -= 1/256
 		if (key == '>') player_car.heading += 1/256
 		if (key == 'f') frozen = not frozen
@@ -210,6 +223,11 @@ end
 function tick_car_speed(car, section, accel_brake_input)
 
 	-- Determine acceleration & speed
+
+	if car.start_delay_counter > 0 then
+		car.start_delay_counter -= 1
+		return 0
+	end
 
 	-- TODO: also factor in slope
 
@@ -463,6 +481,41 @@ function tick_car(car, accel_brake_input, steering_input)
 	clip_wall(car, section)
 end
 
+function tick_race_start(accel_brake_input)
+
+	assert(not race_started)
+
+	if (not frozen) race_start_counter += 1
+
+	if race_start_num_lights <= 0 then
+		-- No lights yet - 2 second delay
+		if race_start_counter > 120 then
+			race_start_num_lights = 1
+			race_start_counter = 0
+			sfx(4, 3)
+		end
+	elseif race_start_num_lights < 5 then
+		-- 1-5 lights - 1 second delay
+		if race_start_counter > 60 then
+			race_start_num_lights += 1
+			race_start_counter = 0
+			sfx(4, 3)
+		end
+	else
+		-- 5 lights - 1-3 second delay
+		if (not race_start_random_delay) race_start_random_delay = 60 + rnd(120)
+		if race_start_counter > race_start_random_delay then
+			race_started = true
+			race_start_num_lights = 0
+			race_start_counter = 0
+			sfx(5, 3)
+
+			-- If trying to accelerate at the moment lights go out, delay start by 1/2 ssecond (30 frames)
+			if (accel_brake_input > 0 and not cars[1].ai) cars[1].start_delay_counter = 30
+		end
+	end
+end
+
 function game_tick()
 
 	if debug then
@@ -475,10 +528,14 @@ function game_tick()
 	if (btn(2) or btn(4)) accel_brake_input = 1
 	if (btn(3) or btn(5)) accel_brake_input -= 2
 
-	for car in all(cars) do
-		tick_car(car, accel_brake_input, steering_input)
-	end
+	if race_started then
+		for car in all(cars) do
+			tick_car(car, accel_brake_input, steering_input)
+		end
 
-	-- TODO: don't do this on every update; only if there was an overtake
-	update_car_positions(false)
+		-- TODO: don't do this on every update; only if there was an overtake
+		update_car_positions(false)
+	else
+		tick_race_start(accel_brake_input)
+	end
 end

@@ -61,6 +61,11 @@ function update_sound()
 
 	if (not enable_sound) return
 
+	-- TODO: special sounds for race start - many cars idling
+	-- if not race_started then
+	-- end
+
+	-- TODO: also other nearby cars
 	local player_car = cars[1]
 
 	-- TODO: sound for on curb?

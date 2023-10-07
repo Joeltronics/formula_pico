@@ -2,8 +2,9 @@
 
 Race logic
 * (Done) Count laps
+* (Done) Start procedure
+* Race end procedure
 * Time laps
-* Start procedure
 
 Pit stops
 1. Add pit lane

@@ -342,10 +342,9 @@ function draw_bg_sprite(s)
 		)
 	end
 
+	-- Don't know how slow these are - might be worth saving the tokens and juist always calling pal()?
+	if (s.palt and not s.palette) palt()
 	if (s.palette) pal()
-	if (s.palt) palt()
-	-- pal()
-	-- palt()
 end
 
 function draw_road()
@@ -554,11 +553,23 @@ function draw_ranking()
 	end
 end
 
+function draw_race_start_lights()
+	palt(0, false)
+	for i = 1,5 do
+		if (i == 1 + race_start_num_lights) pal(palette_race_start_light_out)
+		spr(48, 30 + 10*i, 24)
+		spr(48, 30 + 10*i, 32)
+	end
+	pal()
+end
+
 function draw_hud()
 
 	if #cars > 1 then
 		draw_ranking()
 	end
+
+	if (not race_started) draw_race_start_lights()
 
 	cursor(116, 116, 7)
 	local speed_print = '' .. round(cars[1].speed * speed_to_kph)
