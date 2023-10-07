@@ -2,7 +2,7 @@
 
 start_heading: 0.25
 track_width: 3
-wall: 4
+invisible_wall: 6
 shoulder_half_width: 0.125
 
 tracks:
@@ -10,6 +10,7 @@ tracks:
     start_heading: 0.5
     length_km: 4.32
     length_scale: 2
+    wall: 4
     tree_bg: true
     sections:
     - {length: 8, x: 0, wall: 2}  # start/finish
@@ -66,6 +67,7 @@ tracks:
   - name: belgium
     length_km: 7.00
     length_scale: 2
+    wall: 4
     tree_bg: true
     sections:
     - {length: 8, x: 0.5, wall: 2}  # start/finish; heading 0.25
@@ -77,17 +79,17 @@ tracks:
     - {length: 8, pitch: -0.5, x: -0.5}
     - {turn_num: 2, length: 8, angle: 0.0375, x: 0.25}
     - {turn_num: 2, length: 8, angle: 0.0375, x: 1}
-    - {length: 16, pitch: -0.25, x: 0.25}
-    - {turn_num: 3, length: 2, angle: -0.075, x: -0.5}  # Eau Rouge
-    - {turn_num: 3, length: 2, angle: -0.075, x: -1}
-    - {turn_num: 4, length: 8, angle: 0.15, pitch: 2, x: -0.5}  # Raidillon
-    - {turn_num: 4, length: 8, angle: 0.15, pitch: 2, x: 1}
-    - {turn_num: 5, length: 8, angle: -0.075, x: 0}
-    - {turn_num: 5, length: 8, angle: -0.075, x: -1}
-    - {length: 16, pitch: 1, x: -0.25}
-    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 0.5}
-    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 1}
-    - {length: 40, pitch: 0.5, x: 0.25} # kemmel straight
+    - {length: 16, pitch: -0.25, x: 0.25, wall: 6}
+    - {turn_num: 3, length: 2, angle: -0.075, x: -0.5, wall: 8}  # Eau Rouge
+    - {turn_num: 3, length: 2, angle: -0.075, x: -1, wall: 8}
+    - {turn_num: 4, length: 8, angle: 0.15, pitch: 2, x: -0.5, wall: 8}  # Raidillon
+    - {turn_num: 4, length: 8, angle: 0.15, pitch: 2, x: 1, wall: 8}
+    - {turn_num: 5, length: 8, angle: -0.075, x: 0, wall: 8}
+    - {turn_num: 5, length: 8, angle: -0.075, x: -1, wall: 8}
+    - {length: 16, pitch: 1, x: -0.25, wall: 8}
+    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 0.5, wall: 7}
+    - {turn_num: 6, length: 8, angle: 0.025, pitch: 0.5, x: 1, wall: 6}
+    - {length: 40, pitch: 0.5, x: 0.25, wall: 6} # kemmel straight
     - {length: 8, pitch: 0.125, x: -1}
     - {turn_num: 7, length: 4, angle: 0.125, speed: 180, x: 0}  # high point
     - {turn_num: 7, length: 4, angle: 0.125, speed: 180, x: 1}
@@ -154,6 +156,7 @@ tracks:
   - name: "italy"
     length_km: 5.79
     length_scale: 2
+    wall: 6
     tree_bg: true
     sections:
     - {length: 8, x: 0.25, pitch: 0.125, wall: 2}  # start/finish; heading 0.25
@@ -204,10 +207,10 @@ tracks:
     - {length: 6, x: -0.25, pitch: -0.25}
     - {length: 60, x: 1, pitch: -0.25}
     - {length: 6, x: -1, pitch: -0.25}
-    - {turn_num: 11, length: 6, x: 0, angle: 0.125, speed: 220, wall: 6} # Parabolica
-    - {turn_num: 11, length: 6, x: 1, angle: 0.125, speed: 220, wall: 6}
-    - {turn_num: 11, length: 16, x: 0.5, angle: 0.125, wall: 6}
-    - {turn_num: 11, length: 30, x: -0.25, angle: 0.125, wall: 6}
+    - {turn_num: 11, length: 6, x: 0, angle: 0.125, speed: 220, wall: 8} # Parabolica
+    - {turn_num: 11, length: 6, x: 1, angle: 0.125, speed: 220, wall: 8}
+    - {turn_num: 11, length: 16, x: 0.5, angle: 0.125, wall: 8}
+    - {turn_num: 11, length: 30, x: -0.25, angle: 0.125, wall: 8}
     - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall: 6}
 
   - name: uk
@@ -215,7 +218,7 @@ tracks:
     length_scale: 2
     start_heading: 0.125  # North-East
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
-    wall: 6
+    wall: 8
     sections:
     - {length: 8, pitch: 0.125, wall: 2}  # start/finish
     - {length: 36, pitch: 0.125, wall: 2}
@@ -224,21 +227,21 @@ tracks:
     - {length: 4, pitch: 0.125}
     - {turn_num: 2, length: 12, angle: -6, pitch: 0.125} 
     - {length: 20, pitch: 0.125}
-    - {turn_num: 3, length: 8, angle: 10, pitch: 0.125, speed: 125, wall: 4}
-    - {length: 8, pitch: 0.125, wall: 4}
-    - {turn_num: 4, length: 10, angle: -13, speed: 90, wall: 4}
-    - {length: 6, wall: 4}
-    - {turn_num: 5, length: 10, angle: -2, wall: 5}
+    - {turn_num: 3, length: 8, angle: 10, pitch: 0.125, speed: 125}
+    - {length: 8, pitch: 0.125}
+    - {turn_num: 4, length: 10, angle: -13, speed: 90}
+    - {length: 6}
+    - {turn_num: 5, length: 10, angle: -2}
     - {length: 8, angle: -4}
     - {length: 30}
     - {length: 15}
     - {length: 15, pitch: -0.25}
-    - {turn_num: 6, length: 4, angle: -4, speed: 190, wall: 4}  # Brooklands
-    - {turn_num: 6, length: 8, angle: -4, speed: 190, wall: 4}
-    - {turn_num: 6, length: 4, angle: -4, wall: 4}
-    - {length: 4, wall: 4}
-    - {turn_num: 7, length: 20, angle: 18, speed: 125, wall: 4}  # Luffield
-    - {length: 18, wall: 4}
+    - {turn_num: 6, length: 4, angle: -4, speed: 190}  # Brooklands
+    - {turn_num: 6, length: 8, angle: -4, speed: 190}
+    - {turn_num: 6, length: 4, angle: -4}
+    - {length: 4}
+    - {turn_num: 7, length: 20, angle: 18, speed: 125}  # Luffield
+    - {length: 18}
     - {turn_num: 8, length: 24, angle: 5, wall: 4}  # Woodcote
     - {length: 8, pitch: 0.125, wall: 2}
     - {length: 24, pitch: 0.125, wall: 2}
@@ -266,13 +269,14 @@ tracks:
     - {length: 8}
     - {turn_num: 18, length: 10, angle: 4}
     - {turn_num: 18, length: 4, angle: 4}
-    - {length: 8}
+    - {length: 8, wall: 6}
 
   - name: japan
     length_km: 5.81
     length_scale: 2
     start_heading: 0.75  # South
     angle_scale: 0.03125  # 1/32; so 8 steps is a right angle
+    wall: 4
     city_bg: true
     sections:
     - {length: 8, pitch: -0.25, wall: 2}  # start/finish
@@ -492,12 +496,14 @@ tracks:
 
   - name: "dragstrip"
     track_width: 4
-    wall: 8
+    invisible_wall: 8
     street: true
     city_bg: true
     gndcol1: 4
     gndcol2: 15
     sections:
-    - {length: 16, x: 0}
-    - {length: 1008, x: 0}
+    - {length: 16, x: 0, wall: 2}
+    - {length: 8, x: 0, wall: 2}
+    - {length: 992, x: 0}
+    - {length: 8, x: 0, wall: 8}
 

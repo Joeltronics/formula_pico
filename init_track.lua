@@ -58,15 +58,21 @@ function init_track()
 
 		section.tnl = section.tnl or false
 
-		section.wall = section.wall or road.wall
-		if section.wall then
-			section.wall_is_invisible = false
+		section.wall_is_invisible = false
+		if section.tnl then
+			-- TODO: should this be shoulder_width?
+			section.wall = road.half_width + shoulder_half_width
+		elseif section.wall then
+			--
+		elseif section.iwall then
+			section.wall = section.iwall
+			section.wall_is_invisible = true
+		elseif road.wall then
+			section.wall = road.wall
 		else
-			section.wall = 2 * road.half_width
+			section.wall = road.iwall or 2*road.half_width
 			section.wall_is_invisible = true
 		end
-
-		if (section.tnl) section.wall = road.half_width + shoulder_half_width
 
 		section.wall_clip = section.wall - car_half_width
 

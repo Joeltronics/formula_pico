@@ -131,6 +131,7 @@ class Section:
 	angle: float = 0.0
 	# start_heading: float  # TODO
 	wall: float | None = None
+	invisible_wall: float | None = None
 	dwall: float | None = None
 	pitch: float = 0.0
 	tnl: bool = False
@@ -174,6 +175,7 @@ class Section:
 			'angle',
 			'max_speed',
 			'wall',
+			'invisible_wall',
 			'tnl',
 			'gndcol1',
 			'gndcol2',
@@ -247,6 +249,7 @@ class Track:
 			track_width: float,
 			shoulder_half_width: float,
 			wall: float | None = None,
+			invisible_wall: float | None = None,
 			street: bool = False,
 			tree_bg: bool = False,
 			city_bg: bool = False,
@@ -263,6 +266,7 @@ class Track:
 		self.shoulder_half_width: float = shoulder_half_width
 
 		self.wall = wall
+		self.invisible_wall = invisible_wall
 		self.street = street
 		self.tree_bg = tree_bg
 		self.city_bg = city_bg
@@ -324,8 +328,8 @@ class Track:
 			sec0 = self.sections[idx]
 			sec1 = self.sections[(idx + 1) % len(self.sections)]
 
-			wall0 = sec0.wall or self.wall
-			wall1 = sec1.wall or self.wall
+			wall0 = sec0.wall or sec0.invisible_wall or self.wall or self.invisible_wall
+			wall1 = sec1.wall or sec1.invisible_wall or self.wall or self.invisible_wall
 
 			if sec0.tnl:
 				wall0 = self.track_width/2 + self.shoulder_half_width
@@ -581,6 +585,9 @@ class Track:
 		if self.wall:
 			ret['wall'] = self.wall
 
+		if self.invisible_wall:
+			ret['iwall'] = self.invisible_wall
+
 		if self.street:
 			ret['street'] = self.street
 
@@ -719,10 +726,16 @@ def draw_track(track, scale=16):
 	for section in sections:
 		segments.extend(section.segments)
 
-	x_min = track.x_min - 2*track_width
-	y_min = track.y_min - 2*track_width
-	x_max = track.x_max + 2*track_width
-	y_max = track.y_max + 2*track_width
+	max_wall = max(s.wall or s.invisible_wall or 0 for s in sections)
+	max_wall = max(max_wall, track.wall or 0, track.invisible_wall or 0)
+
+	# TODO: why does max_wall need to be doubled? there could be a bug somewhere in wall drawing
+	padding = max(2*track_width, 2*max_wall)
+
+	x_min = track.x_min - padding
+	y_min = track.y_min - padding
+	x_max = track.x_max + padding
+	y_max = track.y_max + padding
 	width = x_max - x_min
 	height = y_max - y_min
 
@@ -869,13 +882,22 @@ def draw_track(track, scale=16):
 		# for idx, (section, segment) in enumerate(iterate_segments(sections)):
 		idx = -1
 		for section_idx, section in enumerate(sections):
+
+			wall = section.wall
+			if (not section.wall) and (not section.invisible_wall) and track.wall:
+				wall = track.wall
+
+			if not wall:
+				continue
+
 			for segment_idx, segment in enumerate(section.segments):
 				idx += 1
 				if not section.tnl:
 					# TODO: do not make wall further than corner radius
 					wall_color = PALETTE[7] if ((idx % 6) >= 3) else PALETTE[6]
-					wall_start_0 = 2*((section.wall or track.wall) + section.dwall * segment_idx)
-					wall_start_1 = 2*((section.wall or track.wall) + section.dwall * (segment_idx + 1))
+					# TODO: why this 2x?
+					wall_start_0 = 2*(wall + section.dwall * segment_idx)
+					wall_start_1 = 2*(wall + section.dwall * (segment_idx + 1))
 					wall_end_0 = wall_start_0 + 1
 					wall_end_1 = wall_start_1 + 1
 					polygon(segment.points(wall_start_0, wall_end_0, wall_start_1, wall_end_1), wall_color, stroke=0.5)
@@ -957,9 +979,8 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	angle_scale = yaml_track.get('angle_scale', yaml_defaults.get('angle_scale', 1.0))
 	track_width = yaml_track.get('track_width', yaml_defaults['track_width'])
 	shoulder_half_width = yaml_track.get('shoulder_half_width', yaml_defaults['shoulder_half_width'])
-	# TODO: make walls optional
-	wall = yaml_track.get('wall', yaml_defaults['wall'])
-
+	wall = yaml_track.get('wall', yaml_defaults.get('wall', None))
+	invisible_wall = yaml_track.get('invisible_wall', yaml_defaults.get('invisible_wall', None))
 	sections = [Section(**s) for s in yaml_track['sections']]
 	for section in sections:
 		section.length = int(round(section.length * length_scale))
@@ -976,6 +997,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		track_width=track_width,
 		shoulder_half_width=shoulder_half_width,
 		wall=wall,
+		invisible_wall=invisible_wall,
 		street=yaml_track.get('street', False),
 		city_bg=yaml_track.get('city_bg', False),
 		tree_bg=yaml_track.get('tree_bg', False),
