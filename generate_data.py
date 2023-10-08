@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from math import pi as PI, ceil, floor, cos, sin, sqrt, asin
 from pathlib import Path
-from typing import Final, Iterable
+from typing import ClassVar, Final, Iterable
 from warnings import warn
 
 import cairo
@@ -150,6 +150,25 @@ class Section:
 	# List of segments, for use on Python side only
 	segments: list[Segment] = field(default_factory=list)
 
+	LUA_ORDERED_FIELDS: ClassVar[list[str]] = [
+		'length',
+		'x',
+		'pitch',
+		'angle',
+		'max_speed',
+		'wall',
+	]
+
+	LUA_KW_FIELDS: ClassVar[list[str]] = [
+		'invisible_wall',
+		'tnl',
+		'gndcol1',
+		'gndcol2',
+		'bgl',
+		'bgr',
+		'bgc',
+	]
+
 	@property
 	def angle_per_seg(self):
 		return self.angle / self.length
@@ -167,38 +186,18 @@ class Section:
 
 	def to_lua_dict(self) -> dict:
 
-		ret = dict(length=self.length)
+		ret = dict()
 
-		FIELDS_IF_NON_DEFAULT = [
-			'x',
-			'pitch',
-			'angle',
-			'max_speed',
-			'wall',
-			'invisible_wall',
-			'tnl',
-			'gndcol1',
-			'gndcol2',
-			'bgl',
-			'bgr',
-			'bgc',
-		]
+		# Always add all ordered fields
 		default = Section(length=1)
-		for attr_name in FIELDS_IF_NON_DEFAULT:
+		for attr_name in self.LUA_ORDERED_FIELDS:
+			ret[attr_name] = getattr(self, attr_name)
+		
+		# Only add keyword fields if non-default
+		for attr_name in self.LUA_KW_FIELDS:
 			val = getattr(self, attr_name)
 			if val != getattr(default, attr_name):
 				ret[attr_name] = val
-
-		# HACK: rename x -> entrance_x
-		x = ret.pop('x', None)
-		if x is not None:
-			ret['entrance_x'] = x
-
-		# if self.speed is not None:
-		# 	ret['max_speed'] = self.speed / SPEED_KPH_SCALE
-
-		# if (self.apex_idx is not None) and (self.apex_idx < self.length):
-		# 	ret['apex_seg'] = self.apex_idx + 1
 
 		return ret
 
@@ -206,15 +205,7 @@ class Section:
 
 		vals_uncompressed = self.to_lua_dict()
 
-		FIELDS = [
-			'length',
-			'entrance_x',
-			'pitch',
-			'angle',
-			'max_speed',
-			'wall',
-		]
-		items = [vals_uncompressed.pop(field_name, None) for field_name in FIELDS]
+		items = [vals_uncompressed.pop(field_name, None) for field_name in self.LUA_ORDERED_FIELDS]
 
 		if vals_uncompressed:
 			section_type = dict(vals_uncompressed)
