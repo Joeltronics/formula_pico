@@ -4,23 +4,24 @@ function decompress_sections()
 		local section = {}
 		local section_items = split(section_compressed)
 		for idx = 1,#section_items do
-			local key_value, key, value = split(section_items[idx], '='), nil, nil
-			if (#key_value == 2) then
-				key = key_value[1]
-				value = key_value[2]
-			else
-				local field_names = {
-					'length',
-					'entrance_x',
-					'pitch',
-					'angle',
-					'max_speed',
-				}
-				key = field_names[idx]
-				value = key_value[1]
-			end
+			local field_names = {
+				'length',
+				'entrance_x',
+				'pitch',
+				'angle',
+				'max_speed',
+				'wall',
+				'section_type',
+			}
+			key = field_names[idx]
+			value = section_items[idx]
 			-- nil gets parsed as string
 			if (value ~= 'nil') section[key] = value
+		end
+		if section.section_type then
+			for k, v in pairs(section_types[section.section_type + 1]) do
+				section[k] = v
+			end
 		end
 		add(road, section)
 	end

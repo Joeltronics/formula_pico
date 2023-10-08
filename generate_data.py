@@ -202,7 +202,7 @@ class Section:
 
 		return ret
 
-	def to_lua_compressed(self) -> str:
+	def to_lua_compressed(self, section_types) -> str:
 
 		vals_uncompressed = self.to_lua_dict()
 
@@ -212,8 +212,19 @@ class Section:
 			'pitch',
 			'angle',
 			'max_speed',
+			'wall',
 		]
 		items = [vals_uncompressed.pop(field_name, None) for field_name in FIELDS]
+
+		if vals_uncompressed:
+			section_type = dict(vals_uncompressed)
+
+			if section_type in section_types:
+				section_type_idx = section_types.index(section_type)
+			else:
+				section_type_idx = len(section_types)
+				section_types.append(section_type)
+			items.append(section_type_idx)
 
 		# Leave off items at the end that are at default value
 		last_needed_idx = None
@@ -223,13 +234,7 @@ class Section:
 
 		items = items[:(last_needed_idx + 1)]
 
-		# TODO: can put key=value into slots that are None
-		# e.g. if angle but no pitch, could put key=value into pitch slot instead of needing to append
-
 		items = [to_lua_str(item) for item in items]
-
-		for k, v in vals_uncompressed.items():
-			items.append(f'{k}={to_lua_str(v, quote_strings=False)}')
 
 		return ','.join(items)
 
@@ -564,7 +569,7 @@ class Track:
 
 		set_normals(self.segments)
 
-	def lua_output_data(self, defaults: dict, compress: bool):
+	def lua_output_data(self, defaults: dict, section_types: list[dict], compress: bool):
 
 		ret = dict()
 
@@ -603,7 +608,7 @@ class Track:
 			ret['tree_bg'] = True
 
 		if compress:
-			sections_compressed = ';'.join(s.to_lua_compressed() for s in self.sections)
+			sections_compressed = ';'.join(s.to_lua_compressed(section_types) for s in self.sections)
 			ret['sections_compressed'] = sections_compressed
 			ret['sections'] = []
 		else:
@@ -1008,7 +1013,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	width = track.x_max - track.x_min
 	height = track.y_max - track.y_min
 
-	print(f'Length: {len(track.segments)} segments')
+	print(f'Length: {len(track.segments)} segments ({len(track.sections)} sections)')
 	if length_km is not None:
 		m_per_segment = length_km / len(track.segments) * 100
 		print(f'True length: {length_km} km, segment length: {m_per_segment:.3f} m')
@@ -1094,6 +1099,8 @@ def main():
 
 		# Write tracks
 
+		section_types = []
+
 		f.write('tracks={\n')
 
 		for track_yaml in tracks:
@@ -1114,7 +1121,7 @@ def main():
 				# print('Drawing track')
 				draw_track(track)
 
-			track_lua_data = track.lua_output_data(data, compress=args.compress)
+			track_lua_data = track.lua_output_data(data, section_types, compress=args.compress)
 
 			sections = track_lua_data.pop('sections')
 
@@ -1129,6 +1136,11 @@ def main():
 
 			print()
 
+		f.write('}\n')
+
+		f.write('section_types={\n')
+		for section_type in section_types:
+			f.write(f'\t{to_lua_str(section_type, indent=1)},\n')
 		f.write('}\n')
 
 	print(f'Data saved as {DATA_FILENAME_OUT}')
