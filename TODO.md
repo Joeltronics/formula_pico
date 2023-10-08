@@ -23,16 +23,10 @@ Tire management
 3. Select race tire strategy at start
 	- Can override during pit stop
 
-Add other cars
-1. (Done) Just draw & keep track of them
-	- Have them always follow center of track
-	- No clipping yet
-2. (Done) Draw them on minimap
-3. (Done) Keep track of their rank and display it
-4. (Done) Have them follow racing line
-5. Add hitboxes/clipping
-6. Add AI overtaking logic
-7. Pit stops & tire management for other cars as well
+Other cars:
+* Add AI overtaking logic
+* Pit stops & tire management for other cars as well
+* Add AI defending logic?
 
 ## Gameplay improvements
 
@@ -50,6 +44,10 @@ AI steering logic could stand to be improved
 * The simple logic means it often undershoots the racing line
 * It would also overshoot it, but for now there's a hack to immediately reset the accumulator to prevent this
 * "Push to outside of corners" logic does not currently apply to AI cars
+
+Hitbox collision logic improvemnets
+* Should deal with this at steering time - clipping should be last resort
+* Gap in front varies with speed - this is because it's all based on the cars' current position, not where they will be after moving
 
 ## Graphics
 

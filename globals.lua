@@ -6,7 +6,9 @@
 pi    = 3.14159265359
 twopi = 6.28318530718
 
-racing_line_sine_interp = true
+debug_draw_extra = false
+
+racing_line_sine_interp = false
 
 speed_scale = 0.5
 
@@ -43,6 +45,13 @@ center_line_width = 3/32
 car_draw_width, car_draw_height = 0.75, 0.5
 car_width = 0.5 * car_draw_width
 car_half_width = 0.5 * car_width
+
+car_depth = 0.5
+car_depth_hitbox_padding = 0.01
+car_depth_padded = car_depth + car_depth_hitbox_padding
+
+car_x_hitbox_padding = 0.01
+car_width_padded = car_width + 2*car_x_hitbox_padding
 
 cam_dy, cam_dz = 2, 2
 

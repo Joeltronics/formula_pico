@@ -14,12 +14,12 @@ end
 
 function init_cars(team_idx, ghost, num_other_cars, ai_only)
 
-	collisions = not ghost
+	collisions = num_other_cars > 0 and not ghost
 	cars = {}
 
 	local teams = {1, 2, 3, 4, 5, 6, 7, 8}
 
-	for zidx = 0, num_other_cars do
+	for idx = 1, num_other_cars+1 do
 		local palette = palettes[team_idx]
 		palette = {
 			[8]=palette[1],  -- main
@@ -30,10 +30,10 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			[13]=palette[6],  -- floor
 		}
 
-		local ai = (zidx ~= 0) or ai_only
+		local ai = (idx > 1) or ai_only
 
-		local segment_idx = 1 + zidx
-		local is_ghost = ghost and zidx == 1
+		local segment_idx = idx
+		local is_ghost = ghost and idx == 2
 		if is_ghost then
 			-- Ghost car
 			palette = palette_ghost
@@ -43,6 +43,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 		local start_delay_counter = 0
 		if (ai and not is_ghost) start_delay_counter = 9 + flr(rnd(21))
 		add(cars, {
+			idx=idx,
 			x=0,
 			laps=-1,
 			section_idx=1,
@@ -65,6 +66,12 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			touched_wall=false,
 			touched_wall_sound=false,
 			start_delay_counter=start_delay_counter,
+			other_car_data={
+				lx=nil,
+				rx=nil,
+				next=nil,
+				front=nil,
+			}
 		})
 
 		del(teams, team_idx)
@@ -115,6 +122,65 @@ function update_car_positions(full)
 	for item in all(car_scores) do
 		add(car_positions, item[1])
 	end
+end
+
+function car_check_other_cars(car)
+
+	local car_x, segment_idx, subseg, segment_plus_subseg = car.x, car.segment_idx, car.subseg, car.segment_plus_subseg
+	local l_distance, r_distance, next, front = nil, nil, nil, nil
+
+	local car_track_distance = car.segment_total + car.subseg
+
+	-- TODO: don't need to iterate all cars - can look at car_positions and only check the closest few
+
+	for other_car in all(cars) do
+		if (other_car.idx ~= car.idx) then
+
+			local dz_ahead = (other_car.segment_total + other_car.subseg - car_track_distance) % total_segment_count
+			local dz_behind = total_segment_count - dz_ahead
+			assert(dz_behind > 0)
+
+			local dz = dz_ahead
+			if (dz_behind < dz_ahead) dz = -dz_behind
+
+			-- TODO: should this factor in track curvature?
+			local dx = other_car.x - car_x
+
+			local car_info = {
+				car=other_car,
+				dz_ahead=dz_ahead,
+				dz=dz,
+				dx=dx,
+			}
+
+			-- Side by side
+			if (dz_ahead < car_depth_padded) or (dz_behind < car_depth_padded) then
+				if dx < 0 then
+					l_distance = min(-dx, l_distance or -dx)
+				else
+					r_distance = min(dx, r_distance or dx)
+				end
+			end
+
+			-- Next car directly in front
+			if (abs(dx) < car_width_padded and ((not front) or dz_ahead < front.dz_ahead)) front = car_info
+
+			-- Next car (whether directly in front or not)
+			if ((not next) or dz_ahead < next.dz_ahead) next = car_info
+		end
+	end
+
+	local lx, rx = nil, nil
+	if (l_distance) lx = car_x - l_distance
+	if (r_distance) rx = car_x + r_distance
+
+	-- TODO: also keep track of closest (by total x & z distance), for sound purposes
+	car.other_car_data = {
+		lx=lx,
+		rx=rx,
+		next=next,
+		front=front,
+	}
 end
 
 function tick_debug()
@@ -176,24 +242,46 @@ function update_sprite_turn(car, section, dx)
 	car.sprite_turn = car_sprite_turn
 end
 
-function clip_wall(car, section)
+function clip_car_x(car, section)
 
 	local car_x, wall_clip = car.x, section.wall_clip + section.dwall * (car.segment_plus_subseg - 1)
+
+	-- Clip to wall
 
 	if section.wall_is_invisible then
 		if abs(car_x) > wall_clip then
 			-- Hit an invisible wall - immediately set to drive parallel to wall
-			car.steer_accum = 0
+			if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = 0
 		end
 
 	elseif abs(car_x) >= wall_clip then
 		-- Hit a visible wall - bounce back slightly (set accumulator to opposite direction)
-		car.steer_accum = -sgn(car_x)
+		-- car.steer_accum = -sgn(car_x)
+		if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = -sgn(car_x)
 		car.touched_wall = true
 		car.touched_wall_sound = true
 	end
 
-	car.x = clip_num(car_x, -wall_clip, wall_clip)
+	local clip_l, clip_r = -wall_clip, wall_clip
+
+	if collisions then
+		-- Clip to other cars, and force leaving space on the side of the track
+		-- TODO: account for that there could be more than 1 car
+		-- TODO: if car is way off track, don't need to leave space
+		-- TODO: force update accumulator, like with walls
+
+		local lx, rx = car.other_car_data.lx, car.other_car_data.rx
+		if lx then
+			clip_l = max(clip_l, lx + car_width_padded)
+			clip_l = max(clip_l, -road.half_width + car_width)
+		end
+		if rx then
+			clip_r = min(clip_r, rx - car_width_padded)
+			clip_r = min(clip_r, road.half_width - car_width)
+		end
+	end
+
+	car.x = clip_num(car_x, clip_l, clip_r)
 end
 
 function calculate_dz(car, section, steering_input_scaled, dx)
@@ -215,6 +303,17 @@ function calculate_dz(car, section, steering_input_scaled, dx)
 		local track_center_radius = section.length / abs(section.angle * twopi)
 		local car_radius = max(0, track_center_radius + (sgn(car_x) == sgn(section.angle) and -car_x or car_x))
 		dz *= (track_center_radius + turn_radius_compensation_offset) / (car_radius + turn_radius_compensation_offset)
+	end
+
+	-- Clip to not hit car in front
+	local front = car.other_car_data.front
+	if collisions and front then
+		local dz_max = front.dz_ahead - car_depth - car_depth_hitbox_padding
+
+		if dz > dz_max then
+			dz = dz_max
+			car.speed = front.car.speed
+		end
 	end
 
 	return dz
@@ -281,6 +380,8 @@ function tick_car_speed(car, section, accel_brake_input)
 	end
 
 	-- Apply acceleration/braking
+
+	-- TODO: if collisions, brake to prevent hitting car.other_car_data.front
 
 	-- FIXME: there's a bug here, once you hit max speed you can't brake
 
@@ -350,6 +451,9 @@ end
 
 function tick_car_steering(car, steering_input, accel_brake_input)
 
+	-- TODO: if lx or rx, force leaving space for other cars
+	-- (This happens in clip_car_x too, but that should be last resort - we should handle this here)
+
 	if car.ai then
 		local section = road[car.section_idx]
 
@@ -362,12 +466,12 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 		target_x *= road.half_width
 
 		local steer_strength = 1
-		-- TODO
+		-- TODO: don't need to prioritize steering when on straights; not sure the best way about this though
 		-- local brake_dist = distance_to_next_braking_point(section, car.segment_plus_subseg)
 		-- if (brake_dist > 31) steer_strength = 0.5
 		-- if (brake_dist > 63) steer_strength = 0.25
 		-- if (brake_dist > 127) steer_strength = 0.125
-		-- if (abs(target_x - car.x) > 1) steer_strength = 1
+		-- if (abs(target_x - car.x) > 2) steer_strength = 2
 
 		if target_x < car.x - 0.01 then
 			steering_input = -steer_strength
@@ -456,18 +560,22 @@ function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
 
+	if (collisions or car.ai) car_check_other_cars(car)
+	-- TODO: also use other_car_data for AI logic
+
 	if frozen then
-		clip_wall(car, section)
+		clip_car_x(car, section)
+		tick_car_forward(car, 0)
 		update_sprite_turn(car, section, 0)
 		return
 	end
 
 	local accel_brake_input_actual = tick_car_speed(car, section, accel_brake_input)
 
-	-- TODO: clipping wall twice here isn't great, should only need to clip once
+	-- TODO: clip_car_x() twice here isn't great, should only need to clip once
 
 	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input_actual)
-	clip_wall(car, section)
+	clip_car_x(car, section)
 
 	local dx = car.x - car_x_prev
 
@@ -478,7 +586,7 @@ function tick_car(car, accel_brake_input, steering_input)
 	tick_car_forward(car, dz)
 
 	tick_car_corner(car, section, dz)
-	clip_wall(car, section)
+	clip_car_x(car, section)
 end
 
 function tick_race_start(accel_brake_input)
@@ -529,6 +637,8 @@ function game_tick()
 	if (btn(3) or btn(5)) accel_brake_input -= 2
 
 	if race_started then
+		-- TODO: tick all cars' AI, then tick all forward, then clip all
+		-- Right now, if 2 cars go for the same gap in the same frame, the first one gets priority
 		for car in all(cars) do
 			tick_car(car, accel_brake_input, steering_input)
 		end

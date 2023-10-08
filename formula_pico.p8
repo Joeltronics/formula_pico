@@ -16,6 +16,10 @@ __lua__
 #include title_screen.lua
 #include game_logic.lua
 
+-- DEBUG: save characters when not including sound
+-- function update_sound()
+-- end
+
 function _init()
 	init_title_screen()
 end

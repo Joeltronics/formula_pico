@@ -359,9 +359,8 @@ function draw_road()
 	-- direction
 	-- TODO: look ahead a bit more than this to determine camera
 	local camang = subseg * section.tu
-	local xd = -camang
+	local xd, zd = -camang, 1
 	local yd = -(section.pitch + section.dpitch*(segment_idx - 1))
-	local zd = 1
 
 	-- Starting coords
 
@@ -386,7 +385,7 @@ function draw_road()
 
 	-- Draw road segments
 
-	-- TODO: start 1 segment behind the player - other sprites have a problem with pop-in
+	-- TODO: start 1 segment behind the player - walls and other cars have a problem with pop-in
 
 	local x1, y1, scale1 = project(x, y, z)
 
@@ -414,13 +413,6 @@ function draw_road()
 		end
 
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
-
-		-- DEBUG
-		-- if (debug and i < 5) then
-		-- 	for n = -5, 5 do
-		-- 		line(x1 - n*scale1, y1, x2 - n*scale2, y2, 10)
-		-- 	end
-		-- end
 
 		if i < sprite_draw_distance then
 			if sumct == road[1].length then
@@ -482,6 +474,73 @@ function draw_road()
 	end
 
 	clip()
+
+	if (not (debug and debug_draw_extra)) return
+
+	-- DEBUG: on-track stuff
+
+	local playerx, player_subseg = cars[1].x, cars[1].subseg
+
+	local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(segment_idx - 1))
+	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
+	local x, y, z = -cx - road.track_width*cam_x, -cy + cam_dy, -cz + cam_dz
+	local x1, y1, scale1 = project(x, y, z)
+	local x2, y2, scale2 = project(x + xd, y + yd, z + zd)
+
+	-- On-track X Ruler
+	for n = -5, 5 do
+		line(x1 - n*scale1, y1, x2 - n*scale2, y2, 15)
+	end
+
+	-- Draw hitboxes/clipping info
+
+	local car_rear_x, car_rear_y, car_rear_scale = project(
+		x + player_subseg * xd + 2*playerx,
+		y + player_subseg * yd,
+		z + player_subseg * zd)
+
+	local car_front_x, car_front_y, car_front_scale = project(
+		x + player_subseg * xd + 2*playerx,
+		y + (player_subseg + car_depth) * yd,
+		z + (player_subseg + car_depth) * zd)
+
+	local car_rear_left_x = car_rear_x - car_width*car_rear_scale
+	local car_rear_right_x = car_rear_x + car_width*car_rear_scale
+	local car_front_left_x = car_front_x - car_width*car_front_scale
+	local car_front_right_x = car_front_x + car_width*car_front_scale
+
+	line(car_rear_left_x, car_rear_y, car_rear_right_x, car_rear_y, 10)
+	line(car_front_left_x, car_front_y, car_front_right_x, car_front_y, 10)
+	line(car_rear_left_x, car_rear_y, car_front_left_x, car_front_y, 10)
+	line(car_rear_right_x, car_rear_y, car_front_right_x, car_front_y, 10)
+
+	local lx, rx = cars[1].other_car_data.lx, cars[1].other_car_data.rx
+	if lx then
+		line(
+			x1 + 2*(lx + car_half_width)*scale1, y1,
+			x2 + 2*(lx + car_half_width)*scale2, y2,
+			12)
+	end
+	if rx then
+		line(
+			x1 + 2*(rx - car_half_width)*scale1, y1,
+			x2 + 2*(rx - car_half_width)*scale2, y2,
+			8)
+	end
+	local front = cars[1].other_car_data.front
+	if front then
+		local front_x, front_y, front_scale = project(
+			x + (player_subseg + front.dz_ahead) * xd + 2*playerx,
+			y + (player_subseg + front.dz_ahead) * yd,
+			z + player_subseg + front.dz_ahead * zd)
+
+		line(
+			front_x - front_scale*car_width, front_y,
+			front_x + front_scale*car_width, front_y,
+			9
+		)
+	end
+	-- TODO: next car too
 end
 
 function draw_bg()
@@ -610,4 +669,10 @@ function draw_debug_overlay()
 	-- print('bd: ' .. braking_distance(cars[1].speed, section.braking_speed))
 	-- print('bp: ' .. distance_to_next_braking_point(section, cars[1].segment_idx, cars[1].subseg))
 	-- print('bs: ' .. round(speed_to_kph * section.braking_speed))
+
+	local player = cars[1]
+	if (player.other_car_data.lx) print('l:' .. (player.x - player.other_car_data.lx))
+	if (player.other_car_data.rx) print('r:' .. (player.other_car_data.rx - player.x))
+	if (player.other_car_data.front) print('f:' .. player.other_car_data.front.dz)
+	if (player.other_car_data.next) print('n:' .. player.other_car_data.next.dz)
 end
