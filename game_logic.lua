@@ -101,7 +101,7 @@ function update_car_positions(full)
 		-- Laps count from end of 1st section, so add 1 extra lap to compensate
 		local effective_laps = car.laps
 		if (car.section_idx == 1) effective_laps += 1
-		local score = (1 + total_segment_count)*effective_laps + car.segment_total + car.subseg
+		local score = (1 + road.total_segment_count)*effective_laps + car.segment_total + car.subseg
 		add(car_scores, {idx, score})
 	end
 
@@ -136,8 +136,8 @@ function car_check_other_cars(car)
 	for other_car in all(cars) do
 		if (other_car.idx ~= car.idx) then
 
-			local dz_ahead = (other_car.segment_total + other_car.subseg - car_track_distance) % total_segment_count
-			local dz_behind = total_segment_count - dz_ahead
+			local dz_ahead = (other_car.segment_total + other_car.subseg - car_track_distance) % road.total_segment_count
+			local dz_behind = road.total_segment_count - dz_ahead
 			assert(dz_behind > 0)
 
 			local dz = dz_ahead

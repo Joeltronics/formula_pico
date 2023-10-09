@@ -158,7 +158,7 @@ tracks:
     - {length: 8, x: 0}
     - {length: 4, x: 1}
 
-  - name: "italy"
+  - name: italy
     length_km: 5.79
     length_scale: 2
     wall: 6
@@ -446,7 +446,7 @@ tracks:
     - {length: 10, x: 0.125, angle: 1}
     - {length: 10, x: 0.25}
 
-  - name: "test"
+  - name: test
     length_scale: 2
     angle_scale: 1
     tree_bg: true
@@ -471,10 +471,10 @@ tracks:
 
     - {length: 8}
 
-    - {length: 8, angle: -0.125}
-    - {length: 8, angle: 0.125}
+    - {length: 9, angle: -0.125}
+    - {length: 9, angle: 0.125}
 
-  - name: "hill test"
+  - name: hill test
     length_scale: 2
     angle_scale: 1
     tree_bg: true

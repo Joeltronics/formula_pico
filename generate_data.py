@@ -14,6 +14,7 @@ from PIL import Image, ImageDraw
 import yaml
 
 from common import lerp, sgn, Point
+from p8scii import P8SCII
 
 TWO_PI: Final = 2.0 * PI
 EPS: Final = 1e-9
@@ -223,34 +224,30 @@ class Section:
 
 		items = [vals_uncompressed.pop(field_name, None) for field_name in self.LUA_ORDERED_FIELDS]
 
-		for item, field_name in zip(items, self.LUA_ORDERED_FIELDS, strict=True):
-			assert isinstance(item, int), f"{item=} ({field_name})"
-			if not 0 <= item <= 255:
-				raise ValueError(f'field "{field_name}" out of range after compression: {item}')
-
 		if vals_uncompressed:
 			section_type = dict(vals_uncompressed)
 
 			if section_type in section_types:
-				section_type_idx = section_types.index(section_type)
+				section_type_idx = section_types.index(section_type) + 1
 			else:
-				if len(section_types) >= 255:
+				if len(section_types) >= 254:
 					raise ValueError('Too many section types')
-				section_type_idx = len(section_types)
 				section_types.append(section_type)
-			items.append(section_type_idx)
+				section_type_idx = len(section_types)
+		else:
+			section_type_idx = 0
 
-		# Leave off items at the end that are at default value
-		last_needed_idx = None
-		for idx, val in enumerate(items):
-			if val is not None:
-				last_needed_idx = idx
+		items.append(section_type_idx)
 
-		items = items[:(last_needed_idx + 1)]
+		for item, field_name in zip(items, self.LUA_ORDERED_FIELDS + ['section_type'], strict=True):
+			assert isinstance(item, int), f"{item=} ({field_name})"
+			if not 0 <= item <= 255:
+				raise ValueError(f'field "{field_name}" out of range after compression: {item}')
 
-		items = [to_lua_str(item) for item in items]
+		assert len(items) == 7, f'{items=}'
 
-		return ','.join(items)
+		items = [P8SCII[item] for item in items]
+		return ''.join(items)
 
 
 def iterate_segments(sections: Iterable[Section]):
@@ -544,6 +541,9 @@ class Track:
 				else:
 					x0 = x1 = dx = None
 
+				# Angle per section will be at p8 precision, but angle per segment may not be
+				# HACK: just round it at start of each
+				heading = float_round_pico8_precision(heading)
 				for idx in range(length):
 					# Angle units:
 					# The game uses are +right / -left, with 1 = full circle
@@ -579,7 +579,7 @@ class Track:
 			except Exception as ex:
 				raise Exception(f'Failed to parse track "{self.name}" corner {section_idx}: {ex}') from ex
 
-		self.end_heading = heading
+		self.end_heading = float_round_pico8_precision(heading)
 
 		set_normals(self.segments)
 
@@ -589,7 +589,7 @@ class Track:
 
 		ret['name'] = self.name
 
-		ret['minimap_scale'] = self.minimap_scale
+		ret['minimap_scale'] = round(1/self.minimap_scale)
 		ret['minimap_step'] = self.minimap_step
 		ret['minimap_offset_x'] = self.minimap_offset_x
 		ret['minimap_offset_y'] = self.minimap_offset_y
@@ -604,6 +604,7 @@ class Track:
 		if self.wall:
 			ret['wall'] = self.wall
 
+		# TODO: don't need to include this if wall is set
 		if self.invisible_wall:
 			ret['iwall'] = self.invisible_wall
 
@@ -621,8 +622,11 @@ class Track:
 		if self.tree_bg:
 			ret['tree_bg'] = True
 
+		# This also get calculated in Lua; add it for data sanity check
+		ret['total_segment_count'] = sum(s.length for s in self.sections)
+
 		if compress:
-			sections_compressed = ';'.join(s.to_lua_compressed(section_types) for s in self.sections)
+			sections_compressed = ''.join(s.to_lua_compressed(section_types) for s in self.sections)
 			ret['sections_compressed'] = sections_compressed
 			ret['sections'] = []
 		else:
@@ -1032,7 +1036,11 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		m_per_segment = length_km / len(track.segments) * 100
 		print(f'True length: {length_km} km, segment length: {m_per_segment:.3f} m')
 	print(f'End coord: ({track.points[-1][0]:.3f}, {track.points[-1][1]:.3f})')
-	# TODO: give a warning if these don't match up
+
+	if not isclose(track.start_heading, track.end_heading):
+		warn(f'Track "{name}" start heading {track.start_heading} != end heading {track.end_heading}')
+		# raise ValueError(f'Track "{name}" start heading {track.start_heading} != end heading {track.end_heading}')
+
 	print(f'Start heading: {track.start_heading}, end heading: {track.end_heading}')
 	print(f'X range: [{track.x_min:.3f}, {track.x_max:.3f}], Y range: [{track.y_min:.3f}, {track.y_max:.3f}]')
 	print(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width*track.minimap_scale)}x{ceil(height*track.minimap_scale)}')
@@ -1099,7 +1107,7 @@ def main():
 	if DATA_FILENAME_OUT.exists():
 		DATA_FILENAME_OUT.unlink()
 
-	with open(DATA_FILENAME_OUT, 'w', newline='\n') as f:
+	with open(DATA_FILENAME_OUT, 'w', newline='\n', encoding='utf-8') as f:
 
 		# Write common values
 

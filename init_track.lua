@@ -1,19 +1,21 @@
 
 function decompress_sections()
-	for section_compressed in all(split(road.sections_compressed, ';')) do
-		local items = split(section_compressed)
+	local comp = road.sections_compressed
+	assert(#comp % 7 == 0)
+	for idx = 1, #comp, 7 do
 		local section = {
-			length = items[1] - 1,
-			entrance_x = (items[2] - 128) / 64,
-			pitch = (items[3] - 127) / 64,
-			angle = (items[4] - 128) / 128,
-			max_speed = items[5] / 255,
-			wall = (items[6] - 128) / 8,
-			section_type = items[7],
+			length = ord(comp[idx]) + 1,
+			entrance_x = (ord(comp[idx + 1]) - 128) / 64,
+			pitch = (ord(comp[idx + 2]) - 127) / 64,
+			angle = (ord(comp[idx + 3]) - 128) / 128,
+			max_speed = ord(comp[idx + 4]) / 255,
+			wall = (ord(comp[idx + 5]) - 128) / 8,
 		}
 		if (section.wall == 0) section.wall = nil
-		if section.section_type then
-			for k, v in pairs(section_types[section.section_type + 1]) do
+		local section_type = ord(comp[idx + 6])
+		if section_type ~= 0 then
+			assert(section_type <= #section_types)
+			for k, v in pairs(section_types[section_type]) do
 				section[k] = v
 			end
 		end
@@ -27,12 +29,14 @@ function init_track()
 	road.track_width = road.track_width or track_width
 	road.half_width = 0.5 * road.track_width
 
+	road.minimap_scale = 1 / road.minimap_scale
+
 	road.curb_x = road.half_width - shoulder_half_width - car_half_width
 	road.grass_x = road.half_width + car_half_width
 
 	if (road.sections_compressed) decompress_sections()
 
-	total_segment_count = 0
+	local total_segment_count, heading = 0, road.start_heading
 	for section in all(road) do
 		assert(section.length and section.length > 0)
 
@@ -47,6 +51,9 @@ function init_track()
 
 		section.angle_per_seg = section.angle / section.length
 		section.tu = 16 * section.angle_per_seg
+
+		section.heading = heading
+		heading = (heading + section.angle) % 1
 
 		section.sumct = total_segment_count
 		total_segment_count += section.length
@@ -83,6 +90,11 @@ function init_track()
 		if (section.bgc) section.bgc = bg_objects[section.bgc]
 		if (section.bgr) section.bgr = bg_objects[section.bgr]
 	end
+
+	if (total_segment_count ~= road.total_segment_count) printh('WARNING: track data had segment count: ' .. road.total_segment_count .. ', actual count: ' .. total_segment_count)
+	road.total_segment_count = total_segment_count
+
+	if (heading ~= road.start_heading) printh('WARNING: Start heading: ' .. road.start_heading .. ', end heading: ' .. heading)
 
 	-- Now calculate parameters that depend on multiple sections
 	-- Iterate in reverse for the sake of braking speeds
