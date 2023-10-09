@@ -1,23 +1,17 @@
 
 function decompress_sections()
 	for section_compressed in all(split(road.sections_compressed, ';')) do
-		local section = {}
-		local section_items = split(section_compressed)
-		for idx = 1,#section_items do
-			local field_names = {
-				'length',
-				'entrance_x',
-				'pitch',
-				'angle',
-				'max_speed',
-				'wall',
-				'section_type',
-			}
-			key = field_names[idx]
-			value = section_items[idx]
-			-- nil gets parsed as string
-			if (value ~= 'nil') section[key] = value
-		end
+		local items = split(section_compressed)
+		local section = {
+			length = items[1] - 1,
+			entrance_x = (items[2] - 128) / 64,
+			pitch = (items[3] - 127) / 64,
+			angle = (items[4] - 128) / 128,
+			max_speed = items[5] / 255,
+			wall = (items[6] - 128) / 8,
+			section_type = items[7],
+		}
+		if (section.wall == 0) section.wall = nil
 		if section.section_type then
 			for k, v in pairs(section_types[section.section_type + 1]) do
 				section[k] = v

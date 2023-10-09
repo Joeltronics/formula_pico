@@ -4,7 +4,7 @@ from argparse import ArgumentParser
 from collections import namedtuple
 from dataclasses import dataclass, field
 from enum import Enum, auto
-from math import pi as PI, ceil, floor, cos, sin, sqrt, asin
+from math import pi as PI, ceil, floor, cos, sin, sqrt, asin, isclose
 from pathlib import Path
 from typing import ClassVar, Final, Iterable
 from warnings import warn
@@ -205,7 +205,28 @@ class Section:
 
 		vals_uncompressed = self.to_lua_dict()
 
+		vals_uncompressed['length'] = vals_uncompressed['length'] - 1
+		vals_uncompressed['x'] = round((vals_uncompressed['x'] or 0) * 64) + 128
+		vals_uncompressed['pitch'] = round(vals_uncompressed['pitch'] * 64) + 127
+		vals_uncompressed['max_speed'] = round(vals_uncompressed['max_speed'] * 255)
+		vals_uncompressed['wall'] = round((vals_uncompressed['wall'] or 0) * 8) + 128
+
+		angle_before = vals_uncompressed['angle']
+		angle_compressed = round(angle_before * 128) + 128
+		angle_after = (angle_compressed - 128) / 128
+
+		if not isclose(angle_before, angle_after):
+			# warn(f'Angle error: {angle_before} =/ {angle_before*360:.1f} -> {angle_compressed} -> {angle_after} = {angle_after*360:.1f}')
+			raise ValueError(f'Angle error: {angle_before:.12f} = {angle_before*360:.1f} -> {angle_compressed} -> {angle_after} = {angle_after*360:.1f}')
+
+		vals_uncompressed['angle'] = angle_compressed
+
 		items = [vals_uncompressed.pop(field_name, None) for field_name in self.LUA_ORDERED_FIELDS]
+
+		for item, field_name in zip(items, self.LUA_ORDERED_FIELDS, strict=True):
+			assert isinstance(item, int), f"{item=} ({field_name})"
+			if not 0 <= item <= 255:
+				raise ValueError(f'field "{field_name}" out of range after compression: {item}')
 
 		if vals_uncompressed:
 			section_type = dict(vals_uncompressed)
@@ -213,6 +234,8 @@ class Section:
 			if section_type in section_types:
 				section_type_idx = section_types.index(section_type)
 			else:
+				if len(section_types) >= 255:
+					raise ValueError('Too many section types')
 				section_type_idx = len(section_types)
 				section_types.append(section_type)
 			items.append(section_type_idx)
