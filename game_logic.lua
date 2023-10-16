@@ -67,8 +67,8 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			touched_wall_sound=false,
 			start_delay_counter=start_delay_counter,
 			other_car_data={
-				lx=nil,
-				rx=nil,
+				left=nil,
+				right=nil,
 				next=nil,
 				front=nil,
 			}
@@ -127,7 +127,7 @@ end
 function car_check_other_cars(car)
 
 	local car_x, segment_idx, subseg, segment_plus_subseg = car.x, car.segment_idx, car.subseg, car.segment_plus_subseg
-	local l_distance, r_distance, next, front = nil, nil, nil, nil
+	local l_distance, r_distance, left, right, next, front = nil, nil, nil, nil, nil, nil
 
 	local car_track_distance = car.segment_total + car.subseg
 
@@ -156,9 +156,13 @@ function car_check_other_cars(car)
 			-- Side by side
 			if (dz_ahead < car_depth_padded) or (dz_behind < car_depth_padded) then
 				if dx < 0 then
-					l_distance = min(-dx, l_distance or -dx)
-				else
-					r_distance = min(dx, r_distance or dx)
+					if -dx <= (l_distance or -dx) then
+						l_distance = -dx
+						left = car_info
+					end
+				elseif dx <= (r_distance or dx) then
+					r_distance = dx
+					right = car_info
 				end
 			end
 
@@ -170,14 +174,10 @@ function car_check_other_cars(car)
 		end
 	end
 
-	local lx, rx = nil, nil
-	if (l_distance) lx = car_x - l_distance
-	if (r_distance) rx = car_x + r_distance
-
 	-- TODO: also keep track of closest (by total x & z distance), for sound purposes
 	car.other_car_data = {
-		lx=lx,
-		rx=rx,
+		left=left,
+		right=right,
 		next=next,
 		front=front,
 	}
@@ -246,7 +246,7 @@ function clip_car_x(car, section)
 
 	local car_x, wall_clip = car.x, section.wall_clip + section.dwall * (car.segment_plus_subseg - 1)
 
-	-- Clip to wall
+	-- Handle wall effects (clipping will be applied later)
 
 	if section.wall_is_invisible then
 		if abs(car_x) > wall_clip then
@@ -262,26 +262,37 @@ function clip_car_x(car, section)
 		car.touched_wall_sound = true
 	end
 
-	local clip_l, clip_r = -wall_clip, wall_clip
-
 	if collisions then
 		-- Clip to other cars, and force leaving space on the side of the track
-		-- TODO: account for that there could be more than 1 car
+
+		-- TODO: account for that there could be more than 1 car we need to leave space for
+		-- (not as simple as counting the number of cars to the left or right - one could be in front of another)
+
 		-- TODO: if car is way off track, don't need to leave space
+
 		-- TODO: force update accumulator, like with walls
 
-		local lx, rx = car.other_car_data.lx, car.other_car_data.rx
-		if lx then
-			clip_l = max(clip_l, lx + car_width_padded)
-			clip_l = max(clip_l, -road.half_width + car_width)
+		local left, right = car.other_car_data.left, car.other_car_data.right
+		if left then
+			-- HACK: if this car is behind, use slightly larger hitbox
+			-- This is to prevent pushing another car - or at least, the one behind cannot push the one in front
+			-- TODO: this still doesn't seem to work properly,
+			-- likely since clipping is applied before all other cars have moved
+			local w = car_width_padded
+			if (left.dz > 0) w += car_x_hitbox_padding
+			car_x = max(car_x, max(left.car.x + w, -road.half_width + w))
 		end
-		if rx then
-			clip_r = min(clip_r, rx - car_width_padded)
-			clip_r = min(clip_r, road.half_width - car_width)
+		if right then
+			local w = car_width_padded
+			if (right.dz > 0) w += car_x_hitbox_padding
+			car_x = min(car_x, min(right.car.x - w, road.half_width - w))
 		end
 	end
 
-	car.x = clip_num(car_x, clip_l, clip_r)
+	-- In conflict between car clipping & wall clipping, wall takes priority, so apply it last
+	-- (Hopefully conflict shouldn't normally happen due to space logic above, but in case it does)
+
+	car.x = clip_num(car_x, -wall_clip, wall_clip)
 end
 
 function calculate_dz(car, section, steering_input_scaled, dx)
@@ -290,12 +301,15 @@ function calculate_dz(car, section, steering_input_scaled, dx)
 
 	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
 
-	-- local dz = sqrt(max(0, speed*speed - dx*dx)) -- accurate; not necessarily more realistic feeling
-	local dz = max(0, speed - 0.25*abs(dx)) -- simplified
+	local dz = sqrt(max(0, speed*speed - dx*dx)) -- accurate, though not necessarily more realistic feeling
+	-- local dz = max(0, speed - 0.25*abs(dx)) -- simplified
 
 	-- Also account for steering & accel input, to account for slight loss of grip (and penalize weaving)
 
-	if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_input_scaled)/64)
+	-- TODO: figure out which logic we actually want here (and if we even want this at all)
+	-- if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_input_scaled)/64)
+	-- dz *= (1 - abs(steering_input_scaled)/64)
+	-- if (not car.ai) dz *= (1 - abs(steering_input_scaled)/64)
 
 	-- Scale for corners - i.e. inside of corner has smaller distance to travel
 
@@ -320,30 +334,37 @@ function calculate_dz(car, section, steering_input_scaled, dx)
 end
 
 function tick_car_speed(car, section, accel_brake_input)
-
 	-- Determine acceleration & speed
+	-- returns: speed, accel_brake_input, engine_accel_brake
 
 	if car.start_delay_counter > 0 then
 		car.start_delay_counter -= 1
-		return 0
+		return 0, 0, 0
 	end
+
+	-- TODO: less acceleration if turning (need to reconcile this with logic in tick_car_steering)
 
 	-- TODO: also factor in slope
 
-	local speed, gear, car_x = car.speed, car.gear, car.x
+	-- TODO: if collisions, brake before hitting car.other_car_data.front
+
+	local speed, gear, car_x, segment_plus_subseg = car.speed, car.gear, car.x, car.segment_plus_subseg
 
 	local auto_brake = brake_assist or car.ai
+	local bdr = braking_distance_relative(section, segment_plus_subseg, speed)
 
 	local limit_speed = 1
 
 	local accel = accel_by_gear[flr(gear)]
+
+	-- Randomize acceleration slightly for AI cars
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
 
 	local decel = brake_decel
 
-	local car_abs_x = abs(car.x)
+	local car_abs_x = abs(car_x)
 
-	local wall_clip = section.wall_clip + section.dwall * (car.segment_plus_subseg - 1)
+	local wall_clip = section.wall_clip + section.dwall * (segment_plus_subseg - 1)
 	if car.touched_wall then
 		-- Touching wall
 		-- Decrease max speed significantly
@@ -379,74 +400,49 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- TODO: more parameters
 	end
 
-	-- Apply acceleration/braking
+	-- If we're on wall or grass, limit speed
+	if (speed > limit_speed and limit_speed < 1) return max(speed - decel, min(limit_speed, section.braking_speed or 1)), -1, -1
 
-	-- TODO: if collisions, brake to prevent hitting car.other_car_data.front
+	-- Brake, to braking_speed
+	if (auto_brake and bdr < 1.001) return max(speed - decel, section.braking_speed), -1, -1
 
-	-- FIXME: there's a bug here, once you hit max speed you can't brake
+	-- At max speed (or above - e.g. debug turbo button) - brake to limit speed
+	if (speed > limit_speed) return max(speed - decel, limit_speed), -1, 1
 
-	if speed > limit_speed then
-		-- Wall or grass - brake to limit speed
-		speed = max(speed - decel, limit_speed)
+	-- Right at limit speed (typically mid-corner); maintain speed
+	if (auto_brake and speed > section.max_speed - accel) return speed, 0, 0
 
-		if limit_speed == 1 then
-			car.engine_accel_brake = 1
-		else
-			car.engine_accel_brake = -1
-		end
+	-- Accelerate
+	if (car.ai or accel_brake_input > 0) return min(speed + accel, limit_speed), 1, 1
 
-	elseif auto_brake and need_to_brake(section, car.segment_plus_subseg, speed) then
-		-- Brake, to braking_speed
-		accel_brake_input = -1
-		speed = max(speed - decel, section.braking_speed)
-		car.engine_accel_brake = -1
+	-- Brake, to zero
+	if (accel_brake_input < -1) return toward_zero(speed, brake_decel), accel_brake_input, -1
 
-	elseif auto_brake and speed > section.max_speed - accel then
-		-- Right at limit speed (typically mid-corner); maintain speed
-		accel_brake_input = 0
-		car.engine_accel_brake = 0
+	-- Pressing both brake and accelerator - brake, but only to section braking speed
+	-- Use much larger braking distance than normal (so can't abuse this in order to perfectly hit braking point)
+	if accel_brake_input < 0 then
+		-- Brake to braking speed
+		if (bdr < 8) return max(speed - decel, section.braking_speed), -1, -1
 
-	elseif car.ai or accel_brake_input > 0 then
-		-- Accelerate
-		accel_brake_input = 1
-		speed = min(speed + accel, limit_speed)
-		car.engine_accel_brake = 1
-
-	elseif accel_brake_input < -1 then
-		-- Brake, to zero
-		speed = toward_zero(speed, brake_decel)
-		car.engine_accel_brake = -1
-
-	elseif accel_brake_input < 0 then
-		-- Pressing both brake and accelerator
-		-- Auto brake, but with much larger braking distance than normal
-		if need_to_brake(section, car.segment_plus_subseg, speed, 8) then
-			-- Brake to braking speed
-			accel_brake_input = -1
-			speed = max(speed - decel, section.braking_speed)
-			car.engine_accel_brake = -1
-		else
-			-- Maintain speed
-			accel_brake_input = 0
-			car.engine_accel_brake = 0
-		end
-
-	else
-		-- Coast
-		-- TODO: this should be affected by slope even more than regular acceleration is
-		-- (which isn't currently at all, but should be in the future)
-		speed = max(speed*coast_decel_rel - coast_decel_abs, 0)
-		car.engine_accel_brake = 0
+		-- Maintain speed
+		return speed, 0, 0
 	end
 
-	gear = min(speed, 0.99) * #accel_by_gear + 1
+	-- Finally, if no inputs, coast
+
+	-- TODO: this should be affected by slope even more than regular acceleration is
+	-- (which isn't currently at all, but should be in the future)
+
+	assert(accel_brake_input == 0)
+	return max(speed*coast_decel_rel - coast_decel_abs, 0), 0, 0
+end
+
+function update_speed(car, speed, engine_accel_brake)
+	local gear = min(speed, 0.99) * #accel_by_gear + 1
 	local rpm = gear % 1
 	gear = flr(gear)
 	if (gear > 1) rpm = 0.0625 + (rpm * 0.9375)
-
-	car.speed, car.gear, car.rpm = speed, gear, rpm
-
-	return accel_brake_input
+	car.speed, car.gear, car.rpm, car.engine_accel_brake = speed, gear, rpm, engine_accel_brake
 end
 
 function tick_car_steering(car, steering_input, accel_brake_input)
@@ -570,7 +566,8 @@ function tick_car(car, accel_brake_input, steering_input)
 		return
 	end
 
-	local accel_brake_input_actual = tick_car_speed(car, section, accel_brake_input)
+	local speed, accel_brake_input_actual, engine_accel_brake = tick_car_speed(car, section, accel_brake_input)
+	update_speed(car, speed, engine_accel_brake)
 
 	-- TODO: clip_car_x() twice here isn't great, should only need to clip once
 
@@ -639,8 +636,9 @@ function game_tick()
 	if race_started then
 		-- TODO: tick all cars' AI, then tick all forward, then clip all
 		-- Right now, if 2 cars go for the same gap in the same frame, the first one gets priority
-		for car in all(cars) do
-			tick_car(car, accel_brake_input, steering_input)
+		-- Iterate in order of who's ahead, for consistency
+		for idx in all(car_positions) do
+			tick_car(cars[idx], accel_brake_input, steering_input)
 		end
 
 		-- TODO: don't do this on every update; only if there was an overtake

@@ -97,3 +97,16 @@ function need_to_brake(section, seg_plus_subseg, curr_speed, scale_braking_dista
 	if (curr_speed <= section.braking_speed) return false
 	return (scale_braking_distance or 1) * braking_distance(curr_speed, section.braking_speed) >= distance_to_next_braking_point(section, seg_plus_subseg)
 end
+
+function braking_distance_relative(section, seg_plus_subseg, curr_speed)
+
+	if (curr_speed > section.max_speed) return 0
+	-- if (curr_speed <= section.braking_speed) return 32767
+
+	local dist_brake = braking_distance(curr_speed, section.braking_speed)
+	if (dist_brake <= 0) return 32767
+
+	local dist_next = distance_to_next_braking_point(section, seg_plus_subseg)
+
+	return dist_next / dist_brake
+end

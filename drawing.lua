@@ -647,13 +647,14 @@ end
 
 function draw_debug_overlay()
 
-	-- local section = road[cars[1].section_idx]
+	local player = cars[1]
+	local section = road[player.section_idx]
 
 	cursor(88, 0, 5)
 	print("cpu:" .. round(stat(1) * 100))
 	print("mem:" .. round(stat(0) * 100 / 2048))
-	print(cars[1].section_idx .. "," .. cars[1].segment_idx .. ',' .. cars[1].subseg)
-	print('carx:' .. cars[1].x)
+	print(player.section_idx .. "," .. player.segment_idx .. ',' .. player.subseg)
+	print('carx:' .. player.x)
 	-- print('hw:' .. road.half_width)
 	-- print('wall:' .. section.wall)
 
@@ -666,13 +667,13 @@ function draw_debug_overlay()
 	-- local pitch = (section.pitch + section.dpitch*(segment_idx - 1))
 	-- print('pi:' .. pitch)
 
-	-- print('bd: ' .. braking_distance(cars[1].speed, section.braking_speed))
-	-- print('bp: ' .. distance_to_next_braking_point(section, cars[1].segment_idx, cars[1].subseg))
+	-- print('bd: ' .. braking_distance(player.speed, section.braking_speed))
+	-- print('bp: ' .. distance_to_next_braking_point(section, player.segment_plus_subseg))
 	-- print('bs: ' .. round(speed_to_kph * section.braking_speed))
+	-- print('bdr: ' .. braking_distance_relative(section, player.segment_plus_subseg, player.speed))
 
-	local player = cars[1]
-	if (player.other_car_data.lx) print('l:' .. (player.x - player.other_car_data.lx))
-	if (player.other_car_data.rx) print('r:' .. (player.other_car_data.rx - player.x))
-	if (player.other_car_data.front) print('f:' .. player.other_car_data.front.dz)
-	if (player.other_car_data.next) print('n:' .. player.other_car_data.next.dz)
+	-- if (player.other_car_data.lx) print('l:' .. (player.x - player.other_car_data.lx))
+	-- if (player.other_car_data.rx) print('r:' .. (player.other_car_data.rx - player.x))
+	-- if (player.other_car_data.front) print('f:' .. player.other_car_data.front.dz)
+	-- if (player.other_car_data.next) print('n:' .. player.other_car_data.next.dz)
 end
