@@ -34,6 +34,8 @@ function init_track()
 	road.curb_x = road.half_width - shoulder_half_width - car_half_width
 	road.grass_x = road.half_width + car_half_width
 
+	road.lanes = road.lanes or 1
+
 	if (road.sections_compressed) decompress_sections()
 
 	local total_segment_count, heading = 0, road.start_heading

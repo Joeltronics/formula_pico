@@ -343,7 +343,7 @@ tracks:
     length_scale: 1
     track_width: 2.5
     wall: 1.375
-    street: true
+    lanes: 2
     city_bg: true
     gndcol1: 5
     gndcol2: 6
@@ -354,25 +354,25 @@ tracks:
     - {length: 4, x: -0.25, pitch: 0.25}
     - {length: 4, x: -0.875, angle: -2, pitch: 0.25}
     - {length: 4, x: -0.5, pitch: 0.25, speed: 115}
-    - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115}  # Sainte Devote
-    - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115}
-    - {length: 12, x: 0.25}
-    - {length: 4, x: -1, angle: -1, pitch: 1}
-    - {length: 24, x: -0.75, pitch: 1}
-    - {length: 4, x: -0.125, angle: 1, pitch: 1}
-    - {length: 3, x: 0, pitch: 1}
-    - {length: 6, x: 0, angle: -2, pitch: 1}
-    - {length: 3, x: 0.25, pitch: 1}
-    - {turn_num: 2, length: 2, x: 0.5, angle: 1.5, pitch: 0.25}  # Beau Rivage
-    - {turn_num: 2, length: 2, x: 0.75, angle: 1.5, pitch: 0.25}
-    - {length: 6, x: 0.5, pitch: 0.25}
-    - {turn_num: 3, x: 0, length: 10, angle: -4, speed: 165}  # Massenet
-    - {turn_num: 3, x: -1, length: 6, angle: -4, speed: 165}
-    - {turn_num: 3, x: -0.5, length: 10, angle: -4, speed: 165}
-    - {length: 8, x: 0.5}
-    - {length: 4, x: -0.5, speed: 165}
-    - {turn_num: 4, length: 5, x: 0, angle: 4, speed: 165}  # Casino
-    - {turn_num: 4, length: 5, x: 1, angle: 4, speed: 165}
+    - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115, wall: 2.5, lanes: 1}  # Sainte Devote
+    - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2.5, lanes: 1}
+    - {length: 12, x: 0.25, wall: 2.5, lanes: 3}
+    - {length: 4, x: -1, angle: -1, pitch: 1, lanes: 3}
+    - {length: 24, x: -0.75, pitch: 1, lanes: 3}
+    - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3}
+    - {length: 3, x: 0, pitch: 1, lanes: 3}
+    - {length: 6, x: 0, angle: -2, pitch: 1, lanes: 3}
+    - {length: 3, x: 0.25, pitch: 1, lanes: 3}
+    - {turn_num: 2, length: 2, x: 0.5, angle: 1.5, pitch: 0.25, lanes: 3}  # Beau Rivage
+    - {turn_num: 2, length: 2, x: 0.75, angle: 1.5, pitch: 0.25, lanes: 3}
+    - {length: 6, x: 0.5, pitch: 0.25, lanes: 1}
+    - {turn_num: 3, x: 0, length: 10, angle: -4, speed: 165, lanes: 1}  # Massenet
+    - {turn_num: 3, x: -1, length: 6, angle: -4, speed: 165, lanes: 1}
+    - {turn_num: 3, x: -0.5, length: 10, angle: -4, speed: 165, lanes: 1}
+    - {length: 8, x: 0.5, lanes: 1}
+    - {length: 4, x: -0.5, speed: 165, lanes: 1}
+    - {turn_num: 4, length: 5, x: 0, angle: 4, speed: 165, lanes: 1}  # Casino
+    - {turn_num: 4, length: 5, x: 1, angle: 4, speed: 165, lanes: 1}
     - {length: 6, x: 0, pitch: -0.25}
     - {length: 6, x: -0.5, pitch: -0.5}
     - {length: 16, x: -0.75, pitch: -1}
@@ -405,15 +405,15 @@ tracks:
     - {length: 10, x: -0.125, angle: 1.5, pitch: -0.5}
     - {length: 8, x: 0.5}
     - {length: 8, x: 1}
-    - {turn_num: 10, length: 4, x: -1, angle: -8, speed: 85}  # Nouvelle Chicane
-    - {length: 2, x: 0, speed: 70}
-    - {length: 4, x: 1, angle: 8, speed: 70}  # Not numbered
-    - {length: 4, x: 0.5}
-    - {turn_num: 11, length: 4, x: 0.25, angle: 4}  # Chicane exit
-    - {turn_num: 11, length: 2, x: -0.25}
-    - {turn_num: 11, length: 2, x: -0.75, angle: -2}
-    - {turn_num: 11, length: 2, x: -1, angle: -2}
-    - {length: 14, x: -0.5}
+    - {turn_num: 10, length: 4, x: -1, angle: -8, speed: 85, wall: 2, lanes: 1}  # Nouvelle Chicane
+    - {length: 2, x: 0, speed: 70, wall: 2, lanes: 1}
+    - {length: 4, x: 1, angle: 8, speed: 70, wall: 2, lanes: 1}  # Not numbered
+    - {length: 4, x: 0.5, wall: 2, lanes: 1}
+    - {turn_num: 11, length: 4, x: 0.25, angle: 4, wall: 2, lanes: 1}  # Chicane exit
+    - {turn_num: 11, length: 2, x: -0.25, wall: 2, lanes: 1}
+    - {turn_num: 11, length: 2, x: -0.75, angle: -2, wall: 2, lanes: 1}
+    - {turn_num: 11, length: 2, x: -1, angle: -2, wall: 2, lanes: 1}
+    - {length: 14, x: -0.5, wall: 1.5}
     - {length: 6, x: 1}
     - {turn_num: 12, x: 0, length: 9, angle: -5}  # Tabac
     - {length: 12, x: -1, angle: -3}
@@ -423,13 +423,13 @@ tracks:
     - {length: 8, x: 0.25}
     - {length: 6, x: -0.75}
     - {length: 6, x: -1, speed: 125}
-    - {turn_num: 15, length: 4, x: 0.5, angle: 8, speed: 125}
-    - {length: 2, x: 0, speed: 125}
-    - {turn_num: 16, x: -0.75, length: 4, angle: -8, speed: 125}
-    - {length: 8, x: -0.75}
-    - {length: 16, x: 0.5, angle: -4}
-    - {length: 4, x: -0.25}
-    - {turn_num: 17, x: -0.75, length: 8, angle: 3}  # Rascasse
+    - {turn_num: 15, length: 4, x: 0.5, angle: 8, speed: 125, lanes: 1}
+    - {length: 2, x: 0, speed: 125, lanes: 1}
+    - {turn_num: 16, x: -0.75, length: 4, angle: -8, speed: 125, lanes: 1}
+    - {length: 8, x: -0.75, lanes: 1}
+    - {length: 16, x: 0.5, angle: -4, lanes: 1}
+    - {length: 4, x: -0.25, lanes: 1}
+    - {turn_num: 17, x: -0.75, length: 8, angle: 3, lanes: 1}  # Rascasse
     - {turn_num: 17, x: 0.25, length: 4, angle: 4, speed: 70}
     - {turn_num: 17, x: 1, length: 4, angle: 4, speed: 70}
     - {length: 4, x: 0.5, pitch: 0.25}
@@ -478,6 +478,7 @@ tracks:
     city_bg: true
     track_width: 4
     wall: 2.175
+    lanes: 3
     sections:
     - {length: 8, x: 0.75}
     - {length: 12, x: 0.75}
@@ -501,19 +502,19 @@ tracks:
     - {length: 12, wall: 1.625}
     - {length: 12, angle: -0.25, bgr: sign}
     - {length: 12, pitch: -0.75, bgl: tree3}
-    - {length: 8, angle: 0.125, bgl: sign}
-    - {length: 20, angle: 0.125, pitch: 0.75, tnl: true}
-    - {length: 8, pitch: -0.5, tnl: true}
-    - {length: 10, angle: 0.25, tnl: true}
+    - {length: 8, angle: 0.125, bgl: sign, lanes: 2}
+    - {length: 20, angle: 0.125, pitch: 0.75, tnl: true, lanes: 2}
+    - {length: 8, pitch: -0.5, tnl: true, lanes: 2, lanes: 2}
+    - {length: 10, angle: 0.25, tnl: true, lanes: 2}
     - {length: 8}
     - {length: 62, angle: 0.25, bgl: tree3, bgr: tree5}
 
     - {length: 6, angle: 0.25, bgl: sign}
     - {length: 8, angle: -0.25, bgr: sign}
 
-    - {length: 40, bgl: tree4, bgr: tree5}
+    - {length: 40, bgl: tree4, bgr: tree5, lanes: 4}
 
-    - {length: 6, angle: 0.5, bgl: sign}
+    - {length: 6, angle: 0.5, bgl: sign, lanes: 2}
 
     - {length: 8}
 
@@ -531,23 +532,23 @@ tracks:
     - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
     - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
     - {length: 15, x: -0.75}
-    - {length: 5, x: -1, speed: 100}
-    - {length: 6, x: 0, speed: 100, angle: 0.25}
-    - {length: 6, x: 1, speed: 100, angle: 0.25}
-    - {length: 8, x: 0}
+    - {length: 5, x: -1, speed: 100, lanes: 2}
+    - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2}
+    - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2}
+    - {length: 8, x: 0, lanes: 2}
     - {length: 12, x: -0.875}
     - {length: 20, x: -0.75, gndcol1: 1, gndcol2: 12}
     - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
     - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
     - {length: 15, x: -0.75}
-    - {length: 5, x: -1, speed: 100}
-    - {length: 6, x: 0, speed: 100, angle: 0.25}
-    - {length: 6, x: 1, speed: 100, angle: 0.25}
+    - {length: 5, x: -1, speed: 100, lanes: 2}
+    - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2}
+    - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2}
 
   - name: "dragstrip"
     track_width: 4
     invisible_wall: 8
-    street: true
+    lanes: 4
     city_bg: true
     gndcol1: 4
     gndcol2: 15

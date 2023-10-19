@@ -115,16 +115,25 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 		fillp()
 	end
 
-	-- Center line
+	-- Lane lines
 
-	if road.street and (sumct % 4) == 0 then
-		if detail then
-			local cw1, cw2 = center_line_width*scale1, center_line_width*scale2
-			filltrapz(x1, y1, cw1, x2, y2, cw2, 7)
-		else
-			line(x1, ceil(y1), x2, y2, 6)
+	local lanes = section.lanes or road.lanes
+	if (sumct % 4) == 0 then
+		for lane_idx = 1,lanes-1 do
+
+			local lx_rel = 2*lane_idx/lanes - 1
+			local lx1, lx2 = x1 + w1*lx_rel, x2 + w2*lx_rel
+
+			if detail then
+				local cw1, cw2 = lane_line_width*scale1, lane_line_width*scale2
+				filltrapz(lx1, y1, cw1, lx2, y2, cw2, 7)
+			else
+				line(lx1, ceil(y1), lx2, y2, 6)
+			end
 		end
 	end
+
+	-- TODO: draw start boxes for first segment
 
 	-- Racing line
 

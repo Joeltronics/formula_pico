@@ -142,6 +142,7 @@ class Section:
 	x: float | None = None
 
 	# Ground & background info
+	lanes: int | None = None
 	gndcol1: int | None = None
 	gndcol2: int | None = None
 	bgl: str = ''
@@ -163,6 +164,7 @@ class Section:
 	LUA_KW_FIELDS: ClassVar[list[str]] = [
 		'invisible_wall',
 		'tnl',
+		'lanes',
 		'gndcol1',
 		'gndcol2',
 		'bgl',
@@ -266,7 +268,7 @@ class Track:
 			shoulder_half_width: float,
 			wall: float | None = None,
 			invisible_wall: float | None = None,
-			street: bool = False,
+			lanes: int = 1,
 			tree_bg: bool = False,
 			city_bg: bool = False,
 			gndcol1: int | None = None,
@@ -283,7 +285,7 @@ class Track:
 
 		self.wall = wall
 		self.invisible_wall = invisible_wall
-		self.street = street
+		self.lanes = lanes
 		self.tree_bg = tree_bg
 		self.city_bg = city_bg
 		self.gndcol1 = gndcol1
@@ -603,13 +605,11 @@ class Track:
 
 		if self.wall:
 			ret['wall'] = self.wall
-
-		# TODO: don't need to include this if wall is set
-		if self.invisible_wall:
+		elif self.invisible_wall:
 			ret['iwall'] = self.invisible_wall
 
-		if self.street:
-			ret['street'] = self.street
+		if self.lanes > 1:
+			ret['lanes'] = self.lanes
 
 		if self.gndcol1 is not None:
 			ret['gndcol1'] = self.gndcol1
@@ -728,8 +728,10 @@ def set_normals(segments: list[Segment]):
 			norm1 = (0.5*(dp0 + dp1)).normal() if (dp0 is not None) else dp1.normal()
 			norm2 = (0.5*(dp1 + dp2)).normal() if (dp2 is not None) else dp1.normal()
 
-		segment.normal_start = norm1
-		segment.normal_end = norm2
+		# FIXME HACK: normal signes are backwards
+		# (Should change normal() logic instead)
+		segment.normal_start = -norm1
+		segment.normal_end = -norm2
 
 
 def draw_track(track, scale=16):
@@ -870,8 +872,13 @@ def draw_track(track, scale=16):
 			roadcol = 5
 			polygon(segment.points(-track_width, track_width), PALETTE[roadcol], stroke=2)
 
-			if track.street and (idx % 4 == 0):
-				polygon(segment.points(-3/32, 3/32), WHITE, stroke=0)
+			lanes = section.lanes or track.lanes
+
+			if lanes > 1 and (idx % 4 == 0):
+				for idx in range(1, lanes):
+					lane_rel = idx / lanes
+					lane_x = (lane_rel * 2 - 1) * track_width
+					polygon(segment.points(lane_x - 3/32, lane_x + 3/32), WHITE, stroke=0)
 
 		# Line across start of each section
 
@@ -940,10 +947,9 @@ def draw_track(track, scale=16):
 				)
 
 			if segment.racing_line_start_x is not None:
-				# TODO: why is this subtraction, not addition?
 				line([
-						segment.center_start - segment.normal_start * track_width * segment.racing_line_start_x,
-						segment.center_end - segment.normal_end * track_width * segment.racing_line_end_x
+						segment.center_start + segment.normal_start * track_width * segment.racing_line_start_x,
+						segment.center_end + segment.normal_end * track_width * segment.racing_line_end_x
 					], color=color)
 
 		# Apexes & turn numbers
@@ -953,8 +959,7 @@ def draw_track(track, scale=16):
 
 			if section.x is not None:
 				seg = section.segments[0]
-				# TODO: why is this subtraction, not addition?
-				entrance_point = seg.center_start - seg.normal_start * track_width * section.x
+				entrance_point = seg.center_start + seg.normal_start * track_width * section.x
 				circle(entrance_point, radius=0.5, color=(0, 0, 1))
 
 				if section.turn_num:
@@ -1021,7 +1026,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		shoulder_half_width=shoulder_half_width,
 		wall=wall,
 		invisible_wall=invisible_wall,
-		street=yaml_track.get('street', False),
+		lanes=yaml_track.get('lanes', 1),
 		city_bg=yaml_track.get('city_bg', False),
 		tree_bg=yaml_track.get('tree_bg', False),
 		gndcol1=yaml_track.get('gndcol1', None),

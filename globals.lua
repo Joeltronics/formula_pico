@@ -40,7 +40,7 @@ wall_max_speed = 0.25
 
 speed_to_kph = 350
 
-center_line_width = 3/32
+lane_line_width = 3/32
 
 car_draw_width, car_draw_height = 0.75, 0.5
 car_width = 0.5 * car_draw_width
