@@ -244,17 +244,16 @@ end
 
 function clip_car_x(car, section)
 
-	local car_x, wall_clip = car.x, section.wall_clip + section.dwall * (car.segment_plus_subseg - 1)
+	local ds = car.segment_plus_subseg - 1
+	local car_x, wall_clip_l, wall_clip_r = car.x, section.wall_clip_l + ds*section.dwall_l, section.wall_clip_r + ds*section.dwall_r
 
 	-- Handle wall effects (clipping will be applied later)
 
-	if section.wall_is_invisible then
-		if abs(car_x) > wall_clip then
-			-- Hit an invisible wall - immediately set to drive parallel to wall
-			if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = 0
-		end
+	if (car_x < wall_clip_l and not section.wall_l) or (car_x > wall_clip_r and not section.wall_r) then
+		-- Hit an invisible wall - immediately set to drive parallel to wall
+		if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = 0
 
-	elseif abs(car_x) >= wall_clip then
+	elseif car_x < wall_clip_l or car_x > wall_clip_r then
 		-- Hit a visible wall - bounce back slightly (set accumulator to opposite direction)
 		-- car.steer_accum = -sgn(car_x)
 		if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = -sgn(car_x)
@@ -292,7 +291,7 @@ function clip_car_x(car, section)
 	-- In conflict between car clipping & wall clipping, wall takes priority, so apply it last
 	-- (Hopefully conflict shouldn't normally happen due to space logic above, but in case it does)
 
-	car.x = clip_num(car_x, -wall_clip, wall_clip)
+	car.x = clip_num(car_x, wall_clip_l, wall_clip_r)
 end
 
 function calculate_dz(car, section, steering_input_scaled, dx)
@@ -364,7 +363,6 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	local car_abs_x = abs(car_x)
 
-	local wall_clip = section.wall_clip + section.dwall * (segment_plus_subseg - 1)
 	if car.touched_wall then
 		-- Touching wall
 		-- Decrease max speed significantly

@@ -2,7 +2,6 @@
 
 start_heading: 0.25
 track_width: 3
-invisible_wall: 6
 shoulder_half_width: 0.125
 
 # 1/32; so 8 steps is a right angle
@@ -18,8 +17,8 @@ tracks:
     wall: 4
     tree_bg: true
     sections:
-    - {length: 8, x: 0, wall: 2}  # start/finish
-    - {length: 32, x: -0.25, wall: 2}
+    - {length: 8, x: 0, wall: 1}  # start/finish
+    - {length: 32, x: -0.25, wall: 1}
     - {turn_num: 1, length: 8, x: -1, speed: 140}
     - {turn_num: 1, length: 3, angle: 0.125, x: 0.25, speed: 140}
     - {turn_num: 1, length: 3, angle: 0.125, x: 1, speed: 140}
@@ -75,26 +74,26 @@ tracks:
     wall: 4
     tree_bg: true
     sections:
-    - {length: 8, x: 0.5, wall: 2}  # start/finish; heading 0.25
-    - {length: 14, x: 0, wall: 2}
+    - {length: 8, x: 0.5, wall: 1}  # start/finish; heading 0.25
+    - {length: 14, x: 0, wall: 1}
     - {length: 6, x: -1, speed: 95}
-    - {turn_num: 1, length: 4, angle: 6, x: 0.25, speed: 95}  # La Source
-    - {turn_num: 1, length: 4, angle: 6, x: 1, speed: 95}
-    - {length: 8, pitch: -0.125, x: 0.25}
+    - {turn_num: 1, length: 4, angle: 6, x: 0.25, speed: 95, wall_l: 8, wall_r: 2}  # La Source
+    - {turn_num: 1, length: 4, angle: 6, x: 1, speed: 95, wall_l: 12, wall_r: 2}
+    - {length: 8, pitch: -0.125, x: 0.25, wall_l: 8, wall_r: 2}
     - {length: 8, pitch: -0.5, x: -0.5}
     - {turn_num: 2, length: 8, angle: 1.25, x: 0.25}
     - {turn_num: 2, length: 8, angle: 1.25, x: 1}
-    - {length: 16, pitch: -0.25, x: 0.25, wall: 6}
-    - {turn_num: 3, length: 2, angle: -2.25, x: -0.5, wall: 8}  # Eau Rouge
-    - {turn_num: 3, length: 2, angle: -2.25, x: -1, wall: 8}
-    - {turn_num: 4, length: 8, angle: 4.75, pitch: 2, x: -0.5, wall: 8}  # Raidillon
-    - {turn_num: 4, length: 8, angle: 4.5, pitch: 2, x: 1, wall: 8}
-    - {turn_num: 5, length: 8, angle: -2.25, x: 0, wall: 8}
-    - {turn_num: 5, length: 8, angle: -2.25, x: -1, wall: 8}
-    - {length: 16, pitch: 1, x: -0.25, wall: 8}
-    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 0.5, wall: 7}
-    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 1, wall: 6}
-    - {length: 40, pitch: 0.5, x: 0.25, wall: 6} # kemmel straight
+    - {length: 16, pitch: -0.25, x: 0.25}
+    - {turn_num: 3, length: 2, angle: -2.25, x: -0.5}  # Eau Rouge
+    - {turn_num: 3, length: 2, angle: -2.25, x: -1}
+    - {turn_num: 4, length: 8, angle: 4.75, pitch: 2, x: -0.5}  # Raidillon
+    - {turn_num: 4, length: 8, angle: 4.5, pitch: 2, x: 1, wall_l: 8}
+    - {turn_num: 5, length: 8, angle: -2.25, x: 0, wall_l: 8}
+    - {turn_num: 5, length: 8, angle: -2.25, x: -1, wall_l: 8}
+    - {length: 16, pitch: 1, x: -0.25, wall_l: 8}
+    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 0.5, wall_l: 6}
+    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 1}
+    - {length: 40, pitch: 0.5, x: 0.25} # kemmel straight
     - {length: 8, pitch: 0.125, x: -1}
     - {turn_num: 7, length: 4, angle: 4, speed: 180, x: 0}  # high point
     - {turn_num: 7, length: 4, angle: 4, speed: 180, x: 1}
@@ -115,12 +114,12 @@ tracks:
     - {length: 6, pitch: -0.5, x: -0.25}
     - {length: 22, pitch: -0.75, x: 0.25}
     - {length: 8, pitch: -0.75, x: 1}
-    - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: 0}  # Pouhon
-    - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: -1}
-    - {length: 4, pitch: -0.5, x: 0}
-    - {length: 9, angle: -2.75, pitch: -0.5, x: 0.5}
-    - {length: 9, angle: -2.75, pitch: -0.5, x: -1}
-    - {length: 6, pitch: -0.625, x: 0}
+    - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: 0, wall_r: 8}  # Pouhon
+    - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: -1, wall_r: 8}
+    - {length: 4, pitch: -0.5, x: 0, wall_r: 8}
+    - {length: 9, angle: -2.75, pitch: -0.5, x: 0.5, wall_r: 8}
+    - {length: 9, angle: -2.75, pitch: -0.5, x: -1, wall_r: 8}
+    - {length: 6, pitch: -0.625, x: 0, wall_r: 8}
     - {length: 12, pitch: -0.75, x: 1}
     - {length: 6, pitch: -0.75, x: -1}
     - {turn_num: 13, length: 8, angle: 4, pitch: -0.25, x: 0}
@@ -152,9 +151,9 @@ tracks:
     - {length: 4, pitch: 1, x: -0.5}
     - {length: 4, pitch: 0.5, x: -1}
     - {turn_num: 19, length: 3, angle: 4, speed: 110, x: 0}
-    - {turn_num: 19, length: 3, angle: 4, speed: 110, x: 1}
-    - {turn_num: 20, length: 3, angle: -5, speed: 110, x: 0}
-    - {turn_num: 20, length: 3, angle: -5, speed: 110, x: -1}
+    - {turn_num: 19, length: 3, angle: 4, speed: 110, x: 1, wall_l: 8}
+    - {turn_num: 20, length: 3, angle: -5, speed: 110, x: 0, wall_l: 8}
+    - {turn_num: 20, length: 3, angle: -5, speed: 110, x: -1, wall_l: 8}
     - {length: 8, x: 0}
     - {length: 4, x: 1}
 
@@ -164,14 +163,14 @@ tracks:
     wall: 6
     tree_bg: true
     sections:
-    - {length: 8, x: 0.25, pitch: 0.125, wall: 2}  # start/finish; heading 0.25
-    - {length: 42, x: -0.25, pitch: 0.125, wall: 2}
+    - {length: 8, x: 0.25, pitch: 0.125, wall: 1}  # start/finish; heading 0.25
+    - {length: 42, x: -0.25, pitch: 0.125, wall: 1}
     - {length: 4, x: -1, pitch: 0.125, speed: 90}
     - {turn_num: 1, x: 0, length: 3, angle: 4, speed: 90} # Rettifilo
-    - {turn_num: 1, x: 1, length: 3, angle: 4, speed: 90}
-    - {turn_num: 2, x: 0, length: 4, angle: -6, speed: 70}
-    - {turn_num: 2, x: -1 , length: 4, angle: -6, speed: 70}
-    - {turn_num: 2, x: 0, length: 8, angle: 2}
+    - {turn_num: 1, x: 1, length: 3, angle: 4, speed: 90, wall_l: 12}
+    - {turn_num: 2, x: 0, length: 4, angle: -6, speed: 70, wall_l: 12}
+    - {turn_num: 2, x: -1 , length: 4, angle: -6, speed: 70, wall_l: 12}
+    - {turn_num: 2, x: 0, length: 8, angle: 2, wall_l: 8}
     - {turn_num: 2, x: 0.5, length: 8, angle: 2}
     - {length: 8, x: 0, pitch: 0.125}
     - {turn_num: 3, x: -0.25, length: 11, angle: 1.25} # Curva Grande
@@ -181,10 +180,10 @@ tracks:
     - {length: 12, x: 0.25, pitch: 0.5}
     - {length: 4, x: 1, pitch: 0.125, speed: 130}
     - {turn_num: 4, x: 0, length: 3, angle: -4, speed: 130}
-    - {turn_num: 4, x: -1, length: 3, angle: -4, speed: 130}
-    - {turn_num: 5, x: 0, length: 3, angle: 4, speed: 130}
-    - {turn_num: 5, x: 1, length: 3, angle: 4, speed: 130}
-    - {length: 8, x: 0}
+    - {turn_num: 4, x: -1, length: 3, angle: -4, speed: 130, wall_r: 12}
+    - {turn_num: 5, x: 0, length: 3, angle: 4, speed: 130, wall_r: 12}
+    - {turn_num: 5, x: 1, length: 3, angle: 4, speed: 130, wall_r: 12}
+    - {length: 8, x: 0, wall_r: 12}
     - {length: 8, x: -1, speed: 200}
     - {turn_num: 6, x: 0, length: 6, angle: 4, speed: 200} # Lesmo 1
     - {turn_num: 6, x: 1, length: 6, angle: 4, speed: 200}
@@ -212,11 +211,11 @@ tracks:
     - {length: 6, x: -0.25, pitch: -0.25}
     - {length: 68, x: 1, pitch: -0.25}
     - {length: 6, x: -1, pitch: -0.25}
-    - {turn_num: 11, length: 6, x: 0, angle: 4, speed: 220, wall: 8} # Parabolica
-    - {turn_num: 11, length: 6, x: 1, angle: 4, speed: 220, wall: 8}
-    - {turn_num: 11, length: 16, x: 0.5, angle: 4, wall: 8}
-    - {turn_num: 11, length: 30, x: -0.25, angle: 4, wall: 8}
-    - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall: 6}
+    - {turn_num: 11, length: 6, x: 0, angle: 4, speed: 220, wall_l: 12} # Parabolica
+    - {turn_num: 11, length: 6, x: 1, angle: 4, speed: 220, wall_l: 12}
+    - {turn_num: 11, length: 16, x: 0.5, angle: 4, wall_l: 12}
+    - {turn_num: 11, length: 30, x: -0.25, angle: 4, wall_l: 8}
+    - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall_l: 6}
 
   - name: uk
     length_km: 5.9
@@ -224,12 +223,12 @@ tracks:
     start_heading: 0.125  # North-East
     wall: 8
     sections:
-    - {length: 8, pitch: 0.125, wall: 2}  # start/finish
-    - {length: 36, pitch: 0.125, wall: 2}
-    - {turn_num: 1, length: 4, angle: 4, pitch: 0.125}  # Abbey
-    - {turn_num: 1, length: 6, angle: 3, pitch: 0.125}
-    - {length: 4, pitch: 0.125}
-    - {turn_num: 2, length: 12, angle: -6, pitch: 0.125} 
+    - {length: 8, pitch: 0.125, wall: 1}  # start/finish
+    - {length: 36, pitch: 0.125, wall: 1}
+    - {turn_num: 1, length: 4, angle: 4, pitch: 0.125, wall_l: 12}  # Abbey
+    - {turn_num: 1, length: 6, angle: 3, pitch: 0.125, wall_l: 12}
+    - {length: 4, pitch: 0.125, wall_l: 12}
+    - {turn_num: 2, length: 12, angle: -6, pitch: 0.125}
     - {length: 20, pitch: 0.125}
     - {turn_num: 3, length: 8, angle: 10, pitch: 0.125, speed: 125}
     - {length: 8, pitch: 0.125}
@@ -249,10 +248,10 @@ tracks:
     - {turn_num: 8, length: 24, angle: 5, wall: 4}  # Woodcote
     - {length: 8, pitch: 0.125, wall: 2}
     - {length: 24, pitch: 0.125, wall: 2}
-    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125}  # Copse
-    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625}
-    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625}
-    - {length: 20, pitch: 0.125}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125, wall_l: 12}  # Copse
+    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625, wall_l: 12}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625, wall_l: 12}
+    - {length: 20, pitch: 0.125, wall_l: 12}
     - {length: 20, angle: 1}
     - {length: 12, pitch: -0.125}
     - {turn_num: 10, length: 8, angle: -3, pitch: -0.125, speed: 295}  # Maggots
@@ -265,8 +264,8 @@ tracks:
     - {turn_num: 14, length: 4, angle: -4, pitch: -0.125}
     - {length: 52, pitch: -0.25}
     - {length: 20, pitch: 0.5}
-    - {turn_num: 15, length: 20, angle: 11, pitch: 0.25, speed: 250}  # Stowe
-    - {length: 20, angle: -2, pitch: -0.5}
+    - {turn_num: 15, length: 20, angle: 11, pitch: 0.25, speed: 250, wall_l: 12}  # Stowe
+    - {length: 20, angle: -2, pitch: -0.5, wall_l: 12}
     - {length: 16}
     - {turn_num: 16, length: 8, angle: -8, speed: 115}  # Vale
     - {turn_num: 17, length: 8, angle: 8, speed: 130}  # Club
@@ -282,8 +281,8 @@ tracks:
     wall: 4
     city_bg: true
     sections:
-    - {length: 8, pitch: -0.25, wall: 2}  # start/finish
-    - {length: 42, pitch: -0.25, wall: 2}
+    - {length: 8, pitch: -0.25, wall: 1}  # start/finish
+    - {length: 42, pitch: -0.25, wall: 1}
     - {turn_num: 1, length: 8, angle: 5, pitch: -0.25, speed: 290}
     - {length: 4, pitch: -0.125, speed: 195}
     - {turn_num: 2, length: 12, angle: 12, speed: 165}
@@ -308,9 +307,9 @@ tracks:
     - {length: 4}
     - {length: 8, pitch: 0.25}
     - {turn_num: 10, length: 10, angle: 3, pitch: 0.125}
-    - {length: 6, pitch: 0.125}
-    - {turn_num: 11, length: 8, angle: -15, speed: 95}  # Hairpin
-    - {length: 12}
+    - {length: 6, pitch: 0.125, wall_l: 2}
+    - {turn_num: 11, length: 8, angle: -15, speed: 95, wall_l: 2}  # Hairpin
+    - {length: 12, wall_l: 2}
     - {turn_num: 12, length: 8, angle: 4}
     - {length: 12, angle: 3, pitch: -0.125}
     - {length: 4}
@@ -323,8 +322,8 @@ tracks:
     - {turn_num: 14, length: 8, angle: -2}
     - {length: 32, angle: -2.5, pitch: -0.25}
     - {length: 32}
-    - {length: 8, wall: 1.625}  # Bridge
-    - {turn_num: 15, length: 6, angle: -3, speed: 275, wall: 1.625}  # 130R
+    - {length: 8, wall: 0}  # Bridge
+    - {turn_num: 15, length: 6, angle: -3, speed: 275, wall: 0}  # 130R
     - {turn_num: 15, length: 6}
     - {turn_num: 15, length: 16, angle: -2.5}
     - {length: 12, pitch: 0.125}
@@ -342,7 +341,7 @@ tracks:
     length_km: 3.34
     length_scale: 1
     track_width: 2.5
-    wall: 1.375
+    wall: 0
     lanes: 2
     city_bg: true
     gndcol1: 5
@@ -354,9 +353,9 @@ tracks:
     - {length: 4, x: -0.25, pitch: 0.25}
     - {length: 4, x: -0.875, angle: -2, pitch: 0.25}
     - {length: 4, x: -0.5, pitch: 0.25, speed: 115}
-    - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115, wall: 2.5, lanes: 1}  # Sainte Devote
-    - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2.5, lanes: 1}
-    - {length: 12, x: 0.25, wall: 2.5, lanes: 3}
+    - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115, wall: 2, lanes: 1}  # Sainte Devote
+    - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2, lanes: 1}
+    - {length: 12, x: 0.25, wall: 2, lanes: 3}
     - {length: 4, x: -1, angle: -1, pitch: 1, lanes: 3}
     - {length: 24, x: -0.75, pitch: 1, lanes: 3}
     - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3}
@@ -405,15 +404,15 @@ tracks:
     - {length: 10, x: -0.125, angle: 1.5, pitch: -0.5}
     - {length: 8, x: 0.5}
     - {length: 8, x: 1}
-    - {turn_num: 10, length: 4, x: -1, angle: -8, speed: 85, wall: 2, lanes: 1}  # Nouvelle Chicane
-    - {length: 2, x: 0, speed: 70, wall: 2, lanes: 1}
-    - {length: 4, x: 1, angle: 8, speed: 70, wall: 2, lanes: 1}  # Not numbered
-    - {length: 4, x: 0.5, wall: 2, lanes: 1}
-    - {turn_num: 11, length: 4, x: 0.25, angle: 4, wall: 2, lanes: 1}  # Chicane exit
-    - {turn_num: 11, length: 2, x: -0.25, wall: 2, lanes: 1}
-    - {turn_num: 11, length: 2, x: -0.75, angle: -2, wall: 2, lanes: 1}
-    - {turn_num: 11, length: 2, x: -1, angle: -2, wall: 2, lanes: 1}
-    - {length: 14, x: -0.5, wall: 1.5}
+    - {turn_num: 10, length: 4, x: -1, angle: -8, speed: 85, lanes: 1}  # Nouvelle Chicane
+    - {length: 2, x: 0, speed: 70, wall_r: 6, lanes: 1}
+    - {length: 4, x: 1, angle: 8, speed: 70, wall_r: 6, lanes: 1}  # Not numbered
+    - {length: 4, x: 0.5, wall_r: 4, lanes: 1}
+    - {turn_num: 11, length: 4, x: 0.25, angle: 4, wall_r: 4, lanes: 1}  # Chicane exit
+    - {turn_num: 11, length: 2, x: -0.25, wall_r: 4, lanes: 1}
+    - {turn_num: 11, length: 2, x: -0.75, angle: -2, wall_r: 4, lanes: 1}
+    - {turn_num: 11, length: 2, x: -1, angle: -2, wall_r: 4, lanes: 1}
+    - {length: 14, x: -0.5, wall_r: 2}
     - {length: 6, x: 1}
     - {turn_num: 12, x: 0, length: 9, angle: -5}  # Tabac
     - {length: 12, x: -1, angle: -3}
@@ -451,7 +450,7 @@ tracks:
     length_km: 4
     city_bg: true
     track_width: 6
-    wall: 3.125
+    wall: 0
     start_heading: 0.75
     sections:
     - {length: 8, x: 0}
@@ -477,7 +476,7 @@ tracks:
     length_km: 0.847
     city_bg: true
     track_width: 4
-    wall: 2.175
+    wall: 0
     lanes: 3
     sections:
     - {length: 8, x: 0.75}
@@ -498,8 +497,8 @@ tracks:
     angle_scale: 1
     tree_bg: true
     sections:
-    - {length: 8, wall: 1.625}
-    - {length: 12, wall: 1.625}
+    - {length: 8, wall: 1}
+    - {length: 12, wall: 1}
     - {length: 12, angle: -0.25, bgr: sign}
     - {length: 12, pitch: -0.75, bgl: tree3}
     - {length: 8, angle: 0.125, bgl: sign, lanes: 2}
@@ -547,14 +546,13 @@ tracks:
 
   - name: "dragstrip"
     track_width: 4
-    invisible_wall: 8
     lanes: 4
     city_bg: true
     gndcol1: 4
     gndcol2: 15
     sections:
-    - {length: 16, x: 0, wall: 2}
-    - {length: 8, x: 0, wall: 2}
+    - {length: 16, x: 0, wall: 1}
+    - {length: 8, x: 0, wall: 1}
     - {length: 256, x: 0}
     - {length: 256, x: 0}
     - {length: 256, x: 0}

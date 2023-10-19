@@ -13,6 +13,13 @@ def lerp(x0: float, x1: float, t: float) -> float:
 	return (1 - t) * x0 + t * x1
 
 
+def first_non_null(*vals):
+	for val in vals:
+		if val is not None:
+			return val
+	return None
+
+
 class Color(namedtuple('Color', ['r', 'g', 'b'])):
 	@classmethod
 	def from_hex(cls, hex_str: str):

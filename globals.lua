@@ -38,8 +38,6 @@ turn_dx_scale = 1
 grass_max_speed = 0.125
 wall_max_speed = 0.25
 
-speed_to_kph = 350
-
 lane_line_width = 3/32
 
 car_draw_width, car_draw_height = 0.75, 0.5

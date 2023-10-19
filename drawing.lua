@@ -237,17 +237,21 @@ function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scal
 	local col = section.wallcol1 or road.wallcol1 or 6
 	if ((sumct % 6) >= 3) col = section.wallcol1 or road.wallcol1 or 7
 
-	local wall1 = section.wall + section.dwall * (seg - 1)
-	local wall2 = section.wall + section.dwall * seg
+	-- TODO: invisible walls if very far out
+
+	local wall_l1 = section.wall_l + section.dwall_l * (seg - 1)
+	local wall_l2 = section.wall_l + section.dwall_l * seg
+	local wall_r1 = section.wall_r + section.dwall_r * (seg - 1)
+	local wall_r2 = section.wall_r + section.dwall_r * seg
 
 	add(sprite_list, {
 		is_wall=true,
 		col=col,
 		detail=detail,
-		distance_l1=wall1,
-		distance_l2=wall2,
-		distance_r1=wall1,
-		distance_r2=wall2,
+		distance_l1=-wall_l1,
+		distance_l2=-wall_l2,
+		distance_r1=wall_r1,
+		distance_r2=wall_r2,
 		x1=x1, y1=y1, scale1=scale1,
 		x2=x2, y2=y2, scale2=scale2,
 		clp={clp[1],clp[2],clp[3],clp[4]}
@@ -289,10 +293,10 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 	local car_abs_x = abs(car.x)
 
 	if car.speed > 0 then
-		if car_abs_x >= road[car.section_idx].wall then
-			-- Touching wall
-			-- TODO: add smoke, or other indicator of scraping
-		end
+		-- if car_abs_x >= road[car.section_idx].wall then
+		-- 	-- Touching wall
+		-- 	-- TODO: add smoke, or other indicator of scraping
+		-- end
 
 		if car_abs_x >= road.grass_x then
 			-- On grass; bumpy
@@ -449,7 +453,7 @@ function draw_road()
 			end
 		end
 
-		if i < wall_draw_distance and section.wall and not section.wall_is_invisible and not section.tnl then
+		if i < wall_draw_distance and not section.tnl then
 			-- TODO: I think there's an off by 1 error here
 			-- (Why do we have to use previous section's clip rectangle?)
 			-- Also visible at tunnel entrance/exit
@@ -665,7 +669,7 @@ function draw_debug_overlay()
 	print(player.section_idx .. "," .. player.segment_idx .. ',' .. player.subseg)
 	print('carx:' .. player.x)
 	-- print('hw:' .. road.half_width)
-	-- print('wall:' .. section.wall)
+	-- print('wall:' .. -section.wall_l .. ',' .. section.wall_r)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then
 		print('cam:' .. cam_x .. ',' .. cam_dy .. ',' .. cam_dz)

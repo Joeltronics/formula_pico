@@ -3,15 +3,16 @@ function decompress_sections()
 	local comp = road.sections_compressed
 	assert(#comp % 7 == 0)
 	for idx = 1, #comp, 7 do
+		local wall = ord(comp[idx + 5])
 		local section = {
 			length = ord(comp[idx]) + 1,
 			entrance_x = (ord(comp[idx + 1]) - 128) / 64,
 			pitch = (ord(comp[idx + 2]) - 127) / 64,
 			angle = (ord(comp[idx + 3]) - 128) / 128,
 			max_speed = ord(comp[idx + 4]) / 255,
-			wall = (ord(comp[idx + 5]) - 128) / 8,
+			wall_l = wall \ 16,
+			wall_r = wall % 16
 		}
-		if (section.wall == 0) section.wall = nil
 		local section_type = ord(comp[idx + 6])
 		if section_type ~= 0 then
 			assert(section_type <= #section_types)
@@ -33,6 +34,11 @@ function init_track()
 
 	road.curb_x = road.half_width - shoulder_half_width - car_half_width
 	road.grass_x = road.half_width + car_half_width
+
+	-- FIXME: There must be a drawing bug somewhere - full curb width should be correct, but 1/4 width is what draws it correctly
+	-- road.track_boundary = road.half_width + 2*shoulder_half_width
+	road.track_boundary = road.half_width + 0.5*shoulder_half_width
+	-- road.track_boundary = road.half_width + shoulder_half_width
 
 	road.lanes = road.lanes or 1
 
@@ -62,25 +68,26 @@ function init_track()
 
 		section.tnl = section.tnl or false
 
-		section.wall_is_invisible = false
 		if section.tnl then
-			-- TODO: should this be shoulder_width?
-			section.wall = road.half_width + shoulder_half_width
-		elseif section.wall then
-			--
-		elseif section.iwall then
-			section.wall = section.iwall
-			section.wall_is_invisible = true
-		elseif road.wall then
-			section.wall = road.wall
+			section.wall_l, section.wall_r = 0, 0
 		else
-			section.wall = road.iwall or 2*road.half_width
-			section.wall_is_invisible = true
+			section.wall_r = section.wall_r or road.wall or 15
+			section.wall_l = section.wall_l or road.wall or 15
+
+			-- DEBUG
+			-- section.wall_r = section.wall_r or road.wall or 0
+			-- section.wall_l = section.wall_l or road.wall or 0
 		end
 
-		section.wall_clip = section.wall - car_half_width
+		-- Convert wall_l/wall_r from 0-15 to actual units
+		-- TODO: if 15, make wall invisible
+		section.wall_r = road.track_boundary + section.wall_r * wall_scale
+		section.wall_l = -road.track_boundary - section.wall_l * wall_scale
 
-		section.entrance_x = clip_num(section.entrance_x, -section.wall_clip + 0.01, section.wall_clip - 0.01)
+		section.wall_clip_l = section.wall_l + car_half_width
+		section.wall_clip_r = section.wall_r - car_half_width
+
+		section.entrance_x = clip_num(section.entrance_x, section.wall_clip_l + 0.01, section.wall_clip_r - 0.01)
 		section.entrance_x = clip_num(section.entrance_x, -road.grass_x + 0.01, road.grass_x - 0.01)
 
 		if (racing_line_sine_interp) then
@@ -110,9 +117,10 @@ function init_track()
 		section0.dpitch = (section1.pitch - section0.pitch) / section0.length
 
 		-- TODO: only need this to narrow gradually - can widen instantly
-		-- (like for tunnels)
-		section0.dwall = (section1.wall - section0.wall) / section0.length
-		if (section0.tnl) section0.dwall = 0
+		-- (already the case for tunnels, can make this everywhere)
+		section0.dwall_l = (section1.wall_l - section0.wall_l) / section0.length
+		section0.dwall_r = (section1.wall_r - section0.wall_r) / section0.length
+		if (section0.tnl) section0.dwall_l, section0.dwall_r = 0, 0
 
 		section0.racing_line_dx = (section1.entrance_x - section0.entrance_x) / section0.length
 

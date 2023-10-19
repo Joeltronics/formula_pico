@@ -2,6 +2,7 @@
 
 from argparse import ArgumentParser
 from collections import namedtuple
+from copy import copy
 from dataclasses import dataclass, field
 from enum import Enum, auto
 from math import pi as PI, ceil, floor, cos, sin, sqrt, asin, isclose
@@ -13,7 +14,7 @@ import cairo
 from PIL import Image, ImageDraw
 import yaml
 
-from common import lerp, sgn, Point
+from common import lerp, sgn, first_non_null, Point
 from p8scii import P8SCII
 
 TWO_PI: Final = 2.0 * PI
@@ -22,6 +23,10 @@ EPS: Final = 1e-9
 RACING_LINE_SINE_INTERP: Final = True
 
 SPEED_KPH_SCALE: Final = 350
+
+WALL_SCALE: Final = 0.5
+
+WALL_THICKNESS = 0.25
 
 MINIMAP_MAX_WIDTH: Final = 32
 MINIMAP_MAX_HEIGHT: Final = 48
@@ -101,7 +106,16 @@ class Segment:
 	normal_start: Point | None = None
 	normal_end: Point | None = None
 
-	def points(self, x1, x2, x1_far=None, x2_far=None):
+	@property
+	def radius_center(self) -> float:
+		if not self.angle:
+			return 0.0
+		# Radius from arc length: r = s / theta
+		# arc length: s = 1
+		# angle is 0-1, so convert to radians
+		return 1.0 / abs(self.angle * TWO_PI)
+
+	def points(self, x1, x2, x1_far=None, x2_far=None, clip_radius=True):
 		if self.normal_start is None or self.normal_end is None:
 			raise ValueError('normal_start or normal_end is not yet set')
 
@@ -116,6 +130,19 @@ class Segment:
 		n0 = self.normal_start
 		n1 = self.normal_end
 
+		r = self.radius_center
+		if clip_radius and r:
+			if self.angle > 0:
+				x1 = min(x1, r)
+				x2 = min(x2, r)
+				x1_far = min(x1_far, r)
+				x2_far = min(x2_far, r)
+			else:
+				x1 = max(x1, -r)
+				x2 = max(x2, -r)
+				x1_far = max(x1_far, -r)
+				x2_far = max(x2_far, -r)
+
 		return [
 			p0 + n0 * x1,
 			p0 + n0 * x2,
@@ -124,22 +151,25 @@ class Segment:
 		]
 
 
-@dataclass
+@dataclass(kw_only=True)
 class Section:
 	# Basic stats
 	length: int
+
+	wall_l: int
+	wall_r: int
+
 	turn_num: int | None = None
 	angle: float = 0.0
 	# start_heading: float  # TODO
-	wall: float | None = None
-	invisible_wall: float | None = None
-	dwall: float | None = None
+	dwall_l: float | None = None
+	dwall_r: float | None = None
 	pitch: float = 0.0
 	tnl: bool = False
 
 	# Racing line
 	speed: float | None = None
-	x: float | None = None
+	x: float = 0.0
 
 	# Ground & background info
 	lanes: int | None = None
@@ -162,7 +192,6 @@ class Section:
 	]
 
 	LUA_KW_FIELDS: ClassVar[list[str]] = [
-		'invisible_wall',
 		'tnl',
 		'lanes',
 		'gndcol1',
@@ -187,16 +216,37 @@ class Section:
 		if self.length < 1:
 			raise ValueError(f'Section length must be at least 1 ({self.length=})')
 
+		if self.wall_l is None:
+			self.wall_l = 15
+		if self.wall_r is None:
+			self.wall_r = 15
+
+		if self.tnl:
+			self.wall_l = self.wall_r = 0
+
+		if not (isinstance(self.wall_l, int) and isinstance(self.wall_r, int) and (0 <= self.wall_l < 16) and (0 <= self.wall_r < 16)):
+			raise ValueError(f'Invalid wall value(s): {self.wall_l=}, {self.wall_r=}')
+
 	def to_lua_dict(self) -> dict:
 
 		ret = dict()
 
 		# Always add all ordered fields
-		default = Section(length=1)
 		for attr_name in self.LUA_ORDERED_FIELDS:
+			if attr_name == 'wall':
+				continue
 			ret[attr_name] = getattr(self, attr_name)
-		
+
+		# Replace wall with encoded
+		wall_l = self.wall_l
+		wall_r = self.wall_r
+		if not (isinstance(wall_l, int) and isinstance(wall_r, int) and (0 <= wall_l < 16) and (0 <= wall_r < 16)):
+			raise ValueError(f'Invalid wall value(s): {wall_l=}, {wall_r=}')
+		wall_8bit = wall_l * 16 + wall_r
+		ret['wall'] = wall_8bit
+
 		# Only add keyword fields if non-default
+		default = Section(length=1, wall_l=15, wall_r=15)
 		for attr_name in self.LUA_KW_FIELDS:
 			val = getattr(self, attr_name)
 			if val != getattr(default, attr_name):
@@ -212,7 +262,6 @@ class Section:
 		vals_uncompressed['x'] = round((vals_uncompressed['x'] or 0) * 64) + 128
 		vals_uncompressed['pitch'] = round(vals_uncompressed['pitch'] * 64) + 127
 		vals_uncompressed['max_speed'] = round(vals_uncompressed['max_speed'] * 255)
-		vals_uncompressed['wall'] = round((vals_uncompressed['wall'] or 0) * 8) + 128
 
 		angle_before = vals_uncompressed['angle']
 		angle_compressed = round(angle_before * 128) + 128
@@ -266,8 +315,7 @@ class Track:
 			start_heading: float,
 			track_width: float,
 			shoulder_half_width: float,
-			wall: float | None = None,
-			invisible_wall: float | None = None,
+			wall: int | None = None,
 			lanes: int = 1,
 			tree_bg: bool = False,
 			city_bg: bool = False,
@@ -284,7 +332,6 @@ class Track:
 		self.shoulder_half_width: float = shoulder_half_width
 
 		self.wall = wall
-		self.invisible_wall = invisible_wall
 		self.lanes = lanes
 		self.tree_bg = tree_bg
 		self.city_bg = city_bg
@@ -346,16 +393,20 @@ class Track:
 			sec0 = self.sections[idx]
 			sec1 = self.sections[(idx + 1) % len(self.sections)]
 
-			wall0 = sec0.wall or sec0.invisible_wall or self.wall or self.invisible_wall
-			wall1 = sec1.wall or sec1.invisible_wall or self.wall or self.invisible_wall
+			wall0_l = sec0.wall_l
+			wall0_r = sec0.wall_r
+
+			wall1_l = sec1.wall_l
+			wall1_r = sec1.wall_r
 
 			if sec0.tnl:
-				wall0 = self.track_width/2 + self.shoulder_half_width
+				wall0_r = wall0_l = 0
 
 			if sec1.tnl:
-				wall1 = self.track_width/2 + self.shoulder_half_width
+				wall1_r = wall1_l = 0
 
-			sec0.dwall = (wall1 - wall0) / sec0.length
+			sec0.dwall_l = (wall1_l - wall0_l) / sec0.length
+			sec0.dwall_r = (wall1_r - wall0_r) / sec0.length
 
 	@staticmethod
 	def _corner_exit_entrance_original_logic(section: Section) -> float:
@@ -603,10 +654,8 @@ class Track:
 		if self.shoulder_half_width != defaults['shoulder_half_width']:
 			ret['shoulder_half_width'] = self.shoulder_half_width
 
-		if self.wall:
+		if self.wall is not None:
 			ret['wall'] = self.wall
-		elif self.invisible_wall:
-			ret['iwall'] = self.invisible_wall
 
 		if self.lanes > 1:
 			ret['lanes'] = self.lanes
@@ -728,7 +777,7 @@ def set_normals(segments: list[Segment]):
 			norm1 = (0.5*(dp0 + dp1)).normal() if (dp0 is not None) else dp1.normal()
 			norm2 = (0.5*(dp1 + dp2)).normal() if (dp2 is not None) else dp1.normal()
 
-		# FIXME HACK: normal signes are backwards
+		# FIXME HACK: normal signs are backwards
 		# (Should change normal() logic instead)
 		segment.normal_start = -norm1
 		segment.normal_end = -norm2
@@ -751,8 +800,8 @@ def draw_track(track, scale=16):
 	for section in sections:
 		segments.extend(section.segments)
 
-	max_wall = max(s.wall or s.invisible_wall or 0 for s in sections)
-	max_wall = max(max_wall, track.wall or 0, track.invisible_wall or 0)
+	max_wall = max(max(abs(s.wall_l or 0), abs(s.wall_r or 0)) for s in sections)
+	max_wall = max(max_wall, track.wall or 0)
 
 	# TODO: why does max_wall need to be doubled? there could be a bug somewhere in wall drawing
 	padding = max(2*track_width, 2*max_wall)
@@ -772,7 +821,14 @@ def draw_track(track, scale=16):
 		c = cairo.Context(surface)
 
 		# Fill with ground color 1
-		c.set_source_rgb(*PALETTE[track.gndcol1 if track.gndcol1 is not None else 3])
+
+		bgcol = track.gndcol1
+		if (bgcol == 5) and (track.gndcol2 is not None):
+			bgcol = track.gndcol2
+		if bgcol is None:
+			bgcol = 3
+
+		c.set_source_rgb(*PALETTE[bgcol])
 		c.paint()
 
 		# Without stroke, there's a slight gap between each segment; stroke=2 is workaround for this
@@ -909,28 +965,36 @@ def draw_track(track, scale=16):
 
 		# Walls
 
-		# for idx, (section, segment) in enumerate(iterate_segments(sections)):
 		idx = -1
-		for section_idx, section in enumerate(sections):
+		for section in sections:
 
-			wall = section.wall
-			if (not section.wall) and (not section.invisible_wall) and track.wall:
-				wall = track.wall
-
-			if not wall:
-				continue
+			wall_r = section.wall_r
+			wall_l = section.wall_l
 
 			for segment_idx, segment in enumerate(section.segments):
 				idx += 1
-				if not section.tnl:
-					# TODO: do not make wall further than corner radius
-					wall_color = PALETTE[7] if ((idx % 6) >= 3) else PALETTE[6]
+				if section.tnl:
+					continue
+
+				# TODO: improve drawing walls around corners
+				# Making wall not able to go further than corner radius is a start, but could do more
+
+				# wall_color = PALETTE[7] if ((idx % 6) >= 3) else PALETTE[6]
+				wall_color = PALETTE[14]
+
+				if wall_r < 15:
 					# TODO: why this 2x?
-					wall_start_0 = 2*(wall + section.dwall * segment_idx)
-					wall_start_1 = 2*(wall + section.dwall * (segment_idx + 1))
-					wall_end_0 = wall_start_0 + 1
-					wall_end_1 = wall_start_1 + 1
+					wall_start_0 = track_width +  WALL_SCALE*2*(wall_r + section.dwall_r * segment_idx)
+					wall_start_1 = track_width + WALL_SCALE*2*(wall_r + section.dwall_r * (segment_idx + 1))
+					wall_end_0 = wall_start_0 + WALL_THICKNESS
+					wall_end_1 = wall_start_1 + WALL_THICKNESS
 					polygon(segment.points(wall_start_0, wall_end_0, wall_start_1, wall_end_1), wall_color, stroke=0.5)
+
+				if wall_l < 15:
+					wall_start_0 = track_width + WALL_SCALE*2*(wall_l + section.dwall_l * segment_idx)
+					wall_start_1 = track_width + WALL_SCALE*2*(wall_l + section.dwall_l * (segment_idx + 1))
+					wall_end_0 = wall_start_0 + WALL_THICKNESS
+					wall_end_1 = wall_start_1 + WALL_THICKNESS
 					polygon(segment.points(-wall_start_0, -wall_end_0, -wall_start_1, -wall_end_1), wall_color, stroke=0.5)
 
 		# Racing line
@@ -1007,9 +1071,19 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	angle_scale = yaml_track.get('angle_scale', yaml_defaults.get('angle_scale', 1.0))
 	track_width = yaml_track.get('track_width', yaml_defaults['track_width'])
 	shoulder_half_width = yaml_track.get('shoulder_half_width', yaml_defaults['shoulder_half_width'])
-	wall = yaml_track.get('wall', yaml_defaults.get('wall', None))
-	invisible_wall = yaml_track.get('invisible_wall', yaml_defaults.get('invisible_wall', None))
-	sections = [Section(**s) for s in yaml_track['sections']]
+	track_wall = yaml_track.get('wall', yaml_defaults.get('wall', 15))
+
+	sections = copy(yaml_track['sections'])
+
+	for section in sections:
+		section_wall = section.pop('wall', track_wall)
+		if 'wall_l' not in section:
+			section['wall_l'] = section_wall
+		if 'wall_r' not in section:
+			section['wall_r'] = section_wall
+
+	sections = [Section(**s) for s in sections]
+
 	for section in sections:
 		section.length = int(round(section.length * length_scale))
 		section.angle *= angle_scale
@@ -1024,8 +1098,7 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 		start_heading=start_heading,
 		track_width=track_width,
 		shoulder_half_width=shoulder_half_width,
-		wall=wall,
-		invisible_wall=invisible_wall,
+		wall=track_wall,
 		lanes=yaml_track.get('lanes', 1),
 		city_bg=yaml_track.get('city_bg', False),
 		tree_bg=yaml_track.get('tree_bg', False),
@@ -1103,6 +1176,10 @@ def main():
 	parser.add_argument('--uncompressed', dest='compress', action='store_false')
 	args = parser.parse_args()
 	data = load_data()
+
+	# Constants that get added
+	data['wall_scale'] = WALL_SCALE
+	data['speed_to_kph'] = SPEED_KPH_SCALE
 
 	tracks = data.pop('tracks')
 
