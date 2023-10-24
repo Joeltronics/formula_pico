@@ -660,6 +660,10 @@ end
 
 function draw_debug_overlay()
 
+	cursor(52, 0, 8)
+	if (frozen) print('frozen')
+	if (noclip) print('noclip')
+
 	local player = cars[1]
 	local section = road[player.section_idx]
 

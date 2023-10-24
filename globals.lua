@@ -109,6 +109,7 @@ total_segment_count = nil
 --
 
 frozen = false
+noclip = false
 
 -- TODO: rename to "track"
 road = nil  -- Setting this also acts as "game started" flag

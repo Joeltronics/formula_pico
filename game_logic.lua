@@ -207,6 +207,12 @@ function tick_debug()
 			end
 		else
 			if (key == '`' or key == '~') race_start_counter += 15
+			if key == 's' then
+				race_started = true
+				race_start_num_lights = 0
+				race_start_counter = 0
+				sfx(5, 3)
+			end
 		end
 
 		if (key == '7') cam_x_scale = max(cam_x_scale - 0.25, 0)
@@ -218,6 +224,7 @@ function tick_debug()
 		if (key == '<') player_car.heading -= 1/256
 		if (key == '>') player_car.heading += 1/256
 		if (key == 'f') frozen = not frozen
+		if (key == 'n') noclip = not noclip
 	end
 
 	player_car.segment_plus_subseg = player_car.segment_idx + player_car.subseg
@@ -243,6 +250,8 @@ function update_sprite_turn(car, section, dx)
 end
 
 function clip_car_x(car, section)
+
+	if (noclip) return
 
 	local ds = car.segment_plus_subseg - 1
 	local car_x, wall_clip_l, wall_clip_r = car.x, section.wall_clip_l + ds*section.dwall_l, section.wall_clip_r + ds*section.dwall_r
@@ -320,7 +329,7 @@ function calculate_dz(car, section, steering_input_scaled, dx)
 
 	-- Clip to not hit car in front
 	local front = car.other_car_data.front
-	if collisions and front then
+	if collisions and front and not noclip then
 		local dz_max = front.dz_ahead - car_depth - car_depth_hitbox_padding
 
 		if dz > dz_max then
