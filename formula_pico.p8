@@ -10,15 +10,18 @@ __lua__
 #include globals.lua
 #include bg_objects.lua
 #include utils.lua
-#include minimap.lua
-#include sound.lua
 #include drawing.lua
 #include title_screen.lua
 #include game_logic.lua
 
--- DEBUG: save characters when not including sound
--- function update_sound()
--- end
+-- Optional modules: switch these to stub versions to save tokens
+
+-- #include minimap_disabled.lua
+#include minimap.lua
+-- #include sound_disabled.lua
+#include sound.lua
+-- #include debug_disabled.lua
+#include debug.lua
 
 function _init()
 	init_title_screen()
