@@ -43,6 +43,13 @@ class SectionDirection(Enum):
 	right = auto()
 
 
+verbose = False
+
+def vprint(*args, **kwargs):
+	if verbose:
+		print(*args, **kwargs)
+
+
 def float_round_pico8_precision(val: float):
 	""" Round float to Pico-8 fixed-point precision (q16) """
 	return round(val * 65536) / 65536
@@ -635,7 +642,7 @@ class Track:
 
 
 def load_data(filename=DATA_FILENAME_IN):
-	print(f'Loading {filename}')
+	vprint(f'Loading {filename}')
 	with open(filename, 'r') as f:
 		return yaml.safe_load(f)
 
@@ -721,21 +728,21 @@ def process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 	width = track.x_max - track.x_min
 	height = track.y_max - track.y_min
 
-	print(f'Length: {len(track.segments)} segments ({len(track.sections)} sections)')
+	vprint(f'Length: {len(track.segments)} segments ({len(track.sections)} sections)')
 	if length_km is not None:
 		m_per_segment = length_km / len(track.segments) * 100
-		print(f'True length: {length_km} km, segment length: {m_per_segment:.3f} m')
-	print(f'End coord: ({track.points[-1][0]:.3f}, {track.points[-1][1]:.3f})')
+		vprint(f'True length: {length_km} km, segment length: {m_per_segment:.3f} m')
+	vprint(f'End coord: ({track.points[-1][0]:.3f}, {track.points[-1][1]:.3f})')
 
 	if not isclose(track.start_heading, track.end_heading):
 		warn(f'Track "{name}" start heading {track.start_heading} != end heading {track.end_heading}')
 		# raise ValueError(f'Track "{name}" start heading {track.start_heading} != end heading {track.end_heading}')
 
-	print(f'Start heading: {track.start_heading}, end heading: {track.end_heading}')
-	print(f'X range: [{track.x_min:.3f}, {track.x_max:.3f}], Y range: [{track.y_min:.3f}, {track.y_max:.3f}]')
-	print(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width*track.minimap_scale)}x{ceil(height*track.minimap_scale)}')
-	print(f'minimap_step: {track.minimap_step}')
-	print(f'minimap_offset: ({track.minimap_offset_x}, {track.minimap_offset_y})')
+	vprint(f'Start heading: {track.start_heading}, end heading: {track.end_heading}')
+	vprint(f'X range: [{track.x_min:.3f}, {track.x_max:.3f}], Y range: [{track.y_min:.3f}, {track.y_max:.3f}]')
+	vprint(f'minimap_scale: {track.minimap_scale:.3f}, resulting resolution: {ceil(width*track.minimap_scale)}x{ceil(height*track.minimap_scale)}')
+	vprint(f'minimap_step: {track.minimap_step}')
+	vprint(f'minimap_offset: ({track.minimap_offset_x}, {track.minimap_offset_y})')
 
 	return track
 
@@ -781,12 +788,26 @@ def to_lua_str(val, indent=0, quote_strings=True) -> str:
 		return '{' + ','.join(f'{k}={to_lua_str(v, indent=indent, quote_strings=quote_strings)}' for k, v in val.items()) + '}'
 
 
-def main():
+def parse_args(args=None):
+	global verbose
+
 	parser = ArgumentParser()
+
 	parser.add_argument('--no-draw', dest='draw', action='store_false')
 	parser.add_argument('--show', action='store_true')
 	parser.add_argument('--uncompressed', dest='compress', action='store_false')
-	args = parser.parse_args()
+	parser.add_argument('--quiet', dest='verbose', action='store_false')
+
+	args = parser.parse_args(args)
+
+	verbose = args.verbose
+
+	return args
+
+
+def main(args=None):
+	args = parse_args(args)
+
 	data = load_data()
 
 	# Constants that get added
@@ -820,21 +841,21 @@ def main():
 		f.write('tracks={\n')
 
 		for track_yaml in tracks:
-			print(f'Processing track "{track_yaml["name"]}"')
+			vprint(f'Processing track "{track_yaml["name"]}"')
 			track = process_track(track_yaml, data)
 
 			if args.draw:
 
-				# print('Drawing full-res line map')
+				# vprint('Drawing full-res line map')
 				filename = MAP_DIR_OUT / f'{track.name}_linemap.png'
 				draw_line_map(track.points, show=args.show, filename=filename)
 
-				# print('Drawing minimap')
+				# vprint('Drawing minimap')
 				minimap_points = [p * track.minimap_scale for p in track.points[::track.minimap_step]]
 				filename = MAP_DIR_OUT / f'{track.name}_minimap.png'
 				draw_line_map(minimap_points, curve_joint=False, show=args.show, filename=filename)
 
-				# print('Drawing track')
+				# vprint('Drawing track')
 				draw_track(track, MAP_DIR_OUT / track.name)
 
 			track_lua_data = track.lua_output_data(data, section_types, compress=args.compress)
@@ -850,7 +871,7 @@ def main():
 
 			f.write('},\n')
 
-			print()
+			vprint()
 
 		f.write('}\n')
 
@@ -859,7 +880,7 @@ def main():
 			f.write(f'\t{to_lua_str(section_type, indent=1)},\n')
 		f.write('}\n')
 
-	print(f'Data saved as {DATA_FILENAME_OUT}')
+	vprint(f'Data saved as {DATA_FILENAME_OUT}')
 
 
 if __name__ == "__main__":
