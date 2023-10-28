@@ -20,52 +20,47 @@ end
 function update_title_screen()
 
 	-- X
-	if btnp(5) then
-		if (row_zidx > 0) row_zidx -= 1
-	end
+	if (btnp(5) and row_zidx > 0) row_zidx -= 1
 
 	-- O
 	if btnp(4) then
-		if (row_zidx == "{{ last_row_zidx }}") then
-
-			-- TODO: also an option to watch the AI play (mostly for debugging)
-
-			local num_other_cars = 0
-			local ghost = false
-			-- if mode == 1 then
-			-- 	num_other_cars = 1
-			-- 	ghost = true
-			-- elseif mode == 2 then
-			if (mode >= 1) num_other_cars = 7
-			local ai_only = (mode == 2)
-			local is_race = num_other_cars > 1
-
-			init_game(1 + track_zidx, 1 + team_zidx, is_race, ghost, num_other_cars, ai_only)
-			return
-		else
-			row_zidx += 1
+		if row_zidx == "{{ last_row_zidx }}" then
+			return init_game(
+				1 + track_zidx,
+				1 + team_zidx,
+				mode >= 1, -- is_race
+				false, -- ghost (TODO)
+				mode >= 1 and 7 or 0, -- num_other_cars
+				(mode == 2) -- ai_only
+			)
 		end
+		row_zidx += 1
 	end
 
 	-- Up/Down
-	if (btnp(2)) row_zidx = (row_zidx - 1) % "{{ num_rows }}"
-	if (btnp(3)) row_zidx = (row_zidx + 1) % "{{ num_rows }}"
+	if (btnp(2)) row_zidx -= 1
+	if (btnp(3)) row_zidx += 1
+	row_zidx %= "{{ num_rows }}"
 
 	-- Left/Right
 	local incr = 0
 	if (btnp(0)) incr -= 1
 	if (btnp(1)) incr += 1
 
-	if incr ~= 0 then
-		if (row_zidx == 0) mode = (mode + incr) % 3
-		if (row_zidx == 1) track_zidx = (track_zidx + incr) % #tracks
-		if (row_zidx == 2) team_zidx = (team_zidx + incr) % #palettes
-		if (row_zidx == 3) brake_assist = not brake_assist
+	if (incr == 0) return
+
+	if (row_zidx == 0) mode += incr
+	mode %= 3
+	if (row_zidx == 1) track_zidx += incr
+	track_zidx %= #tracks
+	if (row_zidx == 2) team_zidx += incr
+	team_zidx %= #palettes
+
+	if (row_zidx == 3) brake_assist = not brake_assist
 --% if enable_debug
-		-- TODO: add separate debug option to print CPU or not
-		if (row_zidx == 4) debug = not debug
+	-- TODO: add separate debug option to print CPU or not
+	if (row_zidx == 4) debug = not debug
 --% endif
-	end
 end
 
 function draw_title_screen()
