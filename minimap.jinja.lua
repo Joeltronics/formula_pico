@@ -1,5 +1,6 @@
 
 function init_minimap()
+--% if enable_minimap
 
 	minimap = {}
 
@@ -23,9 +24,11 @@ function init_minimap()
 			count += 1
 		end
 	end
+--% endif
 end
 
 function draw_minimap()
+--% if enable_minimap
 
 	-- TODO: use a sprite or the map or something for this, don't redraw the lines every frame
 
@@ -58,4 +61,5 @@ function draw_minimap()
 	line(x, y, x, y, cars[1].palette[8])
 
 	camera()
+--% endif
 end

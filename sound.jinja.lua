@@ -1,3 +1,10 @@
+--%if not enable_sound
+
+function update_sound()
+end
+
+--% else
+
 -- Sound code based on a mix of:
 -- https://www.lexaloffle.com/bbs/?tid=2341
 -- https://pico-8.fandom.com/wiki/Memory#Sound_effects
@@ -58,8 +65,6 @@ function set_flags(sfx, noiz, buzz, detune, reverb, dampen)
 end
 
 function update_sound()
-
-	if (not enable_sound) return
 
 	-- TODO: special sounds for race start - many cars idling
 	-- if not race_started then
@@ -133,3 +138,5 @@ function update_sound()
 		harmonic_prev = harmonic
 	end
 end
+
+--% endif

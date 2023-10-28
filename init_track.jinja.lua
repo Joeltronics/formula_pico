@@ -32,13 +32,13 @@ function init_track()
 
 	road.minimap_scale = 1 / road.minimap_scale
 
-	road.curb_x = road.half_width - shoulder_half_width - car_half_width
-	road.grass_x = road.half_width + car_half_width
+	road.curb_x = road.half_width - "{{ shoulder_half_width }}" - "{{ car_half_width }}"
+	road.grass_x = road.half_width + "{{ car_half_width }}"
 
 	-- FIXME: There must be a drawing bug somewhere - full curb width should be correct, but 1/4 width is what draws it correctly
-	-- road.track_boundary = road.half_width + 2*shoulder_half_width
-	road.track_boundary = road.half_width + 0.5*shoulder_half_width
-	-- road.track_boundary = road.half_width + shoulder_half_width
+	-- road.track_boundary = road.half_width + 2*"{{ shoulder_half_width }}"
+	road.track_boundary = road.half_width + 0.5*"{{ shoulder_half_width }}"
+	-- road.track_boundary = road.half_width + "{{ shoulder_half_width }}"
 
 	road.lanes = road.lanes or 1
 
@@ -81,19 +81,19 @@ function init_track()
 
 		-- Convert wall_l/wall_r from 0-15 to actual units
 		-- TODO: if 15, make wall invisible
-		section.wall_r = road.track_boundary + section.wall_r * wall_scale
-		section.wall_l = -road.track_boundary - section.wall_l * wall_scale
+		section.wall_r = road.track_boundary + section.wall_r * "{{ wall_scale }}"
+		section.wall_l = -road.track_boundary - section.wall_l * "{{ wall_scale }}"
 
-		section.wall_clip_l = section.wall_l + car_half_width
-		section.wall_clip_r = section.wall_r - car_half_width
+		section.wall_clip_l = section.wall_l + "{{ car_half_width }}"
+		section.wall_clip_r = section.wall_r - "{{ car_half_width }}"
 
 		section.entrance_x = clip_num(section.entrance_x, section.wall_clip_l + 0.01, section.wall_clip_r - 0.01)
 		section.entrance_x = clip_num(section.entrance_x, -road.grass_x + 0.01, road.grass_x - 0.01)
 
-		if (racing_line_sine_interp) then
-			section.entrance_x = asin(section.entrance_x)
-			if (section.entrance_x >= 0.5) section.entrance_x -= 1
-		end
+--% if racing_line_sine_interp
+		section.entrance_x = asin(section.entrance_x)
+		if (section.entrance_x >= 0.5) section.entrance_x -= 1
+--% endif
 
 		if (section.bgl) section.bgl = bg_objects[section.bgl]
 		if (section.bgc) section.bgc = bg_objects[section.bgc]

@@ -5,8 +5,13 @@ track_zidx = 0
 team_zidx = 0
 mode = 0
 
-num_rows = 6
-last_row_zidx = num_rows - 1
+--% if enable_debug
+--% set num_rows = 6
+--% else
+--% set num_rows = 5
+--% endif
+
+--% set last_row_zidx = num_rows - 1
 
 
 function init_title_screen()
@@ -21,7 +26,7 @@ function update_title_screen()
 
 	-- O
 	if btnp(4) then
-		if (row_zidx == last_row_zidx) then
+		if (row_zidx == "{{ last_row_zidx }}") then
 
 			-- TODO: also an option to watch the AI play (mostly for debugging)
 
@@ -43,8 +48,8 @@ function update_title_screen()
 	end
 
 	-- Up/Down
-	if (btnp(2)) row_zidx = (row_zidx - 1) % num_rows
-	if (btnp(3)) row_zidx = (row_zidx + 1) % num_rows
+	if (btnp(2)) row_zidx = (row_zidx - 1) % "{{ num_rows }}"
+	if (btnp(3)) row_zidx = (row_zidx + 1) % "{{ num_rows }}"
 
 	-- Left/Right
 	local incr = 0
@@ -56,8 +61,10 @@ function update_title_screen()
 		if (row_zidx == 1) track_zidx = (track_zidx + incr) % #tracks
 		if (row_zidx == 2) team_zidx = (team_zidx + incr) % #palettes
 		if (row_zidx == 3) brake_assist = not brake_assist
+--% if enable_debug
 		-- TODO: add separate debug option to print CPU or not
 		if (row_zidx == 4) debug = not debug
+--% endif
 	end
 end
 
@@ -84,11 +91,14 @@ function draw_title_screen()
 	-- TODO: print team in its color
 	print_centered("team: " .. palettes[team_zidx+1].name, 64, 76, 7)
 	print_centered("brake assist: " .. (brake_assist and "on" or "off"), 64, 82, 7)
+--% if enable_debug
 	print_centered("debug: " .. (debug and "on" or "off"), 64, 88, 7)
-
 	print_centered('start', 64, 100, 7)
+--% else
+	print_centered('start', 64, 94, 7)
+--% endif
 
-	if row_zidx == last_row_zidx then
+	if row_zidx == "{{ last_row_zidx }}" then
 		print('🅾️', 32 - 8, 64 + (1 + row_zidx) * 6)
 	else
 		print('◀', 32 - 8, 64 + row_zidx * 6)

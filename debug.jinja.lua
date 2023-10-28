@@ -1,4 +1,5 @@
 function tick_debug()
+--% if enable_debug
 	local player_car = cars[1]
 	while stat(30) do
 		local key = stat(31)
@@ -43,9 +44,11 @@ function tick_debug()
 	end
 
 	player_car.segment_plus_subseg = player_car.segment_idx + player_car.subseg
+--% endif
 end
 
 function draw_debug_overlay()
+--% if enable_debug
 
 	cursor(52, 0, 8)
 	if (frozen) print('frozen')
@@ -80,4 +83,6 @@ function draw_debug_overlay()
 	-- if (player.other_car_data.rx) print('r:' .. (player.other_car_data.rx - player.x))
 	-- if (player.other_car_data.front) print('f:' .. player.other_car_data.front.dz)
 	-- if (player.other_car_data.next) print('n:' .. player.other_car_data.next.dz)
+
+--% endif
 end

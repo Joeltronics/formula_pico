@@ -1,0 +1,58 @@
+# Build options
+
+enable_debug: true
+debug_draw_extra: false
+enable_minimap: true
+enable_sound: true
+
+# Constants
+
+pi: 3.14159265359
+twopi: 6.28318530718
+
+racing_line_sine_interp: true
+
+speed_to_kph: 350
+speed_scale: 0.5
+
+coast_decel_rel: 255/256
+coast_decel_abs: 1/2048
+brake_decel: 1/128
+
+steer_dx_max: 1/32
+steer_accum_incr_rate_accel_brake: 1/32
+steer_accum_incr_rate_coast: 3/64
+steer_accum_decr_rate: 1/8
+
+turn_radius_compensation_offset: 0.125
+
+turn_dx_scale: 1
+
+grass_max_speed: 0.125
+wall_max_speed: 0.25
+
+wall_scale: 0.5
+
+shoulder_half_width: 0.125
+
+lane_line_width: 3/32
+
+car_draw_height: 0.5
+
+car_draw_width: 0.75
+car_width: 0.5 * car_draw_width
+car_half_width: 0.5 * car_width
+
+car_depth: 0.5
+car_depth_hitbox_padding: 0.01
+car_depth_padded: car_depth + car_depth_hitbox_padding
+
+car_x_hitbox_padding: 0.01
+car_width_padded: car_width + 2*car_x_hitbox_padding
+
+# TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
+draw_distance: 90
+road_draw_distance: 90
+road_detail_draw_distance: 30
+sprite_draw_distance: 45
+wall_draw_distance: 60

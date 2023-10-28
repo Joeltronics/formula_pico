@@ -1,8 +1,17 @@
 #!/usr/bin/env python3
 
 from collections import namedtuple
-from math import sqrt, radians, sin, cos
-from typing import Iterable
+from math import sqrt, radians, sin, cos, isclose
+from os import PathLike
+from pathlib import Path
+import re
+from typing import Final, Iterable
+
+import simpleeval
+import yaml
+
+
+CONSTS_FILE: Final = Path('consts.yaml')
 
 
 def sgn(value: float) -> int:
@@ -18,6 +27,25 @@ def first_non_null(*vals):
 		if val is not None:
 			return val
 	return None
+
+
+def float_round_pico8_precision(val: float):
+	""" Round float to Pico-8 fixed-point precision (q16) """
+	return round(val * 65536) / 65536
+
+
+def float_to_lua_str(val: float) -> str:
+
+	if val.is_integer():
+		return str(val)
+
+	# If the number formats nicely to few decimal places, then assume any extra decimals at the end are the result
+	# of float precision error and can be ignored (since Pico-8 cares about code size & compressibility)
+	val_fmt = f'{val:.9g}'
+	if len(val_fmt.lstrip('-')) <= 8 and ('e' not in val_fmt.lower()):
+		return val_fmt
+	else:
+		return str(float_round_pico8_precision(val))
 
 
 class Color(namedtuple('Color', ['r', 'g', 'b'])):
@@ -150,3 +178,34 @@ def calculate_racing_line_radius(
 	entrance_y = (radius_track_inner - radius) * sin_theta
 
 	return radius, entrance_x, entrance_y
+
+
+def load_consts(filename: PathLike = CONSTS_FILE) -> dict:
+
+	with open(filename, 'r') as f:
+		consts_raw = yaml.safe_load(f)
+
+	# Now, perform any variable substitution & expression evaluation
+	# TODO: there's got to be a way to do this in Jinja instead of this - might have to process template twice?
+
+	consts_out = dict()
+
+	for key, val in consts_raw.items():
+
+		if isinstance(val, str):
+
+			expr_split = re.split(r'(\W)', val)
+			expr_sub = ''.join(str(consts_out.get(token, token)) for token in expr_split)
+
+			try:
+				val = simpleeval.simple_eval(expr_sub)
+			except (simpleeval.InvalidExpression, UserWarning) as ex:
+				raise ValueError(f'Failed to parse expression for const "{key}" in {filename}: {ex}') from ex  # TODO: this will fail for expressions actually meant to be strings!
+
+		if isinstance(val, float):
+			if isclose(val, round(val)):
+				val = int(val)
+
+		consts_out[key] = val
+
+	return consts_out

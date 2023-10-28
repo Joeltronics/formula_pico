@@ -154,7 +154,7 @@ function car_check_other_cars(car)
 			}
 
 			-- Side by side
-			if (dz_ahead < car_depth_padded) or (dz_behind < car_depth_padded) then
+			if (dz_ahead < "{{ car_depth_padded }}") or (dz_behind < "{{ car_depth_padded }}") then
 				if dx < 0 then
 					if -dx <= (l_distance or -dx) then
 						l_distance = -dx
@@ -167,7 +167,7 @@ function car_check_other_cars(car)
 			end
 
 			-- Next car directly in front
-			if (abs(dx) < car_width_padded and ((not front) or dz_ahead < front.dz_ahead)) front = car_info
+			if (abs(dx) < "{{ car_width_padded }}" and ((not front) or dz_ahead < front.dz_ahead)) front = car_info
 
 			-- Next car (whether directly in front or not)
 			if ((not next) or dz_ahead < next.dz_ahead) next = car_info
@@ -239,13 +239,13 @@ function clip_car_x(car, section)
 			-- This is to prevent pushing another car - or at least, the one behind cannot push the one in front
 			-- TODO: this still doesn't seem to work properly,
 			-- likely since clipping is applied before all other cars have moved
-			local w = car_width_padded
-			if (left.dz > 0) w += car_x_hitbox_padding
+			local w = "{{ car_width_padded }}"
+			if (left.dz > 0) w += "{{ car_x_hitbox_padding }}"
 			car_x = max(car_x, max(left.car.x + w, -road.half_width + w))
 		end
 		if right then
-			local w = car_width_padded
-			if (right.dz > 0) w += car_x_hitbox_padding
+			local w = "{{ car_width_padded }}"
+			if (right.dz > 0) w += "{{ car_x_hitbox_padding }}"
 			car_x = min(car_x, min(right.car.x - w, road.half_width - w))
 		end
 	end
@@ -258,7 +258,7 @@ end
 
 function calculate_dz(car, section, steering_input_scaled, dx)
 
-	local speed, car_x = car.speed * speed_scale, car.x
+	local speed, car_x = car.speed * "{{ speed_scale }}", car.x
 
 	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
 
@@ -275,15 +275,15 @@ function calculate_dz(car, section, steering_input_scaled, dx)
 	-- Scale for corners - i.e. inside of corner has smaller distance to travel
 
 	if (section.angle ~= 0) then
-		local track_center_radius = section.length / abs(section.angle * twopi)
+		local track_center_radius = section.length / abs(section.angle * "{{ twopi }}")
 		local car_radius = max(0, track_center_radius + (sgn(car_x) == sgn(section.angle) and -car_x or car_x))
-		dz *= (track_center_radius + turn_radius_compensation_offset) / (car_radius + turn_radius_compensation_offset)
+		dz *= (track_center_radius + "{{ turn_radius_compensation_offset }}") / (car_radius + "{{ turn_radius_compensation_offset }}")
 	end
 
 	-- Clip to not hit car in front
 	local front = car.other_car_data.front
 	if collisions and front and not noclip then
-		local dz_max = front.dz_ahead - car_depth - car_depth_hitbox_padding
+		local dz_max = front.dz_ahead - "{{ car_depth + car_depth_hitbox_padding }}"
 
 		if dz > dz_max then
 			dz = dz_max
@@ -321,7 +321,7 @@ function tick_car_speed(car, section, accel_brake_input)
 	-- Randomize acceleration slightly for AI cars
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
 
-	local decel = brake_decel
+	local decel = "{{ brake_decel }}"
 
 	local car_abs_x = abs(car_x)
 
@@ -333,7 +333,7 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- Increase coasting deceleration significantly
 		-- Increase tire deg
 		car.touched_wall = false
-		limit_speed = min(limit_speed, wall_max_speed)
+		limit_speed = min(limit_speed, "{{ wall_max_speed }}")
 		decel *= 4
 		-- TODO: more parameters
 	end
@@ -344,7 +344,7 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- Slower acceleration (unless in 1st gear)
 		-- Faster deceleration while above limit, but otherwise slower braking
 		-- Increase coasting deceleration significantly
-		limit_speed = min(limit_speed, grass_max_speed)
+		limit_speed = min(limit_speed, "{{ grass_max_speed }}")
 		if (gear > 1) accel *= 0.5
 		decel *= 2
 		-- TODO: more parameters
@@ -376,7 +376,7 @@ function tick_car_speed(car, section, accel_brake_input)
 	if (car.ai or accel_brake_input > 0) return min(speed + accel, limit_speed), 1, 1
 
 	-- Brake, to zero
-	if (accel_brake_input < -1) return toward_zero(speed, brake_decel), accel_brake_input, -1
+	if (accel_brake_input < -1) return toward_zero(speed, "{{ brake_decel }}"), accel_brake_input, -1
 
 	-- Pressing both brake and accelerator - brake, but only to section braking speed
 	-- Use much larger braking distance than normal (so can't abuse this in order to perfectly hit braking point)
@@ -394,7 +394,7 @@ function tick_car_speed(car, section, accel_brake_input)
 	-- (which isn't currently at all, but should be in the future)
 
 	assert(accel_brake_input == 0)
-	return max(speed*coast_decel_rel - coast_decel_abs, 0), 0, 0
+	return max(speed * "{{ coast_decel_rel }}" - "{{ coast_decel_abs }}", 0), 0, 0
 end
 
 function update_speed(car, speed, engine_accel_brake)
@@ -415,10 +415,12 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 
 		-- Look ahead by dz estimate (Won't know true dz until after steering)
 		-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
-		local dz_estimate = min(car.segment_idx + car.subseg + car.speed * speed_scale - 1, section.length)
+		local dz_estimate = min(car.segment_idx + car.subseg + car.speed * "{{ speed_scale }}" - 1, section.length)
 
 		local target_x = section.entrance_x + dz_estimate*section.racing_line_dx
-		if (racing_line_sine_interp) target_x = sin(target_x)
+--% if racing_line_sine_interp
+		target_x = sin(target_x)
+--% endif
 		target_x *= road.half_width
 
 		local steer_strength = 1
@@ -457,15 +459,15 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 		steer_accum = 0
 	else
 		if sgn0(steering_input_scaled) ~= sgn0(steer_accum) then
-			steer_accum = toward_zero(steer_accum, steer_accum_decr_rate)
+			steer_accum = toward_zero(steer_accum, "{{ steer_accum_decr_rate }}")
 		end
 
-		local steer_accum_incr_rate = steer_accum_incr_rate_coast
-		if (accel_brake_input ~= 0) steer_accum_incr_rate = steer_accum_incr_rate_accel_brake
+		local steer_accum_incr_rate = "{{ steer_accum_incr_rate_coast }}"
+		if (accel_brake_input ~= 0) steer_accum_incr_rate = "{{ steer_accum_incr_rate_accel_brake }}"
 
 		steer_accum = clip_num(steer_accum + steering_input_scaled * steer_accum_incr_rate, -1, 1)
 	end
-	car.x += steer_dx_max * steer_accum * steering_scale
+	car.x += "{{ steer_dx_max }}" * steer_accum * steering_scale
 	car.steer_accum = steer_accum
 
 	return steering_input_scaled
@@ -476,7 +478,12 @@ function tick_car_corner(car, section, dz)
 	-- TODO: scaling by tu is accurate compared to what is displayed on screen, but not necessarily geometric interpretation
 	-- should instead be based on section.angle_per_seg
 	-- Probably not a big deal right now, because tu is based on angle_per_seg in the first place
-	car.x -= turn_dx_scale * dz * section.tu
+
+--% if turn_dx_scale != 1
+	car.x -= "{{ turn_dx_scale }}" * dz * section.tu
+--% else
+	car.x -= dz * section.tu
+--% endif
 end
 
 function tick_car_forward(car, dz)

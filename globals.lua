@@ -3,15 +3,6 @@
 -- (including a few values which can be changed while debugging)
 --
 
-pi    = 3.14159265359
-twopi = 6.28318530718
-
-debug_draw_extra = false
-
-racing_line_sine_interp = false
-
-speed_scale = 0.5
-
 -- Acceleration, by gear
 -- TOOD: make it 7 gears, but have gear 1 be twice as long
 accel_by_gear = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
@@ -22,47 +13,11 @@ ai_accel_random = {1/1.5, 1/1.25, 1/1.125, 1, 1, 1, 1.125, 1.25}
 -- This is also how long first note is held before sliding, so don't go higher than 8
 sfx_speed_by_gear = {2, 2, 2, 2, 2, 4, 8, 8}
 
-coast_decel_rel = 255/256
-coast_decel_abs = 1/2048
-brake_decel = 1/128
-
-steer_dx_max = 1/32
-steer_accum_incr_rate_accel_brake = 1/32
-steer_accum_incr_rate_coast = 3/64
-steer_accum_decr_rate = 1/8
-
-turn_radius_compensation_offset = 0.125
-
-turn_dx_scale = 1
-
-grass_max_speed = 0.125
-wall_max_speed = 0.25
-
-lane_line_width = 3/32
-
-car_draw_width, car_draw_height = 0.75, 0.5
-car_width = 0.5 * car_draw_width
-car_half_width = 0.5 * car_width
-
-car_depth = 0.5
-car_depth_hitbox_padding = 0.01
-car_depth_padded = car_depth + car_depth_hitbox_padding
-
-car_x_hitbox_padding = 0.01
-car_width_padded = car_width + 2*car_x_hitbox_padding
-
 cam_dy, cam_dz = 2, 2
 
 -- At 0, the camera is always centered on track and the car moves
 -- At 1, the car is always centered on track and the camera moves
 cam_x_scale = 0.75
-
--- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
-draw_distance = 90
-road_draw_distance = 90
-road_detail_draw_distance = 30
-sprite_draw_distance = 45
-wall_draw_distance = 60
 
 palettes = {
 	-- main, accent, wing top, wing rear, dark, floor
@@ -98,7 +53,6 @@ minimap_step = 1
 
 debug = true
 print_cpu = true
-enable_sound = true
 draw_racing_line = true
 brake_assist = true
 collisions = false

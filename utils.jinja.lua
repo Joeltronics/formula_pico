@@ -82,10 +82,10 @@ end
 		SCALE = C^2 / (2 * -a)
 ]]
 
-braking_distance_scale = speed_scale * speed_scale / (2 * brake_decel)
+--% set braking_distance_scale = speed_scale * speed_scale / (2 * brake_decel)
 
 function braking_distance(curr_speed, brake_speed)
-	return braking_distance_scale * (curr_speed*curr_speed - brake_speed*brake_speed)
+	return "{{ braking_distance_scale }}" * (curr_speed*curr_speed - brake_speed*brake_speed)
 end
 
 function distance_to_next_braking_point(section, seg_plus_subseg)

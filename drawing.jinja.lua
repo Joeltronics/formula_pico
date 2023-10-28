@@ -63,7 +63,7 @@ end
 
 function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, distance)
 
-	detail = (distance <= road_detail_draw_distance)
+	detail = (distance <= "{{ road_detail_draw_distance }}")
 
 	y1, yt = ceil(y1), flr(y2)
 
@@ -75,7 +75,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 			section.gndcol2 or road.gndcol2 or 11)
 	end
 
-	if (y2 < y1 or distance > road_draw_distance) return
+	if (y2 < y1 or distance > "{{ road_draw_distance }}") return
 
 	-- Road
 
@@ -106,7 +106,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	if detail then
 		local linecol = 7
 		if (sumct % 2 == 0) linecol = 8
-		local sw1, sw2 = shoulder_half_width*scale1, shoulder_half_width*scale2
+		local sw1, sw2 = "{{ shoulder_half_width }}"*scale1, "{{ shoulder_half_width }}"*scale2
 		filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
 		filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
 	else
@@ -125,7 +125,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 			local lx1, lx2 = x1 + w1*lx_rel, x2 + w2*lx_rel
 
 			if detail then
-				local cw1, cw2 = lane_line_width*scale1, lane_line_width*scale2
+				local cw1, cw2 = "{{ lane_line_width }}"*scale1, "{{ lane_line_width }}"*scale2
 				filltrapz(lx1, y1, cw1, lx2, y2, cw2, 7)
 			else
 				line(lx1, ceil(y1), lx2, y2, 6)
@@ -148,9 +148,9 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 
 	local dx1 = section.entrance_x + seg*section.racing_line_dx
 	local dx2 = section.entrance_x + (seg - 1)*section.racing_line_dx
-	if (racing_line_sine_interp) then
-		dx1, dx2 = sin(dx1), sin(dx2)
-	end
+--% if racing_line_sine_interp
+	dx1, dx2 = sin(dx1), sin(dx2)
+--% endif
 	line(x1 + w1*dx1, y1, x2 + w2*dx2, y2, col)
 end
 
@@ -321,7 +321,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 			img={
 				24 * min(3, ceil(abs(sprite_turn))),
 				0, 24, 16},
-			siz={car_draw_width, car_draw_height},
+			siz={"{{ car_draw_width }}", "{{ car_draw_height }}"},
 			palt=11,
 			palette=car.palette,
 			flip=sprite_turn < 0,
@@ -406,7 +406,8 @@ function draw_road()
 
 	local ptnl = section.tnl
 
-	for i = 1, draw_distance do
+	-- TODO: try dynamic draw distance, i.e. stop rendering at certain CPU pct
+	for i = 1, "{{ draw_distance }}" do
 
 		local x_prev, y_prev, z_prev = x, y, z
 
@@ -427,7 +428,7 @@ function draw_road()
 
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
-		if i < sprite_draw_distance then
+		if i < "{{ sprite_draw_distance }}" then
 			if sumct == road[1].length then
 				add_bg_sprite(sp, sumct, seg, bg_objects['finishline'], -1, x2, y2, scale2, clp)
 				add_bg_sprite(sp, sumct, seg, bg_objects['finishline'],  1, x2, y2, scale2, clp)
@@ -453,11 +454,11 @@ function draw_road()
 			end
 		end
 
-		if i < wall_draw_distance and not section.tnl then
+		if i < "{{ wall_draw_distance }}" and not section.tnl then
 			-- TODO: I think there's an off by 1 error here
 			-- (Why do we have to use previous section's clip rectangle?)
 			-- Also visible at tunnel entrance/exit
-			add_wall(sp, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp_prev, i < road_detail_draw_distance)
+			add_wall(sp, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp_prev, i < "{{ road_detail_draw_distance }}")
 		end
 
 		-- TODO: setting this before add_wall doesn't work - why?!
@@ -488,7 +489,9 @@ function draw_road()
 
 	clip()
 
-	if (not (debug and debug_draw_extra)) return
+--% if enable_debug and debug_draw_extra
+
+	if (not debug) return
 
 	-- DEBUG: on-track stuff
 
@@ -514,13 +517,13 @@ function draw_road()
 
 	local car_front_x, car_front_y, car_front_scale = project(
 		x + player_subseg * xd + 2*playerx,
-		y + (player_subseg + car_depth) * yd,
-		z + (player_subseg + car_depth) * zd)
+		y + (player_subseg + "{{ car_depth }}") * yd,
+		z + (player_subseg + "{{ car_depth }}") * zd)
 
-	local car_rear_left_x = car_rear_x - car_width*car_rear_scale
-	local car_rear_right_x = car_rear_x + car_width*car_rear_scale
-	local car_front_left_x = car_front_x - car_width*car_front_scale
-	local car_front_right_x = car_front_x + car_width*car_front_scale
+	local car_rear_left_x = car_rear_x - "{{ car_width }}"*car_rear_scale
+	local car_rear_right_x = car_rear_x + "{{ car_width }}"*car_rear_scale
+	local car_front_left_x = car_front_x - "{{ car_width }}"*car_front_scale
+	local car_front_right_x = car_front_x + "{{ car_width }}"*car_front_scale
 
 	line(car_rear_left_x, car_rear_y, car_rear_right_x, car_rear_y, 10)
 	line(car_front_left_x, car_front_y, car_front_right_x, car_front_y, 10)
@@ -530,14 +533,14 @@ function draw_road()
 	local lx, rx = cars[1].other_car_data.lx, cars[1].other_car_data.rx
 	if lx then
 		line(
-			x1 + 2*(lx + car_half_width)*scale1, y1,
-			x2 + 2*(lx + car_half_width)*scale2, y2,
+			x1 + 2*(lx + "{{ car_half_width }}")*scale1, y1,
+			x2 + 2*(lx + "{{ car_half_width }}")*scale2, y2,
 			12)
 	end
 	if rx then
 		line(
-			x1 + 2*(rx - car_half_width)*scale1, y1,
-			x2 + 2*(rx - car_half_width)*scale2, y2,
+			x1 + 2*(rx - "{{ car_half_width }}")*scale1, y1,
+			x2 + 2*(rx - "{{ car_half_width }}")*scale2, y2,
 			8)
 	end
 	local front = cars[1].other_car_data.front
@@ -548,12 +551,13 @@ function draw_road()
 			z + player_subseg + front.dz_ahead * zd)
 
 		line(
-			front_x - front_scale*car_width, front_y,
-			front_x + front_scale*car_width, front_y,
+			front_x - front_scale*"{{ car_width }}", front_y,
+			front_x + front_scale*"{{ car_width }}", front_y,
 			9
 		)
 	end
 	-- TODO: next car too
+--% endif
 end
 
 function draw_bg()
@@ -644,7 +648,7 @@ function draw_hud()
 	if (not race_started) draw_race_start_lights()
 
 	cursor(116, 116, 7)
-	local speed_print = '' .. round(cars[1].speed * speed_to_kph)
+	local speed_print = '' .. round(cars[1].speed * "{{ speed_to_kph }}")
 	if (#speed_print == 1) speed_print = ' ' .. speed_print
 	if (#speed_print == 2) speed_print = ' ' .. speed_print
 	print(speed_print .. '\nkph')
