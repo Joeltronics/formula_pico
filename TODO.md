@@ -6,12 +6,6 @@ Race logic
 * Race end procedure
 * Time laps
 
-Pit stops
-1. Add pit lane
-2. Add capability to drive into pit lane
-3. Change tires
-4. Pit stop animation
-
 Tire management
 1. Tires wear down
 	- Wear varies with driving style - e.g. can save tires with lift & coast
@@ -22,6 +16,12 @@ Tire management
 	- Can select at pit stop
 3. Select race tire strategy at start
 	- Can override during pit stop
+
+Pit stops
+1. (Done) Add pit lane
+2. (Done) Add capability to drive into pit lane
+3. Change tires
+4. Pit stop animation
 
 Other cars:
 * Add AI overtaking logic

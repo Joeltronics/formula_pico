@@ -65,6 +65,8 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			in_pit=false,
 			touched_wall=false,
 			touched_wall_sound=false,
+			off_track=false,
+			on_curb=false,
 			start_delay_counter=start_delay_counter,
 			other_car_data={
 				left=nil,
@@ -202,7 +204,23 @@ function update_sprite_turn(car, section, dx)
 	car.sprite_turn = car_sprite_turn
 end
 
+function check_car_pit(car, section)
+	if not section.pit_wall then
+		if (car.in_pit) car.steer_accum = -sgn(car.x) -- Pit exit
+		car.in_pit = false
+	elseif
+		-- Check for pit entrance
+			(
+				(section.pit > 0 and car.x > road.track_boundary) or
+				(section.pit < 0 and car.x < -road.track_boundary)
+			) then
+		car.in_pit = true
+	end
+end
+
 function clip_car_x(car, section)
+
+	if (car.in_pit) return
 
 	if (noclip) return
 
@@ -298,6 +316,8 @@ function tick_car_speed(car, section, accel_brake_input)
 	-- Determine acceleration & speed
 	-- returns: speed, accel_brake_input, engine_accel_brake
 
+	-- TODO: engine_accel_brake seems to be obsolete now - can use accel_brake_input to cover this
+
 	if car.start_delay_counter > 0 then
 		car.start_delay_counter -= 1
 		return 0, 0, 0
@@ -309,14 +329,30 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	-- TODO: if collisions, brake before hitting car.other_car_data.front
 
+	car.off_track, car.on_curb = false, false
+
 	local speed, gear, car_x, segment_plus_subseg = car.speed, car.gear, car.x, car.segment_plus_subseg
+	local accel = accel_by_gear[flr(gear)]
+
+	if car.in_pit then
+		if speed > "{{ pit_max_speed }}" then
+			-- Brake to pit speed
+			return max(speed - "{{ brake_decel }}", "{{ pit_max_speed }}"), -1, -1
+
+		elseif speed < "{{ pit_max_speed }}" then
+			-- Accelerate to pit speed
+			return min(speed + accel, "{{ pit_max_speed }}"), 1, 1
+		else
+			-- Maintain speed
+			-- TODO: should engine_accel_brake be 1 for sound reasons?
+			return "{{ pit_max_speed }}", 0, 0
+		end
+	end
 
 	local auto_brake = brake_assist or car.ai
 	local bdr = braking_distance_relative(section, segment_plus_subseg, speed)
 
 	local limit_speed = 1
-
-	local accel = accel_by_gear[flr(gear)]
 
 	-- Randomize acceleration slightly for AI cars
 	if (car.ai and not car.ghost) accel *= rnd(ai_accel_random)
@@ -338,26 +374,31 @@ function tick_car_speed(car, section, accel_brake_input)
 		-- TODO: more parameters
 	end
 
-	if car_abs_x >= road.grass_x then
-		-- On grass
-		-- Decrease max speed significantly
-		-- Slower acceleration (unless in 1st gear)
-		-- Faster deceleration while above limit, but otherwise slower braking
-		-- Increase coasting deceleration significantly
-		limit_speed = min(limit_speed, "{{ grass_max_speed }}")
-		if (gear > 1) accel *= 0.5
-		decel *= 2
-		-- TODO: more parameters
+	-- HACK: don't do any of this at pit entrance/exit section
+	if section.dpit == 0 then
+		if car_abs_x >= road.grass_x then
+			-- On grass
+			-- Decrease max speed significantly
+			-- Slower acceleration (unless in 1st gear)
+			-- Faster deceleration while above limit, but otherwise slower braking
+			-- Increase coasting deceleration significantly
+			car.off_track = true
+			limit_speed = min(limit_speed, "{{ grass_max_speed }}")
+			if (gear > 1) accel *= 0.5
+			decel *= 2
+			-- TODO: more parameters
 
-	elseif car_abs_x >= road.curb_x then
-		-- On curb
-		-- Max speed unaffected
-		-- Slower acceleration (unless in 1st gear)
-		-- Slower braking
-		-- Increase coasting deceleration
-		-- Increase tire deg slightly
-		if (gear > 1) accel *= 0.5
-		-- TODO: more parameters
+		elseif car_abs_x >= road.curb_x then
+			-- On curb
+			-- Max speed unaffected
+			-- Slower acceleration (unless in 1st gear)
+			-- Slower braking
+			-- Increase coasting deceleration
+			-- Increase tire deg slightly
+			car.on_curb = true
+			if (gear > 1) accel *= 0.5
+			-- TODO: more parameters
+		end
 	end
 
 	-- If we're on wall or grass, limit speed
@@ -410,18 +451,25 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 	-- TODO: if lx or rx, force leaving space for other cars
 	-- (This happens in clip_car_x too, but that should be last resort - we should handle this here)
 
-	if car.ai then
-		local section = road[car.section_idx]
+	if car.in_pit or car.ai then
+		local section, target_x = road[car.section_idx]
 
 		-- Look ahead by dz estimate (Won't know true dz until after steering)
 		-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
 		local dz_estimate = min(car.segment_idx + car.subseg + car.speed * "{{ speed_scale }}" - 1, section.length)
 
-		local target_x = section.entrance_x + dz_estimate*section.racing_line_dx
+		if car.in_pit then
+			-- TODO: why is this 1/4 the pit lane width? Should be half. Must have an off by 1/2 error somewhere
+			target_x = road.half_width + "{{ 0.25 * pit_lane_width }}"
+			target_x *= sgn(section.pit)
+		else
 --% if racing_line_sine_interp
-		target_x = sin(target_x)
+			target_x = road.half_width * sin(section.entrance_x + dz_estimate*section.racing_line_dx)
+--% else
+			target_x = section.entrance_x + dz_estimate*section.racing_line_dx
+			target_x *= road.half_width
 --% endif
-		target_x *= road.half_width
+		end
 
 		local steer_strength = 1
 		-- TODO: don't need to prioritize steering when on straights; not sure the best way about this though
@@ -474,7 +522,7 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 end
 
 function tick_car_corner(car, section, dz)
-	if (car.ai) return  -- TODO: apply this to AI cars
+	if (car.ai or car.in_pit) return  -- TODO: apply this to AI cars
 	-- TODO: scaling by tu is accurate compared to what is displayed on screen, but not necessarily geometric interpretation
 	-- should instead be based on section.angle_per_seg
 	-- Probably not a big deal right now, because tu is based on angle_per_seg in the first place
@@ -502,6 +550,8 @@ function tick_car_forward(car, dz)
 			car.laps += 1
 			-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
 			car.heading = road.start_heading
+
+			-- TODO: if in pit lane, replace tires
 		end
 	end
 	assert (subseg < 1)
@@ -548,8 +598,15 @@ function tick_car(car, accel_brake_input, steering_input)
 	local dz = calculate_dz(car, section, steering_input_scaled, dx)
 
 	tick_car_forward(car, dz)
+	-- Section may have changed - update it
+	section = road[car.section_idx]
+
+	-- TODO: should tick corner be before or after entering pit? Could matter if pit entrance is on a curve
 
 	tick_car_corner(car, section, dz)
+
+	check_car_pit(car, section)
+
 	clip_car_x(car, section)
 end
 

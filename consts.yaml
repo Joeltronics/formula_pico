@@ -30,10 +30,14 @@ turn_dx_scale: 1
 
 grass_max_speed: 0.125
 wall_max_speed: 0.25
+pit_max_speed: 80/speed_to_kph
 
 wall_scale: 0.5
+# wall_scale: 0.25  # DEBUG
 
 shoulder_half_width: 0.125
+
+pit_lane_width: 4
 
 lane_line_width: 3/32
 

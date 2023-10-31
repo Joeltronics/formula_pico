@@ -8,7 +8,7 @@ from typing import Final, Iterable
 import cairo
 from PIL import Image, ImageDraw
 
-from common import lerp, Point
+from common import lerp, sgn, Point, load_consts
 
 
 TWO_PI: Final = 2.0 * PI
@@ -18,7 +18,9 @@ WALL_SCALE: Final = 0.5
 
 WALL_THICKNESS = 0.25
 
-MAP_DIR_OUT: Final = Path('maps')
+CONSTS: Final = load_consts()
+PIT_LANE_WIDTH: Final = CONSTS['pit_lane_width']
+LANE_LINE_WIDTH: Final = CONSTS['lane_line_width']
 
 
 class Color(namedtuple('Color', ['r', 'g', 'b'])):
@@ -266,18 +268,44 @@ def draw_track(track, path_base, scale=16):
 
 		# Track surface
 
-		for idx, (section, segment) in enumerate(iterate_segments(sections)):
+		idx = -1
+		for section in sections:
+
 			# roadcol = 1 if section.tnl else 5
 			roadcol = 5
-			polygon(segment.points(-track_width, track_width), PALETTE[roadcol], stroke=2)
 
-			lanes = section.lanes or track.lanes
+			for segment_idx, segment in enumerate(section.segments):
+				idx += 1
 
-			if lanes > 1 and (idx % 4 == 0):
-				for idx in range(1, lanes):
-					lane_rel = idx / lanes
-					lane_x = (lane_rel * 2 - 1) * track_width
-					polygon(segment.points(lane_x - 3/32, lane_x + 3/32), WHITE, stroke=0)
+				l1 = l2 = -track_width
+				r1 = r2 = track_width
+
+				pit1 = section.pit + segment_idx * section.dpit
+				pit2 = section.pit + (segment_idx + 1) * section.dpit
+
+				assert -1 <= pit1 <= 1 and -1 <= pit2 <= 1, f"{pit1=}, {pit2=}"
+
+				pit_l = pit1 < 0 or pit2 < 0
+				pit_r = pit1 > 0 or pit2 > 0
+
+				if pit_r and pit_l:
+					raise AssertionError(f"Start and end of segment have pit on different sides: {pit1=}, {pit2=}, {pit_l=}, {pit_r=}")
+				elif pit_l:
+					l1 += pit1 * PIT_LANE_WIDTH
+					l2 += pit2 * PIT_LANE_WIDTH
+				elif pit_r:
+					r1 += pit1 * PIT_LANE_WIDTH
+					r2 += pit2 * PIT_LANE_WIDTH
+
+				polygon(segment.points(l1, r1, l2, r2), PALETTE[roadcol], stroke=2)
+
+				lanes = section.lanes or track.lanes
+
+				if lanes > 1 and (idx % 4 == 0):
+					for idx in range(1, lanes):
+						lane_rel = idx / lanes
+						lane_x = (lane_rel * 2 - 1) * track_width
+						polygon(segment.points(lane_x - LANE_LINE_WIDTH, lane_x + LANE_LINE_WIDTH), WHITE, stroke=0)
 
 		# Line across start of each section
 
@@ -301,10 +329,67 @@ def draw_track(track, path_base, scale=16):
 
 		# Curbs
 
-		for idx, (section, segment) in enumerate(iterate_segments(sections)):
-			curb_color = RED if (idx % 2 == 0) else WHITE
-			polygon(segment.points(track_width - shoulder_half_width, track_width + shoulder_half_width), curb_color, stroke=0.5)
-			polygon(segment.points(-track_width + shoulder_half_width, -track_width - shoulder_half_width), curb_color, stroke=0.5)
+		# for idx, (section, segment) in enumerate(iterate_segments(sections)):
+		# 	curb_color = RED if (idx % 2 == 0) else WHITE
+		# 	polygon(segment.points(track_width - shoulder_half_width, track_width + shoulder_half_width), curb_color, stroke=0.5)
+		# 	polygon(segment.points(-track_width + shoulder_half_width, -track_width - shoulder_half_width), curb_color, stroke=0.5)
+
+		idx = -1
+		for section in sections:
+
+			pit_start_l = section.pit == 0  and section.dpit < 0
+			pit_start_r = section.pit == 0  and section.dpit > 0
+			pit_end_l   = section.pit == -1 and section.dpit > 0
+			pit_end_r   = section.pit == 1  and section.dpit < 0
+
+			if section.dpit:
+				assert sum([pit_start_l, pit_end_l, pit_start_r, pit_end_r]) == 1
+			else:
+				assert not any([pit_start_l, pit_end_l, pit_start_r, pit_end_r])
+
+			for segment_idx, segment in enumerate(section.segments):
+				idx += 1
+
+				curb_color = RED if (idx % 2 == 0) else WHITE
+
+				pit1 = abs(section.pit + segment_idx * section.dpit)
+				pit2 = abs(section.pit + (segment_idx + 1) * section.dpit)
+
+				assert 0 <= pit1 <= 1 and 0 <= pit2 <= 1, f"{pit1=}, {pit2=}"
+
+				start = segment_idx / len(section.segments)
+				end = (segment_idx + 1) / len(section.segments)
+				assert 0 <= start <= 1 and 0 <= end <= 1
+
+				if pit_start_r or pit_end_r:
+					# Right curb (pit entrance/exit)
+					polygon(segment.points(
+							track_width - shoulder_half_width + PIT_LANE_WIDTH * pit1,
+							track_width + shoulder_half_width + PIT_LANE_WIDTH * pit1,
+							track_width - shoulder_half_width + PIT_LANE_WIDTH * pit2,
+							track_width + shoulder_half_width + PIT_LANE_WIDTH * pit2,
+						), curb_color, stroke=0.5)
+				else:
+					# Right curb (normal)
+					polygon(segment.points(
+							track_width - shoulder_half_width,
+							track_width + shoulder_half_width,
+						), curb_color, stroke=0.5)
+
+				if pit_start_l or pit_end_l:
+					# Left curb (pit entrance/exit)
+					polygon(segment.points(
+							-track_width - shoulder_half_width - PIT_LANE_WIDTH * pit1,
+							-track_width + shoulder_half_width - PIT_LANE_WIDTH * pit1,
+							-track_width - shoulder_half_width - PIT_LANE_WIDTH * pit2,
+							-track_width + shoulder_half_width - PIT_LANE_WIDTH * pit2,
+						), curb_color, stroke=0.5)
+				else:
+					# Left curb (normal)
+					polygon(segment.points(
+							-track_width + shoulder_half_width,
+							-track_width - shoulder_half_width,
+						), curb_color, stroke=0.5)
 
 		# Walls
 
@@ -339,6 +424,14 @@ def draw_track(track, path_base, scale=16):
 					wall_end_0 = wall_start_0 + WALL_THICKNESS
 					wall_end_1 = wall_start_1 + WALL_THICKNESS
 					polygon(segment.points(-wall_start_0, -wall_end_0, -wall_start_1, -wall_end_1), wall_color, stroke=0.5)
+
+				# Pit wall
+				# if abs(section.pit) == 2:
+				# 	polygon(segment.points(track_width, track_width + WALL_THICKNESS), wall_color, stroke=0.5)
+				if section.pit == 2:
+					polygon(segment.points(track_width, track_width + WALL_THICKNESS), wall_color, stroke=0.5)
+				elif section.pit == -2:
+					polygon(segment.points(-track_width, -track_width - WALL_THICKNESS), wall_color, stroke=0.5)
 
 		# Racing line
 

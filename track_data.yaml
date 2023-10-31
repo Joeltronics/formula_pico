@@ -17,12 +17,12 @@ tracks:
     wall: 4
     tree_bg: true
     sections:
-    - {length: 8, x: 0, wall: 1}  # start/finish
-    - {length: 32, x: -0.25, wall: 1}
-    - {turn_num: 1, length: 8, x: -1, speed: 140}
-    - {turn_num: 1, length: 3, angle: 0.125, x: 0.25, speed: 140}
-    - {turn_num: 1, length: 3, angle: 0.125, x: 1, speed: 140}
-    - {length: 6, angle: -0.0625, x: 0.5}
+    - {length: 8, x: 0, wall: 1, pit: 1}  # start/finish
+    - {length: 32, x: -0.25, wall: 1, pit: 1}
+    - {turn_num: 1, length: 8, x: -1, speed: 140, pit: 1}
+    - {turn_num: 1, length: 3, angle: 0.125, x: 0.25, speed: 140, pit: 1}
+    - {turn_num: 1, length: 3, angle: 0.125, x: 1, speed: 140, pit: 1}
+    - {length: 6, angle: -0.0625, x: 0.5, pit: 1}
     - {length: 16, x: -1}
     - {length: 14, angle: 0.03125, x: 0}
     - {length: 14, angle: 0.03125, x: 1}
@@ -62,11 +62,11 @@ tracks:
     - {turn_num: 9, length: 6, angle: 0.09375, x: 1, speed: 240}
     - {length: 4, pitch: -0.125, x: 0.25}
     - {length: 6, pitch: -0.125, x: -0.5}
-    - {turn_num: 10, length: 3, angle: 0.09375, x: 0.375, speed: 200}  # low point
-    - {turn_num: 10, length: 3, angle: 0.09375, x: 1, speed: 200}
-    - {length: 6, x: 0.75}
-    - {length: 8, angle: 0.0625, x: 0.5}
-    - {length: 15, x: 0.25}
+    - {turn_num: 10, length: 3, angle: 0.09375, x: 0.375, speed: 200, pit: 1}  # low point
+    - {turn_num: 10, length: 3, angle: 0.09375, x: 1, speed: 200, pit: 1}
+    - {length: 6, x: 0.75, pit: 1}
+    - {length: 8, angle: 0.0625, x: 0.5, pit: 1}
+    - {length: 15, x: 0.25, pit: 1}
 
   - name: belgium
     length_km: 7.00
@@ -336,7 +336,6 @@ tracks:
     - {length: 4, pitch: -0.25}
 
   - name: monaco
-    # TODO: walls
     # TODO: scale is accurate vs other tracks, but it feels too short - scale up a bit?
     length_km: 3.34
     length_scale: 1
@@ -347,15 +346,15 @@ tracks:
     gndcol1: 5
     gndcol2: 6
     sections:
-    - {length: 16, x: 0}  # start/finish
-    - {length: 8, x: 0}
-    - {length: 4, x: 0, angle: 2, pitch: 0.25}
-    - {length: 4, x: -0.25, pitch: 0.25}
-    - {length: 4, x: -0.875, angle: -2, pitch: 0.25}
-    - {length: 4, x: -0.5, pitch: 0.25, speed: 115}
-    - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115, wall: 2, lanes: 1}  # Sainte Devote
-    - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2, lanes: 1}
-    - {length: 12, x: 0.25, wall: 2, lanes: 3}
+    - {length: 16, x: 0, pit: 1}  # start/finish
+    - {length: 8, x: 0, pit: 1}
+    - {length: 4, x: 0, angle: 2, pitch: 0.25, pit: 1}
+    - {length: 4, x: -0.25, pitch: 0.25, pit: 1}
+    - {length: 4, x: -0.875, angle: -2, pitch: 0.25, pit: 1}
+    - {length: 4, x: -0.5, pitch: 0.25, speed: 115, pit: 1}
+    - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115, wall: 2, lanes: 1, pit: 1}  # Sainte Devote
+    - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2, lanes: 1, pit: 1}
+    - {length: 12, x: 0.25, wall: 2, lanes: 3, pit: 1}
     - {length: 4, x: -1, angle: -1, pitch: 1, lanes: 3}
     - {length: 24, x: -0.75, pitch: 1, lanes: 3}
     - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3}
@@ -434,16 +433,16 @@ tracks:
     - {length: 4, x: 0.5, pitch: 0.25}
     - {length: 4, x: 0, angle: 1.5, pitch: 0.25}
     - {length: 6, x: -1, pitch: 0.25, speed: 80}
-    - {turn_num: 18, x: 0.25, length: 3, angle: 4, speed: 80}  # Anthony Noghes
-    - {turn_num: 18, x: 0.875, length: 3, angle: 4, speed: 80}
-    - {length: 2, x: 0.25, speed: 80}
-    - {turn_num: 19, length: 2, x: -0.25, angle: -1.5, speed: 80}
-    - {turn_num: 19, length: 2, x: -0.5, angle: -1.5, speed: 80}
-    - {length: 10, x: -0.75}
-    - {length: 10, x: -0.25, angle: 2}
-    - {length: 12, x: 0}
-    - {length: 10, x: 0.125, angle: 1}
-    - {length: 10, x: 0.25}
+    - {turn_num: 18, x: 0.25, length: 3, angle: 4, speed: 80, pit: 1}  # Anthony Noghes
+    - {turn_num: 18, x: 0.875, length: 3, angle: 4, speed: 80, pit: 1}
+    - {length: 2, x: 0.25, speed: 80, pit: 1}
+    - {turn_num: 19, length: 2, x: -0.25, angle: -1.5, speed: 80, pit: 1}
+    - {turn_num: 19, length: 2, x: -0.5, angle: -1.5, speed: 80, pit: 1}
+    - {length: 10, x: -0.75, pit: 1}
+    - {length: 10, x: -0.25, angle: 2, pit: 1}
+    - {length: 12, x: 0, pit: 1}
+    - {length: 10, x: 0.125, angle: 1, pit: 1}
+    - {length: 10, x: 0.25, pit: 1}
 
   - name: usa
     length_scale: 2
@@ -453,10 +452,10 @@ tracks:
     wall: 0
     start_heading: 0.75
     sections:
-    - {length: 8, x: 0}
-    - {length: 8, x: 0.25}
-    - {length: 12, angle: -1.5, x: 0, speed: 250 }
-    - {length: 12, angle: -1.5, x: -0.5, speed: 250 }
+    - {length: 8, x: 0, pit: -1}
+    - {length: 8, x: 0.25, pit: -1}
+    - {length: 12, angle: -1.5, x: 0, speed: 250, pit: -1 }
+    - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1 }
     - {length: 48, x: -0.375}
     - {length: 4, angle: -1, x: 0.75, speed: 275 }
     - {length: 32, angle: -4, x: 0.5, speed: 300 }
@@ -469,7 +468,7 @@ tracks:
     - {length: 4, angle: -1, x: 0.5, speed: 275 }
     - {length: 48, x: 0.75}
     - {length: 12, angle: -1.5, x: -0.375, speed: 250 }
-    - {length: 12, angle: -1.5, x: -0.5, speed: 250 }
+    - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1 }
 
   - name: usa-short
     length_scale: 2
@@ -479,18 +478,18 @@ tracks:
     wall: 0
     lanes: 3
     sections:
-    - {length: 8, x: 0.75}
-    - {length: 12, x: 0.75}
-    - {length: 4, x: 0.75, speed: 100}
-    - {length: 8, angle: -8, x: 0.25, speed: 100}
-    - {length: 8, angle: -8, x: -0.75, speed: 100}
-    - {length: 4, x: 0.25}
+    - {length: 8, x: 0.75, pit: -1}
+    - {length: 12, x: 0.75, pit: -1}
+    - {length: 4, x: 0.75, speed: 100, pit: -1}
+    - {length: 8, angle: -8, x: 0.25, speed: 100, pit: -1}
+    - {length: 8, angle: -8, x: -0.75, speed: 100, pit: -1}
+    - {length: 4, x: 0.25, pit: -1}
     - {length: 24, x: 0.75}
     - {length: 4, x: 0.75, speed: 100}
-    - {length: 8, angle: -8, x: 0.25, speed: 100}
-    - {length: 8, angle: -8, x: -0.75, speed: 100}
-    - {length: 4, x: 0.25}
-    - {length: 4, x: 0.75}
+    - {length: 8, angle: -8, x: 0.25, speed: 100, pit: -1}
+    - {length: 8, angle: -8, x: -0.75, speed: 100, pit: -1}
+    - {length: 4, x: 0.25, pit: -1}
+    - {length: 4, x: 0.75, pit: -1}
 
   - name: test
     length_scale: 2
@@ -525,8 +524,8 @@ tracks:
     angle_scale: 1
     tree_bg: true
     sections:
-    - {length: 8, x: 0}
-    - {length: 12, x: -0.875}
+    - {length: 8, x: 0, pit: 1}
+    - {length: 12, x: -0.875, pit: 1}
     - {length: 20, x: -0.75, gndcol1: 8, gndcol2: 2}
     - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
     - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
@@ -541,8 +540,8 @@ tracks:
     - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
     - {length: 15, x: -0.75}
     - {length: 5, x: -1, speed: 100, lanes: 2}
-    - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2}
-    - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2}
+    - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2, pit: 1}
+    - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2, pit: 1}
 
   - name: "dragstrip"
     track_width: 4
@@ -551,8 +550,8 @@ tracks:
     gndcol1: 4
     gndcol2: 15
     sections:
-    - {length: 16, x: 0, wall: 1}
-    - {length: 8, x: 0, wall: 1}
+    - {length: 16, x: 0, wall: 1, pit: -1}
+    - {length: 8, x: 0, wall: 1, pit: -1}
     - {length: 256, x: 0}
     - {length: 256, x: 0}
     - {length: 256, x: 0}

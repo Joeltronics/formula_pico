@@ -23,6 +23,15 @@ CONSTS: Final = load_consts()
 WALL_SCALE: Final = CONSTS['wall_scale']
 SPEED_KPH_SCALE: Final = CONSTS['speed_to_kph']
 RACING_LINE_SINE_INTERP: Final = CONSTS['racing_line_sine_interp']
+PIT_LANE_WIDTH: Final = CONSTS['pit_lane_width']
+
+# TODO: figure this out - I don't think wall_scale is being applied properly in drawing
+# PIT_LANE_WALL: Final = round(PIT_LANE_WIDTH / (2 * WALL_SCALE))
+# PIT_LANE_WALL: Final = round(PIT_LANE_WIDTH / WALL_SCALE)
+# PIT_LANE_WALL: Final = round(0.5 * PIT_LANE_WIDTH)
+PIT_LANE_WALL: Final = round(PIT_LANE_WIDTH)  # This seems to work
+
+WALL_THICKNESS: Final = 0.5
 
 MINIMAP_MAX_WIDTH: Final = 32
 MINIMAP_MAX_HEIGHT: Final = 48
@@ -126,6 +135,8 @@ class Section:
 	dwall_r: float | None = None
 	pitch: float = 0.0
 	tnl: bool = False
+	pit: int = 0
+	dpit: float | None = None
 
 	# Racing line
 	speed: float | None = None
@@ -152,6 +163,7 @@ class Section:
 	]
 
 	LUA_KW_FIELDS: ClassVar[list[str]] = [
+		'pit',
 		'tnl',
 		'lanes',
 		'gndcol1',
@@ -183,6 +195,14 @@ class Section:
 
 		if self.tnl:
 			self.wall_l = self.wall_r = 0
+
+		if self.pit:
+			if self.pit < 0:
+				# self.wall_l = max(self.wall_l, PIT_LANE_WALL)
+				self.wall_l = PIT_LANE_WALL
+			else:
+				# self.wall_r = max(self.wall_r, PIT_LANE_WALL)
+				self.wall_r = PIT_LANE_WALL
 
 		if not (isinstance(self.wall_l, int) and isinstance(self.wall_r, int) and (0 <= self.wall_l < 16) and (0 <= self.wall_r < 16)):
 			raise ValueError(f'Invalid wall value(s): {self.wall_l=}, {self.wall_r=}')
@@ -307,7 +327,7 @@ class Track:
 
 		# TODO: auto adjust last section length so it matches up to start as close as possible
 
-		self._set_dwall()
+		self._set_deltas()
 
 		# TODO: use the new logic
 		# self._calculate_racing_line_original_logic()
@@ -342,7 +362,7 @@ class Track:
 		# Offset from vertical center of screen to put bottom of minimap at center of screen
 		self.minimap_offset_y = int(round(-self.y_min * self.minimap_scale))
 
-	def _set_dwall(self):
+	def _set_deltas(self):
 		for idx in range(len(self.sections)):
 			sec0 = self.sections[idx]
 			sec1 = self.sections[(idx + 1) % len(self.sections)]
@@ -353,6 +373,7 @@ class Track:
 			wall1_l = sec1.wall_l
 			wall1_r = sec1.wall_r
 
+			# TODO: this logic is probably obsolete (handled in section post_init)
 			if sec0.tnl:
 				wall0_r = wall0_l = 0
 
@@ -361,6 +382,8 @@ class Track:
 
 			sec0.dwall_l = (wall1_l - wall0_l) / sec0.length
 			sec0.dwall_r = (wall1_r - wall0_r) / sec0.length
+
+			sec0.dpit = (sec1.pit - sec0.pit) / sec0.length
 
 	@staticmethod
 	def _corner_exit_entrance_original_logic(section: Section) -> float:

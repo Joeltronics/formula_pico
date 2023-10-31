@@ -50,12 +50,13 @@ end
 function draw_debug_overlay()
 --% if enable_debug
 
+	local player = cars[1]
+	local section = road[player.section_idx]
+
 	cursor(52, 0, 8)
 	if (frozen) print('frozen')
 	if (noclip) print('noclip')
-
-	local player = cars[1]
-	local section = road[player.section_idx]
+	if (player.in_pit) print('pit')
 
 	cursor(88, 0, 5)
 	print("cpu:" .. round(stat(1) * 100))

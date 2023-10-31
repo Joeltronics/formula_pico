@@ -45,7 +45,10 @@ function init_track()
 	if (road.sections_compressed) decompress_sections()
 
 	local total_segment_count, heading = 0, road.start_heading
-	for section in all(road) do
+	for section_idx = 1,#road do
+		local section = road[section_idx]
+		local next = road[section_idx % #road + 1]
+
 		assert(section.length and section.length > 0)
 
 		-- Defaults
@@ -54,6 +57,7 @@ function init_track()
 		section.angle = section.angle or 0
 		section.entrance_x = section.entrance_x or 0
 		section.max_speed = section.max_speed or 1
+		section.pit = section.pit or 0
 
 		-- Calculated values
 
@@ -73,19 +77,22 @@ function init_track()
 		else
 			section.wall_r = section.wall_r or road.wall or 15
 			section.wall_l = section.wall_l or road.wall or 15
-
-			-- DEBUG
-			-- section.wall_r = section.wall_r or road.wall or 0
-			-- section.wall_l = section.wall_l or road.wall or 0
 		end
 
 		-- Convert wall_l/wall_r from 0-15 to actual units
 		-- TODO: if 15, make wall invisible
 		section.wall_r = road.track_boundary + section.wall_r * "{{ wall_scale }}"
-		section.wall_l = -road.track_boundary - section.wall_l * "{{ wall_scale }}"
+		section.wall_l = -road.track_boundary - section.wall_l * "{{ wall_scale }}"	 
 
 		section.wall_clip_l = section.wall_l + "{{ car_half_width }}"
 		section.wall_clip_r = section.wall_r - "{{ car_half_width }}"
+
+		-- Pit wall clip logic (but not at pit entrance/exit!)
+		if section.pit == 1 and next.pit == 1 then
+			section.pit_wall, section.wall_clip_r = road.track_boundary, road.track_boundary - "{{ car_half_width }}"
+		elseif section.pit == -1 and next.pit == -1 then
+			section.pit_wall, section.wall_clip_l = -road.track_boundary, "{{ car_half_width }}" - road.track_boundary
+		end
 
 		section.entrance_x = clip_num(section.entrance_x, section.wall_clip_l + 0.01, section.wall_clip_r - 0.01)
 		section.entrance_x = clip_num(section.entrance_x, -road.grass_x + 0.01, road.grass_x - 0.01)
@@ -115,6 +122,8 @@ function init_track()
 		local section1 = road[section_idx % #road + 1]
 
 		section0.dpitch = (section1.pitch - section0.pitch) / section0.length
+
+		section0.dpit = (section1.pit - section0.pit) / section0.length
 
 		-- TODO: only need this to narrow gradually - can widen instantly
 		-- (already the case for tunnels, can make this everywhere)

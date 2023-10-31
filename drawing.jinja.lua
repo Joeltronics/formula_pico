@@ -55,6 +55,19 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col, rotate90)
 	end
 end
 
+-- function filltrapz_lr(x1_l, x1_r, y1, x2_l, x2_r, y2, col, rotate90)
+-- 	filltrapz(
+-- 		(x1_r + x1_l) / 2,
+-- 		y1,
+-- 		(x1_r - x1_l) / 2,
+-- 		(x2_l + x2_r) / 2,
+-- 		y2,
+-- 		(x2_r - x2_l) / 2,
+-- 		col,
+-- 		rotate90
+-- 	)
+-- end
+
 function draw_ground(y1, y2, sumct, gndcol1, gndcol2)
 	local gndcol = gndcol1
 	if ((sumct % 6) >= 3) gndcol = gndcol2
@@ -80,6 +93,14 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	-- Road
 
 	local w1, w2 = road.track_width*scale1, road.track_width*scale2
+	local x1l, x1r, x2l, x2r = x1 - w1, x1 + w1, x2 - w2, x2 + w2
+
+	local pit1 = section.pit + seg*section.dpit
+	local pit2 = section.pit + (seg - 1)*section.dpit
+	-- if (pit1 ~= 0 or pit2 ~= 0) filltrapz(x1 + pit1*scale1*"{{ pit_lane_width }}", y1, w1, x2 + pit2*scale2*"{{ pit_lane_width }}", y2, w2, 5)
+	pit1 *= scale1 * "{{ pit_lane_width }}"
+	pit2 *= scale2 * "{{ pit_lane_width }}"
+	if (pit1 ~= 0 or pit2 ~= 0) filltrapz(x1 + pit1, y1, w1, x2 + pit2, y2, w2, 5)
 
 	filltrapz(x1, y1, w1, x2, y2, w2, 5)
 
@@ -101,17 +122,34 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 		end
 	end
 
-	-- Shoulders
+	-- Curbs
+
+	if section.dpit ~= 0 then
+		-- Pit entrance/exit
+		if max(pit1, pit2) > 0 then
+			-- TODO
+			x1r += pit1
+			x2r += pit2
+		else
+			-- TODO: is sign right?
+			x1l += pit1
+			x2l += pit2
+		end
+	end
 
 	if detail then
 		local linecol = 7
 		if (sumct % 2 == 0) linecol = 8
 		local sw1, sw2 = "{{ shoulder_half_width }}"*scale1, "{{ shoulder_half_width }}"*scale2
-		filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
-		filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
+		-- filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
+		-- filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
+		filltrapz(x1l, y1, sw1, x2l, y2, sw2, linecol)
+		filltrapz(x1r, y1, sw1, x2r, y2, sw2, linecol)
 	else
-		line(x1-w1, y1, x2-w2, y2, 0x6e)
-		line(x1+w1, y1, x2+w2, y2, 0x6e)
+		-- line(x1-w1, y1, x2-w2, y2, 0x6e)
+		-- line(x1+w1, y1, x2+w2, y2, 0x6e)
+		line(x1l, y1, x2l, y2, 0x6e)
+		line(x1r, y1, x2r, y2, 0x6e)
 		fillp()
 	end
 
@@ -239,19 +277,27 @@ function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scal
 
 	-- TODO: invisible walls if very far out
 
-	local wall_l1 = section.wall_l + section.dwall_l * (seg - 1)
-	local wall_l2 = section.wall_l + section.dwall_l * seg
-	local wall_r1 = section.wall_r + section.dwall_r * (seg - 1)
-	local wall_r2 = section.wall_r + section.dwall_r * seg
+	local walls={{
+		section.wall_l + section.dwall_l * (seg - 1),
+		section.wall_l + section.dwall_l * seg
+	}, {
+		section.wall_r + section.dwall_r * (seg - 1),
+		section.wall_r + section.dwall_r * seg
+	}}
+
+	if section.pit_wall then
+		add(walls, {section.pit_wall, section.pit_wall})
+	end
+
+	-- local wall_l1 = section.wall_l + section.dwall_l * (seg - 1)
+	-- local wall_l2 = section.wall_l + section.dwall_l * seg
+	-- local wall_r1 = section.wall_r + section.dwall_r * (seg - 1)
+	-- local wall_r2 = section.wall_r + section.dwall_r * seg
 
 	add(sprite_list, {
-		is_wall=true,
+		walls=walls,
 		col=col,
 		detail=detail,
-		distance_l1=-wall_l1,
-		distance_l2=-wall_l2,
-		distance_r1=wall_r1,
-		distance_r2=wall_r2,
 		x1=x1, y1=y1, scale1=scale1,
 		x2=x2, y2=y2, scale2=scale2,
 		clp={clp[1],clp[2],clp[3],clp[4]}
@@ -260,29 +306,19 @@ end
 
 function draw_wall(s)
 
-	local x1l, x2l = s.x1 - 2*s.scale1*s.distance_l1, s.x2 - 2*s.scale2*s.distance_l2
-	local x1r, x2r = s.x1 + 2*s.scale1*s.distance_r1, s.x2 + 2*s.scale2*s.distance_r2
-
 	local h1, h2 = s.scale1 / 2, s.scale2 / 2
 	local cy1, cy2 = s.y1 - h1, s.y2 - h2
 
-	if s.detail then
-		-- Fill wall
-		filltrapz(cy1, x1r, h1, cy2, x2r, h2, s.col, true)
-		filltrapz(cy1, x1l, h1, cy2, x2l, h2, s.col, true)
-
-		-- Wall bottom
-		line(x1l, s.y1, x2l, s.y2, 6)
-		line(x1r, s.y1, x2r, s.y2, 6)
-	else
-		-- Wall center
-		line(x1l, cy1, x2l, cy2, s.col)
-		line(x1r, cy1, x2r, cy2, s.col)
+	for w in all(s.walls) do
+		local x1, x2 = s.x1 + 2*s.scale1*w[1], s.x2 + 2*s.scale2*w[2]
+		if s.detail then
+			filltrapz(cy1, x1, h1, cy2, x2, h2, s.col, true) -- Fill
+			line(x1, s.y1, x2, s.y2, 6) -- Bottom
+		else
+			line(x1, cy1, x2, cy2, s.col) -- Center
+		end
+		line(x1, s.y1 - 2*h1, x2, s.y2 - 2*h2, 6) -- Top
 	end
-
-	-- Wall top
-	line(x1l, s.y1 - 2*h1, x2l, s.y2 - 2*h2, 6)
-	line(x1r, s.y1 - 2*h1, x2r, s.y2 - 2*h2, 6)
 end
 
 function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
@@ -297,13 +333,10 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		-- 	-- Touching wall
 		-- 	-- TODO: add smoke, or other indicator of scraping
 		-- end
-
-		if car_abs_x >= road.grass_x then
-			-- On grass; bumpy
+		if car.off_track then
 			y -= flr(rnd(2))
 			-- TODO: add "flinging grass" sprite
-		elseif car_abs_x >= road.curb_x then
-			-- On curb
+		elseif car.on_curb then
 			y -= 1
 		end
 	end
@@ -340,7 +373,7 @@ function draw_bg_sprite(s)
 
 	if (s.palette) pal(s.palette, 0)
 
-	if s.is_wall then
+	if s.walls then
 		draw_wall(s)
 	else
 		local x1=ceil(s.x-s.w/2)
@@ -429,11 +462,14 @@ function draw_road()
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
 		if i < "{{ sprite_draw_distance }}" then
+			-- TODO: token optimizations - a lot of repeated stuff here
 			if sumct == road[1].length then
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline'], -1, x2, y2, scale2, clp)
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline'],  1, x2, y2, scale2, clp)
+				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
+				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
+				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
+				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
+				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
 			end
-
 			add_bg_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp)
 			add_bg_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
 			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
