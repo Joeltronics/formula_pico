@@ -5,6 +5,7 @@ function tick_debug()
 		local key = stat(31)
 		-- printh('"' .. key .. '"')
 		if race_started then
+			if (key == 't') replace_tires(player_car)
 			if (key == 'k') player_car.subseg += 0.25
 			if (key == 'j') player_car.subseg -= 0.25
 			if (key == '⌂') player_car.subseg += 1
@@ -47,6 +48,10 @@ function tick_debug()
 --% endif
 end
 
+--% if enable_debug
+_prev_tire = 1
+--% endif
+
 function draw_debug_overlay()
 --% if enable_debug
 
@@ -71,6 +76,10 @@ function draw_debug_overlay()
 	else
 		print('cam:' .. cam_x)
 	end
+
+	print('tire: ' .. player.tire_health)
+	print('deg: ' .. 6000*(_prev_tire - player.tire_health)) -- percent per second
+	_prev_tire = player.tire_health
 
 	-- local pitch = (section.pitch + section.dpitch*(segment_idx - 1))
 	-- print('pi:' .. pitch)

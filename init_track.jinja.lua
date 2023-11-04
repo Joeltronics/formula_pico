@@ -40,6 +40,8 @@ function init_track()
 	road.track_boundary = road.half_width + 0.5*"{{ shoulder_half_width }}"
 	-- road.track_boundary = road.half_width + "{{ shoulder_half_width }}"
 
+	road.tire_deg = road.tire_deg or 1
+
 	road.lanes = road.lanes or 1
 
 	if (road.sections_compressed) decompress_sections()

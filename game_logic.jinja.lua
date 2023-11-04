@@ -1,7 +1,9 @@
 
 function init_game(track_idx, team_idx, is_race, ghost, num_other_cars, ai_only)
 	road = tracks[track_idx]
+--% if enable_debug
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
+--% endif
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
 	init_cars(team_idx, ghost, num_other_cars, ai_only)
 	init_track()
@@ -40,8 +42,11 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			segment_idx = 1
 		end
 		-- Start reaction time: 0.15 - 0.5 seconds (9-30 frames)
-		local start_delay_counter = 0
-		if (ai and not is_ghost) start_delay_counter = 9 + flr(rnd(21))
+		local start_delay_counter, tire_compound_idx = 0, 2
+		if ai and not is_ghost then
+			start_delay_counter = 9 + flr(rnd(21))
+			tire_compound_idx = 1 + flr(rnd(#tire_compounds))
+		end
 		add(cars, {
 			idx=idx,
 			x=0,
@@ -54,6 +59,8 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			speed=0,
 			gear=1,
 			rpm=0,
+			tire_compound_idx=tire_compound_idx,
+			tire_health=1,
 			palette=palette,
 			ai=ai,
 			ghost=is_ghost,
@@ -183,6 +190,20 @@ function car_check_other_cars(car)
 		next=next,
 		front=front,
 	}
+end
+
+function wear_tires(car, dspeed, dsteer)
+--% if tire_wear_scale_dspeed != 1
+	dspeed *= "{{ tire_wear_scale_dspeed }}"
+--% endif
+--% if tire_wear_scale_dsteer != 1
+	dsteer *= "{{ tire_wear_scale_dsteer }}"
+--% endif
+	-- if (dspeed ~= 0 or dspeed ~= 0) printh('dspeed: ' .. dspeed .. ', dsteer: ' .. dsteer) -- DEBUG
+	car.tire_health = max(
+		0,
+		car.tire_health - sqrt(dspeed*dspeed + dsteer*dsteer) * "{{ tire_wear_scale }}" * tire_compounds[car.tire_compound_idx].deg * road.tire_deg
+	)
 end
 
 function update_sprite_turn(car, section, dx)
@@ -516,9 +537,10 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 		steer_accum = clip_num(steer_accum + steering_input_scaled * steer_accum_incr_rate, -1, 1)
 	end
 	car.x += "{{ steer_dx_max }}" * steer_accum * steering_scale
+	local dsteer = steer_accum - car.steer_accum
 	car.steer_accum = steer_accum
 
-	return steering_input_scaled
+	return steering_input_scaled, dsteer
 end
 
 function tick_car_corner(car, section, dz)
@@ -532,6 +554,11 @@ function tick_car_corner(car, section, dz)
 --% else
 	car.x -= dz * section.tu
 --% endif
+end
+
+function replace_tires(car)
+	-- TODO: select compound
+	car.tire_health = 1
 end
 
 function tick_car_forward(car, dz)
@@ -551,7 +578,7 @@ function tick_car_forward(car, dz)
 			-- HACK: Angle has slight error due to fixed-point precision, so reset when we complete the lap
 			car.heading = road.start_heading
 
-			-- TODO: if in pit lane, replace tires
+			if (car.in_pit) replace_tires(car)
 		end
 	end
 	assert (subseg < 1)
@@ -584,14 +611,17 @@ function tick_car(car, accel_brake_input, steering_input)
 	end
 
 	local speed, accel_brake_input_actual, engine_accel_brake = tick_car_speed(car, section, accel_brake_input)
+	local dspeed = car.speed - speed
 	update_speed(car, speed, engine_accel_brake)
 
 	-- TODO: clip_car_x() twice here isn't great, should only need to clip once
 
-	local steering_input_scaled = tick_car_steering(car, steering_input, accel_brake_input_actual)
+	local steering_input_scaled, dsteer = tick_car_steering(car, steering_input, accel_brake_input_actual)
 	clip_car_x(car, section)
 
 	local dx = car.x - car_x_prev
+
+	wear_tires(car, dspeed, dsteer)
 
 	update_sprite_turn(car, section, dx)
 
@@ -614,7 +644,11 @@ function tick_race_start(accel_brake_input)
 
 	assert(not race_started)
 
+--% if enable_debug
 	if (not frozen) race_start_counter += 1
+--% else
+	race_start_counter += 1
+--% endif
 
 	if race_start_num_lights <= 0 then
 		-- No lights yet - 2 second delay
@@ -639,7 +673,7 @@ function tick_race_start(accel_brake_input)
 			race_start_counter = 0
 			sfx(5, 3)
 
-			-- If trying to accelerate at the moment lights go out, delay start by 1/2 ssecond (30 frames)
+			-- If trying to accelerate at the moment lights go out, delay start by 1/2 second (30 frames)
 			if (accel_brake_input > 0 and not cars[1].ai) cars[1].start_delay_counter = 30
 		end
 	end
@@ -647,9 +681,9 @@ end
 
 function game_tick()
 
-	if debug then
-		tick_debug()
-	end
+--% if enable_debug
+	if (debug) tick_debug()
+--% endif
 
 	local steering_input, accel_brake_input = 0, 0
 	if (btn(0)) steering_input -= 1

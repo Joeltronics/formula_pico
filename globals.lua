@@ -9,6 +9,12 @@ accel_by_gear = {8/2048, 7/2048, 6/2048, 4/2048, 3/2048, 2/2048, 1/2048, 1/4096}
 
 ai_accel_random = {1/1.5, 1/1.25, 1/1.125, 1, 1, 1, 1.125, 1.25}
 
+tire_compounds = {
+	{pal={[10]=7, [9]=6}, grip=0.75, deg=0.75}, -- hard
+	{pal={[10]=10, [9]=9}, grip=1, deg=1}, -- med
+	{pal={[10]=8, [9]=2}, grip=1.25, deg=1.25}, -- soft
+}
+
 -- SFX speed: ticks, around 1/120 second
 -- This is also how long first note is held before sliding, so don't go higher than 8
 sfx_speed_by_gear = {2, 2, 2, 2, 2, 4, 8, 8}

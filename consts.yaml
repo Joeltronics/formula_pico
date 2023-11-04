@@ -24,6 +24,10 @@ steer_accum_incr_rate_accel_brake: 1/32
 steer_accum_incr_rate_coast: 3/64
 steer_accum_decr_rate: 1/8
 
+tire_wear_scale: 1/512
+tire_wear_scale_dspeed: 8
+tire_wear_scale_dsteer: 0.5
+
 turn_radius_compensation_offset: 0.125
 
 turn_dx_scale: 1

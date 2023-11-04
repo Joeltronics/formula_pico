@@ -20,7 +20,7 @@ Tire management
 Pit stops
 1. (Done) Add pit lane
 2. (Done) Add capability to drive into pit lane
-3. Change tires
+3. Change tires (partially done - tires get repaired, but do not change compounds)
 4. Pit stop animation
 
 Other cars:

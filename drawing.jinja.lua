@@ -639,6 +639,8 @@ end
 function draw_ranking()
 	-- TODO: may only want to print 4 cars (self, leader, and cars before/after)
 	cursor()
+	palt(0, false)
+	palt(11, true)
 	for pos_num = 1,#car_positions do
 		local car_idx = car_positions[pos_num]
 		local car = cars[car_idx]
@@ -660,9 +662,27 @@ function draw_ranking()
 
 		print(text .. '\0')
 		-- Player indicator (separate print call, to reset background)
-		if (car_idx == 1) print('◀\0')
+		if car_idx == 1 then
+			print('◀\0')
+		else
+			-- local x, y, colors = peek(0x5f26), peek(0x5f27), tire_compounds[car.tire_compound_idx].color
+			local x, y, compound = peek(0x5f26), peek(0x5f27), tire_compounds[car.tire_compound_idx]
+
+			-- TODO: more granular than this? (i.e. use all the colors)
+
+			-- pal(10, colors[1])
+			pal(compound.pal)
+			spr(60, x, y)
+
+			clip(0, y, 128, round(6 - 6 * car.tire_health))
+			pal(10, 0)
+			spr(60, x, y)
+			clip()
+		end
 		print('\n\0')
 	end
+	pal()
+	palt()
 end
 
 function draw_race_start_lights()
@@ -677,20 +697,41 @@ end
 
 function draw_hud()
 
+	local player_car = cars[1]
+
 	if #cars > 1 then
 		draw_ranking()
 	end
 
 	if (not race_started) draw_race_start_lights()
 
+	-- Speed & gear
+
 	cursor(116, 116, 7)
-	local speed_print = '' .. round(cars[1].speed * "{{ speed_to_kph }}")
+	local speed_print = '' .. round(player_car.speed * "{{ speed_to_kph }}")
 	if (#speed_print == 1) speed_print = ' ' .. speed_print
 	if (#speed_print == 2) speed_print = ' ' .. speed_print
 	print(speed_print .. '\nkph')
 
 	cursor(108, 118)
-	print(cars[1].gear)
+	print(player_car.gear)
+
+	-- Tire status
+
+	palt(0, false)
+	palt(11, true)
+
+	pal({[10]=0,[9]=0})
+	spr(46, 0, 112, 2, 2)
+
+	-- Tire sprite is 16 tall, but colored band is 12 tall, so it starts at (y + 2) and ends at (y + 14)
+	pal(tire_compounds[player_car.tire_compound_idx].pal)
+	clip(0, "{{ 112 + 14 }}" - ceil(12 * player_car.tire_health), 128, 128)
+	spr(46, 0, 112, 2, 2)
+
+	clip()
+	palt()
+	pal()
 end
 
 function draw_cpu_only_overlay()
