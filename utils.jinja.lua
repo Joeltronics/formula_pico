@@ -60,6 +60,22 @@ function reverse(section_idx, segment_idx)
 	return section_idx, segment_idx
 end
 
+function adjust_speed_for_grip(speed, grip)
+	--[[
+	Scaling section speed for grip:
+
+	Centripetal acceleration: 
+		a_c = v^2 / r
+		v = sqrt(a_c / r)
+
+	section.braking_speed is for grip=1
+	a_c is linearly proportional to grip
+
+	So if grip != 1, then scale speed by sqrt(grip)
+	]]
+	return speed * sqrt(grip)
+end
+
 --[[
 	Braking distance:
 		Vf^2 = Vi^2  + 2 * a * d
@@ -85,6 +101,7 @@ end
 --% set braking_distance_scale = speed_scale * speed_scale / (2 * brake_decel)
 
 function braking_distance(curr_speed, brake_speed)
+	-- TODO: decel should depend on grip (it doesn't currently)
 	return "{{ braking_distance_scale }}" * (curr_speed*curr_speed - brake_speed*brake_speed)
 end
 
@@ -92,21 +109,21 @@ function distance_to_next_braking_point(section, seg_plus_subseg)
 	return section.next_braking_distance + section.length - seg_plus_subseg
 end
 
-function need_to_brake(section, seg_plus_subseg, curr_speed, scale_braking_distance)
-	if (curr_speed > section.max_speed) return true
-	if (curr_speed <= section.braking_speed) return false
-	return (scale_braking_distance or 1) * braking_distance(curr_speed, section.braking_speed) >= distance_to_next_braking_point(section, seg_plus_subseg)
+function need_to_brake(section, seg_plus_subseg, curr_speed, scale_braking_distance, grip)
+
+	local brake_speed = adjust_speed_for_grip(section.braking_speed, grip)
+	if (curr_speed > adjust_speed_for_grip(section.max_speed, grip)) return true
+	if (curr_speed <= brake_speed) return false
+	return (scale_braking_distance or 1) * braking_distance(curr_speed, brake_speed) >= distance_to_next_braking_point(section, seg_plus_subseg)
 end
 
-function braking_distance_relative(section, seg_plus_subseg, curr_speed)
+function braking_distance_relative(section, seg_plus_subseg, curr_speed, grip)
 
-	if (curr_speed > section.max_speed) return 0
-	-- if (curr_speed <= section.braking_speed) return 32767
+	if (curr_speed > adjust_speed_for_grip(section.max_speed, grip)) return 0
+	-- if (curr_speed <= adjust_speed_for_grip(section, grip)) return 32767
 
-	local dist_brake = braking_distance(curr_speed, section.braking_speed)
+	local dist_brake = braking_distance(curr_speed, adjust_speed_for_grip(section.braking_speed, grip))
 	if (dist_brake <= 0) return 32767
 
-	local dist_next = distance_to_next_braking_point(section, seg_plus_subseg)
-
-	return dist_next / dist_brake
+	return distance_to_next_braking_point(section, seg_plus_subseg) / dist_brake
 end

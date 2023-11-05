@@ -181,7 +181,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 
 	local col = 11
 	if (section.max_speed < 0.999 and speed > section.max_speed - 0.01) col = 10
-	if (need_to_brake(section, seg, 0, speed)) col = 2
+	if (need_to_brake(section, seg, 0, speed, cars[1].grip)) col = 2
 	if (section.max_speed < 0.999 and speed > section.max_speed + 0.01) col = 8
 
 	local dx1 = section.entrance_x + seg*section.racing_line_dx

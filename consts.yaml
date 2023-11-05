@@ -1,6 +1,6 @@
 # Build options
 
-enable_debug: true
+enable_debug: false
 debug_draw_extra: false
 enable_minimap: true
 enable_sound: true
@@ -27,6 +27,11 @@ steer_accum_decr_rate: 1/8
 tire_wear_scale: 1/512
 tire_wear_scale_dspeed: 8
 tire_wear_scale_dsteer: 0.5
+
+# If tire health <= 0, grip = grip_tires_dead (regardless of compound)
+grip_tires_dead: 0.25
+# Otherwise, grip = compound.grip * lerp(grip_tires_min, 1.0, sqrt(health))
+grip_tires_min: 0.5
 
 turn_radius_compensation_offset: 0.125
 

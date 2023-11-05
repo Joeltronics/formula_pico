@@ -61,6 +61,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			rpm=0,
 			tire_compound_idx=tire_compound_idx,
 			tire_health=1,
+			grip=tire_compounds[tire_compound_idx].grip,
 			palette=palette,
 			ai=ai,
 			ghost=is_ghost,
@@ -206,6 +207,14 @@ function wear_tires(car, dspeed, dsteer)
 	)
 end
 
+function calculate_grip(car)
+--% if grip_tires_dead > 0
+	if (car.tire_health <= 0) return "{{ grip_tires_dead }}"
+--% endif
+	local grip = "{{ grip_tires_min }}" + "{{ 1.0 - grip_tires_min }}" * sqrt(car.tire_health)
+	return grip * tire_compounds[car.tire_compound_idx].grip
+end
+
 function update_sprite_turn(car, section, dx)
 	-- Base car direction to draw
 	-- (Extra may be added at draw time to account for position on screen)
@@ -271,6 +280,7 @@ function clip_car_x(car, section)
 		-- TODO: if car is way off track, don't need to leave space
 
 		-- TODO: force update accumulator, like with walls
+		-- TODO: decay tires
 
 		local left, right = car.other_car_data.left, car.other_car_data.right
 		if left then
@@ -352,7 +362,7 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	car.off_track, car.on_curb = false, false
 
-	local speed, gear, car_x, segment_plus_subseg = car.speed, car.gear, car.x, car.segment_plus_subseg
+	local speed, gear, car_x, segment_plus_subseg, grip = car.speed, car.gear, car.x, car.segment_plus_subseg, car.grip
 	local accel = accel_by_gear[flr(gear)]
 
 	if car.in_pit then
@@ -371,7 +381,6 @@ function tick_car_speed(car, section, accel_brake_input)
 	end
 
 	local auto_brake = brake_assist or car.ai
-	local bdr = braking_distance_relative(section, segment_plus_subseg, speed)
 
 	local limit_speed = 1
 
@@ -407,6 +416,7 @@ function tick_car_speed(car, section, accel_brake_input)
 			limit_speed = min(limit_speed, "{{ grass_max_speed }}")
 			if (gear > 1) accel *= 0.5
 			decel *= 2
+			grip *= 0.25
 			-- TODO: more parameters
 
 		elseif car_abs_x >= road.curb_x then
@@ -421,6 +431,10 @@ function tick_car_speed(car, section, accel_brake_input)
 			-- TODO: more parameters
 		end
 	end
+
+	-- TODO: use grip to limit acceleration
+	-- TODO: use grip to limit braking deceleration - will also need to update logic in braking_distance()
+	local bdr = braking_distance_relative(section, segment_plus_subseg, speed, grip)
 
 	-- If we're on wall or grass, limit speed
 	if (speed > limit_speed and limit_speed < 1) return max(speed - decel, min(limit_speed, section.braking_speed or 1)), -1, -1
@@ -600,6 +614,8 @@ function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
 
+	car.grip = calculate_grip(car)
+
 	if (collisions or car.ai) car_check_other_cars(car)
 	-- TODO: also use other_car_data for AI logic
 
@@ -611,7 +627,7 @@ function tick_car(car, accel_brake_input, steering_input)
 	end
 
 	local speed, accel_brake_input_actual, engine_accel_brake = tick_car_speed(car, section, accel_brake_input)
-	local dspeed = car.speed - speed
+	local dspeed = car.speed - speed  -- TODO: this does not account for loss of speed from hitting another car!
 	update_speed(car, speed, engine_accel_brake)
 
 	-- TODO: clip_car_x() twice here isn't great, should only need to clip once

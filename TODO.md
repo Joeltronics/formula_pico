@@ -1,31 +1,20 @@
 ## Gameplay features
 
 Race logic
-* (Done) Count laps
-* (Done) Start procedure
 * Race end procedure
 * Time laps
 
-Tire management
-1. Tires wear down
-	- Wear varies with driving style - e.g. can save tires with lift & coast
-	- Older tires slow down acceleration & corner top speed
-	- Tire age probably won't affect braking distance - this would be much tricker to implement with current game logic
-2. Soft/med/hard tires
-	- Speed vs durability
-	- Can select at pit stop
-3. Select race tire strategy at start
-	- Can override during pit stop
+Tires & pit stops:
+* Add pit lane to remaining tracks
+* Select starting tire compound
+	- Possibly also preview strategy?
+* Select tire compound at pit stop
+* Have AI cars take pit stops
+* Require 2 different tire compounds in race
 
-Pit stops
-1. (Done) Add pit lane
-2. (Done) Add capability to drive into pit lane
-3. Change tires (partially done - tires get repaired, but do not change compounds)
-4. Pit stop animation
-
-Other cars:
+AI:
 * Add AI overtaking logic
-* Pit stops & tire management for other cars as well
+	- Now that there are tire compounds & deg, this is especially important (since not all cars are same speed anymore)
 * Add AI defending logic?
 
 Game modes
@@ -34,16 +23,18 @@ Game modes
 
 ## Gameplay improvements
 
-Improve steering/cornering logic
+Change direction relative to track to be real angle:
 
-* Right now, logic does not line up with corner speeds, so there are some corners that you can't make
-* Figure out direction on-track in real units (currently represented by abstract turn accumulator)
-	- Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right
-* When being pushed toward outside of turn, also affect on-track direction/turn accumulator
+* Currently represented by abstract "turn accumulator"
+* Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right
+* When being pushed toward outside of turn, also affect direction
 * Smarter dx/dz tradeoff logic
 	- Essentially base it on GG diagram
 	- Kind of already operates this way, but need to determine both together rather than one then other
-	- Also needs on-track direction to be in real units to do this properly
+
+Other steering/cornering improvements:
+
+* Right now, logic does not line up with corner speeds, so there are some corners that you can't make
 
 Hitbox collision logic improvements:
 
@@ -63,6 +54,12 @@ AI steering logic could stand to be improved:
 * It would also overshoot it, but for now there's a hack to immediately reset the steering accumulator to prevent this
 * "Push to outside of corners" logic does not currently apply to AI cars
 
+Tire grip & wear
+* Right now it only affects corner max speed
+* Does not actually affect cornering physics
+* Does not affect acceleration
+* Does not affect braking distance
+
 ## Graphics
 
 Better car sprites & animations
@@ -71,6 +68,10 @@ Better car sprites & animations
 * Extra effects when braking, off track, etc
 
 Show arrows for cars that are just off-screen
+
+Show warning of upcoming pit lane
+
+Show warning of upcoming corners (when racing line disabled)
 
 Fix pop-in issues with cars right behind (caused by rendering only starting at current segment)
 

@@ -78,6 +78,7 @@ function draw_debug_overlay()
 	end
 
 	print('tire: ' .. player.tire_health)
+	print('grip: ' .. player.grip)
 	print('deg: ' .. 6000*(_prev_tire - player.tire_health)) -- percent per second
 	_prev_tire = player.tire_health
 
@@ -87,7 +88,7 @@ function draw_debug_overlay()
 	-- print('bd: ' .. braking_distance(player.speed, section.braking_speed))
 	-- print('bp: ' .. distance_to_next_braking_point(section, player.segment_plus_subseg))
 	-- print('bs: ' .. round(speed_to_kph * section.braking_speed))
-	-- print('bdr: ' .. braking_distance_relative(section, player.segment_plus_subseg, player.speed))
+	-- print('bdr: ' .. braking_distance_relative(section, player.segment_plus_subseg, player.speed, player.grip))
 
 	-- if (player.other_car_data.lx) print('l:' .. (player.x - player.other_car_data.lx))
 	-- if (player.other_car_data.rx) print('r:' .. (player.other_car_data.rx - player.x))
