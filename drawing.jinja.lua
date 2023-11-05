@@ -395,12 +395,9 @@ end
 
 function draw_road()
 
-	-- road position
-	local section_idx = cars[1].section_idx
-	local segment_idx = cars[1].segment_idx
-	local subseg = cars[1].subseg
-	local sect, seg = section_idx, segment_idx
-	local section = road[section_idx]
+	local player_car = cars[1]
+	local section_idx, segment_idx, subseg = player_car.section_idx, player_car.segment_idx, player_car.subseg
+	local section, sect, seg = road[section_idx], section_idx, segment_idx
 
 	-- direction
 	-- TODO: look ahead a bit more than this to determine camera
@@ -411,7 +408,7 @@ function draw_road()
 	-- Starting coords
 
 	-- TODO: if off track, move camera even further to make sure car is in frame
-	cam_x = cam_x_scale * cars[1].x * (2 / road.track_width)
+	cam_x = cam_x_scale * player_car.x * (2 / road.track_width)
 
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
@@ -531,7 +528,7 @@ function draw_road()
 
 	-- DEBUG: on-track stuff
 
-	local playerx, player_subseg = cars[1].x, cars[1].subseg
+	local playerx, player_subseg = player_car.x, player_car.subseg
 
 	local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(segment_idx - 1))
 	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
@@ -566,7 +563,7 @@ function draw_road()
 	line(car_rear_left_x, car_rear_y, car_front_left_x, car_front_y, 10)
 	line(car_rear_right_x, car_rear_y, car_front_right_x, car_front_y, 10)
 
-	local lx, rx = cars[1].other_car_data.lx, cars[1].other_car_data.rx
+	local lx, rx, front = player_car.other_car_data.lx, player_car.other_car_data.rx, player_car.other_car_data.front
 	if lx then
 		line(
 			x1 + 2*(lx + "{{ car_half_width }}")*scale1, y1,
@@ -579,7 +576,6 @@ function draw_road()
 			x2 + 2*(rx - "{{ car_half_width }}")*scale2, y2,
 			8)
 	end
-	local front = cars[1].other_car_data.front
 	if front then
 		local front_x, front_y, front_scale = project(
 			x + (player_subseg + front.dz_ahead) * xd + 2*playerx,
@@ -621,7 +617,7 @@ function draw_bg()
 	end
 
 	-- Trees/Buildings
-	local spr1 = nil
+	local spr1
 	if (road.tree_bg) spr1 = 112
 	if (road.city_bg) spr1 = 114
 	if (not spr1) return

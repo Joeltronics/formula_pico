@@ -69,18 +69,22 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			steer_accum=0,
 			heading=start_heading,
 			sprite_turn=0,
+--% if false
 			finished=false,
 			in_pit=false,
 			touched_wall=false,
 			touched_wall_sound=false,
 			off_track=false,
 			on_curb=false,
+--% endif
 			start_delay_counter=start_delay_counter,
 			other_car_data={
+--% if false
 				left=nil,
 				right=nil,
 				next=nil,
 				front=nil,
+--% endif
 			}
 		})
 
@@ -137,7 +141,7 @@ end
 function car_check_other_cars(car)
 
 	local car_x, segment_idx, subseg, segment_plus_subseg = car.x, car.segment_idx, car.subseg, car.segment_plus_subseg
-	local l_distance, r_distance, left, right, next, front = nil, nil, nil, nil, nil, nil
+	local l_distance, r_distance, left, right, next, front
 
 	local car_track_distance = car.segment_total + car.subseg
 
@@ -200,19 +204,18 @@ function wear_tires(car, dspeed, dsteer)
 --% if tire_wear_scale_dsteer != 1
 	dsteer *= "{{ tire_wear_scale_dsteer }}"
 --% endif
-	-- if (dspeed ~= 0 or dspeed ~= 0) printh('dspeed: ' .. dspeed .. ', dsteer: ' .. dsteer) -- DEBUG
-	car.tire_health = max(
-		0,
-		car.tire_health - sqrt(dspeed*dspeed + dsteer*dsteer) * "{{ tire_wear_scale }}" * tire_compounds[car.tire_compound_idx].deg * road.tire_deg
-	)
-end
 
-function calculate_grip(car)
---% if grip_tires_dead > 0
-	if (car.tire_health <= 0) return "{{ grip_tires_dead }}"
---% endif
-	local grip = "{{ grip_tires_min }}" + "{{ 1.0 - grip_tires_min }}" * sqrt(car.tire_health)
-	return grip * tire_compounds[car.tire_compound_idx].grip
+	local compound = tire_compounds[car.tire_compound_idx]
+
+	-- if (dspeed ~= 0 or dspeed ~= 0) printh('dspeed: ' .. dspeed .. ', dsteer: ' .. dsteer) -- DEBUG
+	car.tire_health -= sqrt(dspeed*dspeed + dsteer*dsteer) * "{{ tire_wear_scale }}" * compound.deg * road.tire_deg
+
+	if car.tire_health <= 0 then
+		car.tire_health = 0
+		car.grip = "{{ grip_tires_dead }}"
+	else
+		car.grip = "{{ grip_tires_min }}" + "{{ 1.0 - grip_tires_min }}" * sqrt(car.tire_health) * compound.grip
+	end
 end
 
 function update_sprite_turn(car, section, dx)
@@ -250,9 +253,11 @@ end
 
 function clip_car_x(car, section)
 
+--% if enable_debug
+	if (car.in_pit or noclip) return
+--% else
 	if (car.in_pit) return
-
-	if (noclip) return
+--% endif
 
 	local ds = car.segment_plus_subseg - 1
 	local car_x, wall_clip_l, wall_clip_r = car.x, section.wall_clip_l + ds*section.dwall_l, section.wall_clip_r + ds*section.dwall_r
@@ -331,7 +336,11 @@ function calculate_dz(car, section, steering_input_scaled, dx)
 
 	-- Clip to not hit car in front
 	local front = car.other_car_data.front
+--% if enable_debug
 	if collisions and front and not noclip then
+--% else
+	if collisions and front then
+--% endif
 		local dz_max = front.dz_ahead - "{{ car_depth + car_depth_hitbox_padding }}"
 
 		if dz > dz_max then
@@ -597,6 +606,8 @@ function tick_car_forward(car, dz)
 	end
 	assert (subseg < 1)
 
+--% if enable_debug
+	-- Should only be possible with debug stuff
 	while subseg < 0 do
 		subseg += 1
 		section_idx, segment_idx = reverse(section_idx, segment_idx)
@@ -605,6 +616,8 @@ function tick_car_forward(car, dz)
 			car.laps -= 1
 		end
 	end
+--% endif
+
 	assert(subseg >= 0 and subseg < 1)
 
 	car.section_idx, car.segment_idx, car.subseg, car.segment_plus_subseg, car.segment_total = section_idx, segment_idx, subseg, segment_idx + subseg, road[section_idx].sumct + segment_idx
@@ -614,17 +627,17 @@ function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
 
-	car.grip = calculate_grip(car)
-
 	if (collisions or car.ai) car_check_other_cars(car)
 	-- TODO: also use other_car_data for AI logic
 
+--% if enable_debug
 	if frozen then
 		clip_car_x(car, section)
 		tick_car_forward(car, 0)
 		update_sprite_turn(car, section, 0)
 		return
 	end
+--% endif
 
 	local speed, accel_brake_input_actual, engine_accel_brake = tick_car_speed(car, section, accel_brake_input)
 	local dspeed = car.speed - speed  -- TODO: this does not account for loss of speed from hitting another car!
