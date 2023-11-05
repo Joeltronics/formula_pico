@@ -148,7 +148,7 @@ function car_check_other_cars(car)
 	-- TODO: don't need to iterate all cars - can look at car_positions and only check the closest few
 
 	for other_car in all(cars) do
-		if (other_car.idx ~= car.idx) then
+		if (other_car.idx ~= car.idx and not other_car.in_pit) then
 
 			local dz_ahead = (other_car.segment_total + other_car.subseg - car_track_distance) % road.total_segment_count
 			local dz_behind = road.total_segment_count - dz_ahead
