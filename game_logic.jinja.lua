@@ -66,9 +66,8 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			ai=ai,
 			ghost=is_ghost,
 			engine_accel_brake=0,
-			steer_accum=0,
+			track_angle=0,
 			heading=start_heading,
-			sprite_turn=0,
 --% if false
 			finished=false,
 			in_pit=false,
@@ -218,28 +217,9 @@ function wear_tires(car, dspeed, dsteer)
 	end
 end
 
-function update_sprite_turn(car, section, dx)
-	-- Base car direction to draw
-	-- (Extra may be added at draw time to account for position on screen)
-
-	-- TODO: these don't all have to be integers, can add fractional amount
-
-	-- Did we move left/right?
-	local car_sprite_turn = sgn0(dx)
- 
-	-- Is accumulator saturated?
-	if (abs(car.steer_accum) >= 1) car_sprite_turn += sgn(car.steer_accum)
-
-	-- Is road turning?
-	if (abs(section.tu) > 0.1) car_sprite_turn += sgn(car_sprite_turn)
-	-- TODO: 2nd level, if turning sharply
-
-	car.sprite_turn = car_sprite_turn
-end
-
 function check_car_pit(car, section)
 	if not section.pit_wall then
-		if (car.in_pit) car.steer_accum = -sgn(car.x) -- Pit exit
+		if (car.in_pit) car.track_angle = "{{ -track_angle_pit_exit }}" * sgn(car.x)  -- Pit exit
 		car.in_pit = false
 	elseif
 		-- Check for pit entrance
@@ -266,12 +246,11 @@ function clip_car_x(car, section)
 
 	if (car_x < wall_clip_l and not section.wall_l) or (car_x > wall_clip_r and not section.wall_r) then
 		-- Hit an invisible wall - immediately set to drive parallel to wall
-		if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = 0
+		if (sgn0(car_x) == sgn0(car.track_angle)) car.track_angle = 0
 
 	elseif car_x < wall_clip_l or car_x > wall_clip_r then
 		-- Hit a visible wall - bounce back slightly (set accumulator to opposite direction)
-		-- car.steer_accum = -sgn(car_x)
-		if (sgn0(car_x) == sgn0(car.steer_accum)) car.steer_accum = -sgn(car_x)
+		if (sgn0(car_x) == sgn0(car.track_angle)) car.track_angle = "{{ -track_angle_max }}" * sgn(car_x)
 		car.touched_wall = true
 		car.touched_wall_sound = true
 	end
@@ -530,8 +509,8 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 		else
 			steering_input = 0
 			-- HACK: logic doesn't take accumulator into account, so we would overshoot
-			-- So Just reset the accumulator when we're at racing line
-			car.steer_accum = 0
+			-- So Just reset the track angle when we're at racing line
+			car.track_angle = 0
 		end
 	end
 
@@ -539,29 +518,26 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 	local steering_scale = min(16*car.speed, 1)
 	local steering_input_scaled = steering_input * steering_scale
 
-	--[[ Steering accumulator:
-	Don't just start turning immediately; add some acceleration in the X axis
-	This essentially represents that the car isn't pointing in quite the same direction as the track
-	It also just feels a bit more realistic
-	Also to penalize turning while accelerating/braking
-	]]
-	local steer_accum = car.steer_accum
+	local track_angle = car.track_angle
+
+	-- TODO: change this all to be in actual centripital acceleration units
 
 	if speed == 0 then
-		steer_accum = 0
+		track_angle = 0
 	else
-		if sgn0(steering_input_scaled) ~= sgn0(steer_accum) then
-			steer_accum = toward_zero(steer_accum, "{{ steer_accum_decr_rate }}")
+		if sgn0(steering_input_scaled) ~= sgn0(track_angle) then
+			track_angle = toward_zero(track_angle, "{{ track_angle_decr_rate }}")
 		end
 
-		local steer_accum_incr_rate = "{{ steer_accum_incr_rate_coast }}"
-		if (accel_brake_input ~= 0) steer_accum_incr_rate = "{{ steer_accum_incr_rate_accel_brake }}"
+		local track_angle_incr_rate = "{{ track_angle_incr_rate_coast }}"
+		if (accel_brake_input ~= 0) track_angle_incr_rate = "{{ track_angle_incr_rate_accel_brake }}"
 
-		steer_accum = clip_num(steer_accum + steering_input_scaled * steer_accum_incr_rate, -1, 1)
+		track_angle = clip_num(track_angle + steering_input_scaled * track_angle_incr_rate, "{{ -track_angle_max }}", "{{ track_angle_max }}")
 	end
-	car.x += "{{ steer_dx_max }}" * steer_accum * steering_scale
-	local dsteer = steer_accum - car.steer_accum
-	car.steer_accum = steer_accum
+	-- TODO: do this when ticking forward, not here
+	car.x += "{{ steer_dx_max / track_angle_max }}" * track_angle * steering_scale
+	local dsteer = track_angle - car.track_angle
+	car.track_angle = track_angle
 
 	return steering_input_scaled, dsteer
 end
@@ -634,7 +610,6 @@ function tick_car(car, accel_brake_input, steering_input)
 	if frozen then
 		clip_car_x(car, section)
 		tick_car_forward(car, 0)
-		update_sprite_turn(car, section, 0)
 		return
 	end
 --% endif
@@ -651,8 +626,6 @@ function tick_car(car, accel_brake_input, steering_input)
 	local dx = car.x - car_x_prev
 
 	wear_tires(car, dspeed, dsteer)
-
-	update_sprite_turn(car, section, dx)
 
 	local dz = calculate_dz(car, section, steering_input_scaled, dx)
 

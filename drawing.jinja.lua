@@ -341,7 +341,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		end
 	end
 
-	local sprite_turn = car.sprite_turn
+	local sprite_turn = "{{ 2 / track_angle_max }}" * car.track_angle
 
 	-- TODO: don't have to add integers, can add fractional amount
 	local d_center = x - 64
@@ -352,7 +352,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		sprite_list, sumct, seg,
 		{
 			img={
-				24 * min(3, ceil(abs(sprite_turn))),
+				24 * min(3, round(abs(sprite_turn))),
 				0, 24, 16},
 			siz={"{{ car_draw_width }}", "{{ car_draw_height }}"},
 			palt=11,

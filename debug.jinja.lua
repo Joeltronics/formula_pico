@@ -77,9 +77,11 @@ function draw_debug_overlay()
 		print('cam:' .. cam_x)
 	end
 
-	print('tire: ' .. player.tire_health)
-	print('grip: ' .. player.grip)
-	print('deg: ' .. 6000*(_prev_tire - player.tire_health)) -- percent per second
+	print('ang:' .. 360*player.track_angle)
+
+	print('tire:' .. player.tire_health)
+	print('grip:' .. player.grip)
+	print('deg:' .. 6000*(_prev_tire - player.tire_health)) -- percent per second
 	_prev_tire = player.tire_health
 
 	-- local pitch = (section.pitch + section.dpitch*(segment_idx - 1))

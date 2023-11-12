@@ -19,10 +19,14 @@ coast_decel_rel: 255/256
 coast_decel_abs: 1/2048
 brake_decel: 1/128
 
+# TODO: deprecate
 steer_dx_max: 1/32
-steer_accum_incr_rate_accel_brake: 1/32
-steer_accum_incr_rate_coast: 3/64
-steer_accum_decr_rate: 1/8
+
+track_angle_max: 30/360
+track_angle_pit_exit: track_angle_max
+track_angle_incr_rate_accel_brake: track_angle_max * 1/32
+track_angle_incr_rate_coast: track_angle_max * 3/64
+track_angle_decr_rate: track_angle_max * 1/8
 
 tire_wear_scale: 1/512
 tire_wear_scale_dspeed: 8
