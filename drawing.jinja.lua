@@ -341,7 +341,8 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		end
 	end
 
-	local sprite_turn = "{{ 2 / track_angle_max }}" * car.track_angle
+	local sprite_turn = car.track_angle - cam_angle_scale * cars[1].track_angle
+	sprite_turn *= "{{ 2 / track_angle_max }}"
 
 	-- TODO: don't have to add integers, can add fractional amount
 	local d_center = x - 64
@@ -404,6 +405,9 @@ function draw_road()
 	local camang = subseg * section.tu
 	local xd, zd = -camang, 1
 	local yd = -(section.pitch + section.dpitch*(segment_idx - 1))
+
+	xd += sin(cam_angle_scale * player_car.track_angle)
+	zd *= cos(cam_angle_scale * player_car.track_angle)
 
 	-- Starting coords
 
@@ -531,6 +535,10 @@ function draw_road()
 	local playerx, player_subseg = player_car.x, player_car.subseg
 
 	local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(segment_idx - 1))
+
+	xd += sin(cam_angle_scale * player_car.track_angle)
+	zd *= cos(cam_angle_scale * player_car.track_angle)
+
 	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
 	local x, y, z = -cx - road.track_width*cam_x, -cy + cam_dy, -cz + cam_dz
 	local x1, y1, scale1 = project(x, y, z)

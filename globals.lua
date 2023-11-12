@@ -21,9 +21,16 @@ sfx_speed_by_gear = {2, 2, 2, 2, 2, 4, 8, 8}
 
 cam_dy, cam_dz = 2, 2
 
--- At 0, the camera is always centered on track and the car moves
--- At 1, the car is always centered on track and the camera moves
-cam_x_scale = 0.75
+--[[
+cam_x_scale:
+	At 0, the camera is always centered on track and the car moves
+	At 1, the car is always centered on track and the camera moves
+cam_angle_scale:
+	At 0, the camera angle follows the track
+	At 1, the camera angle follows the car (car always appears pointed forward)
+]]
+cam_x_scale, cam_angle_scale = 0.75, 0.25
+-- cam_x_scale, cam_angle_scale = 1, 1
 
 palettes = {
 	-- main, accent, wing top, wing rear, dark, floor
