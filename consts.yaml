@@ -19,9 +19,7 @@ coast_decel_rel: 255/256
 coast_decel_abs: 1/2048
 brake_decel: 1/128
 
-# TODO: deprecate
-steer_dx_max: 1/32
-
+# TODO: some of these need to scale with speed
 track_angle_max: 30/360
 track_angle_pit_exit: track_angle_max
 track_angle_incr_rate_accel_brake: track_angle_max * 1/32

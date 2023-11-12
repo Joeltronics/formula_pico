@@ -289,29 +289,17 @@ function clip_car_x(car, section)
 	car.x = clip_num(car_x, wall_clip_l, wall_clip_r)
 end
 
-function calculate_dz(car, section, steering_input_scaled, dx)
-
-	local speed, car_x = car.speed * "{{ speed_scale }}", car.x
-
-	-- Adjust dz according to dx, i.e. account for the fact we're moving diagonally (don't just naively add dx)
-
-	local dz = sqrt(max(0, speed*speed - dx*dx)) -- accurate, though not necessarily more realistic feeling
-	-- local dz = max(0, speed - 0.25*abs(dx)) -- simplified
-
-	-- Also account for steering & accel input, to account for slight loss of grip (and penalize weaving)
-
-	-- TODO: figure out which logic we actually want here (and if we even want this at all)
-	-- if (car.engine_accel_brake ~= 0) dz *= (1 - abs(steering_input_scaled)/64)
-	-- dz *= (1 - abs(steering_input_scaled)/64)
-	-- if (not car.ai) dz *= (1 - abs(steering_input_scaled)/64)
-
-	-- Scale for corners - i.e. inside of corner has smaller distance to travel
-
+function scale_dz_for_corners(car, section, dz)
+	local car_x = car.x
 	if (section.angle ~= 0) then
 		local track_center_radius = section.length / abs(section.angle * "{{ twopi }}")
 		local car_radius = max(0, track_center_radius + (sgn(car_x) == sgn(section.angle) and -car_x or car_x))
 		dz *= (track_center_radius + "{{ turn_radius_compensation_offset }}") / (car_radius + "{{ turn_radius_compensation_offset }}")
 	end
+	return dz
+end
+
+function clip_dz(car, dz)
 
 	-- Clip to not hit car in front
 	local front = car.other_car_data.front
@@ -534,8 +522,7 @@ function tick_car_steering(car, steering_input, accel_brake_input)
 
 		track_angle = clip_num(track_angle + steering_input_scaled * track_angle_incr_rate, "{{ -track_angle_max }}", "{{ track_angle_max }}")
 	end
-	-- TODO: do this when ticking forward, not here
-	car.x += "{{ steer_dx_max / track_angle_max }}" * track_angle * steering_scale
+
 	local dsteer = track_angle - car.track_angle
 	car.track_angle = track_angle
 
@@ -560,12 +547,30 @@ function replace_tires(car)
 	car.tire_health = 1
 end
 
-function tick_car_forward(car, dz)
+function tick_car_forward(car, section)
 
-	local section_idx, segment_idx, subseg = car.section_idx, car.segment_idx, car.subseg + dz
+	local speed = car.speed * "{{ speed_scale }}"
 
-	car.heading -= road[section_idx].angle_per_seg * dz
+	local dz, dx = speed * cos(car.track_angle), -speed * sin(car.track_angle)
+
+	dz = scale_dz_for_corners(car, section, dz)
+	dz = clip_dz(car, dz)
+
+	car.subseg += dz
+
+	car.x += dx
+
+	car.heading -= road[car.section_idx].angle_per_seg * dz
 	car.heading %= 1.0
+
+	heal_car_section(car)
+
+	return dz
+end
+
+function heal_car_section(car)
+
+	local section_idx, segment_idx, subseg = car.section_idx, car.segment_idx, car.subseg
 
 	while subseg >= 1 do
 		subseg -= 1
@@ -609,7 +614,7 @@ function tick_car(car, accel_brake_input, steering_input)
 --% if enable_debug
 	if frozen then
 		clip_car_x(car, section)
-		tick_car_forward(car, 0)
+		heal_car_section(car)
 		return
 	end
 --% endif
@@ -623,14 +628,10 @@ function tick_car(car, accel_brake_input, steering_input)
 	local steering_input_scaled, dsteer = tick_car_steering(car, steering_input, accel_brake_input_actual)
 	clip_car_x(car, section)
 
-	local dx = car.x - car_x_prev
-
 	wear_tires(car, dspeed, dsteer)
 
-	local dz = calculate_dz(car, section, steering_input_scaled, dx)
-
-	tick_car_forward(car, dz)
-	-- Section may have changed - update it
+	local dz = tick_car_forward(car, section)
+	-- Section may have changed
 	section = road[car.section_idx]
 
 	-- TODO: should tick corner be before or after entering pit? Could matter if pit entrance is on a curve
