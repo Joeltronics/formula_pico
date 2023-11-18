@@ -29,7 +29,8 @@ cam_angle_scale:
 	At 0, the camera angle follows the track
 	At 1, the camera angle follows the car (car always appears pointed forward)
 ]]
-cam_x_scale, cam_angle_scale = 0.75, 0.25
+-- cam_x_scale, cam_angle_scale = 0.75, 0.25
+cam_x_scale, cam_angle_scale = 0.75, 0
 -- cam_x_scale, cam_angle_scale = 1, 1
 
 palettes = {

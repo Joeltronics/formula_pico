@@ -23,7 +23,16 @@ Game modes
 
 ## Gameplay improvements
 
-Change direction relative to track to be real angle:
+Cornerning & physics improvements:
+
+* Limit cornering grip based on acceleration
+	- Essentially base it on GG diagram
+	- Kind of already operates this way, but need to determine both together rather than one then other
+* Improve "push outside of turn" logic
+	- It was too strong before the change
+	- Now it's not strong enough
+
+
 
 * Currently represented by abstract "turn accumulator"
 * Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right

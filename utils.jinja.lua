@@ -15,12 +15,10 @@ function asin(val)
 	return atan2(sqrt(1 - val*val), val)
 end
 
-function toward_zero(val, inc)
-	if val >= 0 then
-		return max(0, val - inc)
-	else
-		return min(0, val + inc)
-	end
+function move_toward(curr, rate, dest)
+	dest = dest or 0
+	if (curr >= dest) return max(dest, curr - rate)
+	return min(dest, curr + rate)
 end
 
 function print_centered(text, x, y, col)

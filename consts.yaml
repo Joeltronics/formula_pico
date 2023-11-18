@@ -21,10 +21,12 @@ brake_decel: 1/128
 
 # TODO: some of these need to scale with speed
 track_angle_max: 30/360
-track_angle_pit_exit: track_angle_max
-track_angle_incr_rate_accel_brake: track_angle_max * 1/32
-track_angle_incr_rate_coast: track_angle_max * 3/64
-track_angle_decr_rate: track_angle_max * 1/8
+track_angle_target_coast: 30/360
+track_angle_target_accel_brake: 15/360
+track_angle_pit_exit: track_angle_target_coast
+track_angle_incr_rate: track_angle_target_coast * 1/64
+track_angle_extra_decr_rate: track_angle_target_coast * 1/16
+track_angle_sprite_turn_scale: 2 / track_angle_max
 
 tire_wear_scale: 1/512
 tire_wear_scale_dspeed: 8
@@ -36,8 +38,6 @@ grip_tires_dead: 0.25
 grip_tires_min: 0.5
 
 turn_radius_compensation_offset: 0.125
-
-turn_dx_scale: 1
 
 grass_max_speed: 0.125
 wall_max_speed: 0.25

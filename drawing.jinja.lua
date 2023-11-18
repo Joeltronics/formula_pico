@@ -336,13 +336,13 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		if car.off_track then
 			y -= flr(rnd(2))
 			-- TODO: add "flinging grass" sprite
-		elseif car.on_curb then
+		elseif car.on_curb and car.subseg < 0.5 then
 			y -= 1
 		end
 	end
 
 	local sprite_turn = car.track_angle - cam_angle_scale * cars[1].track_angle
-	sprite_turn *= "{{ 2 / track_angle_max }}"
+	sprite_turn *= "{{ track_angle_sprite_turn_scale }}"
 
 	-- TODO: don't have to add integers, can add fractional amount
 	local d_center = x - 64

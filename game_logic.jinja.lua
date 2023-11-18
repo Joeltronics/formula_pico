@@ -249,8 +249,8 @@ function clip_car_x(car, section)
 		if (sgn0(car_x) == sgn0(car.track_angle)) car.track_angle = 0
 
 	elseif car_x < wall_clip_l or car_x > wall_clip_r then
-		-- Hit a visible wall - bounce back slightly (set accumulator to opposite direction)
-		if (sgn0(car_x) == sgn0(car.track_angle)) car.track_angle = "{{ -track_angle_max }}" * sgn(car_x)
+		-- Hit a visible wall - bounce back slightly
+		if (sgn0(car_x) == sgn0(car.track_angle)) car.track_angle = -0.5*car.track_angle
 		car.touched_wall = true
 		car.touched_wall_sound = true
 	end
@@ -428,7 +428,7 @@ function tick_car_speed(car, section, accel_brake_input)
 	if (car.ai or accel_brake_input > 0) return min(speed + accel, limit_speed), 1, 1
 
 	-- Brake, to zero
-	if (accel_brake_input < -1) return toward_zero(speed, "{{ brake_decel }}"), accel_brake_input, -1
+	if (accel_brake_input < -1) return move_toward(speed, "{{ brake_decel }}"), accel_brake_input, -1
 
 	-- Pressing both brake and accelerator - brake, but only to section braking speed
 	-- Use much larger braking distance than normal (so can't abuse this in order to perfectly hit braking point)
@@ -457,89 +457,149 @@ function update_speed(car, speed, engine_accel_brake)
 	car.speed, car.gear, car.rpm, car.engine_accel_brake = speed, gear, rpm, engine_accel_brake
 end
 
-function tick_car_steering(car, steering_input, accel_brake_input)
+function ai_steering(car, section, dz_estimate)
+
+	-- Look ahead by dz estimate
+	-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
+	local section_z_estimate = min(car.segment_idx + car.subseg + dz_estimate - 1, section.length)
+
+	local target_x
+	if car.in_pit then
+		-- TODO: why is this 1/4 the pit lane width? Should be half. Must have an off by 1/2 error somewhere
+		target_x = sgn(section.pit) * (road.half_width + "{{ 0.25 * pit_lane_width }}")
+	else
+--% if racing_line_sine_interp
+		target_x = road.half_width * sin(section.entrance_x + section_z_estimate*section.racing_line_dx)
+--% else
+		target_x = road.half_width * (section.entrance_x + section_z_estimate*section.racing_line_dx)
+--% endif
+	end
+
+	-- TODO: don't need to prioritize steering when on straights; not sure the best way about this though
+	-- local brake_dist = distance_to_next_braking_point(section, car.segment_plus_subseg)
+	-- local steer_strength = 1
+	-- if (brake_dist > 31) steer_strength = 0.5
+	-- if (brake_dist > 63) steer_strength = 0.25
+	-- if (brake_dist > 127) steer_strength = 0.125
+	-- if (abs(target_x - car.x) > 2) steer_strength = 2
+
+	if (target_x < car.x - 0.01) return -1
+	-- if (target_x < car.x - 0.01) return -steer_strength
+
+	if (target_x > car.x + 0.01) return 1
+	-- if (target_x > car.x + 0.01) return steer_strength
+
+	-- HACK: logic doesn't take track angle into account, so we would overshoot
+	-- So Just reset the track angle when we're at target
+	car.track_angle = 0
+	return 0
+end
+
+
+function tick_car_steering(car, section, steering_input, accel_brake_input)
+
+	if car.speed == 0 then
+		-- Not moving
+		car.track_angle = 0
+		return 0
+	end
+
+	-- This will just be an estimate of dz - won't know true dz until after we've steered
+	local _, dz_estimate = calc_dx_dz(car, section)
 
 	-- TODO: if lx or rx, force leaving space for other cars
 	-- (This happens in clip_car_x too, but that should be last resort - we should handle this here)
 
-	if car.in_pit or car.ai then
-		local section, target_x = road[car.section_idx]
-
-		-- Look ahead by dz estimate (Won't know true dz until after steering)
-		-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
-		local dz_estimate = min(car.segment_idx + car.subseg + car.speed * "{{ speed_scale }}" - 1, section.length)
-
-		if car.in_pit then
-			-- TODO: why is this 1/4 the pit lane width? Should be half. Must have an off by 1/2 error somewhere
-			target_x = road.half_width + "{{ 0.25 * pit_lane_width }}"
-			target_x *= sgn(section.pit)
-		else
---% if racing_line_sine_interp
-			target_x = road.half_width * sin(section.entrance_x + dz_estimate*section.racing_line_dx)
---% else
-			target_x = section.entrance_x + dz_estimate*section.racing_line_dx
-			target_x *= road.half_width
---% endif
-		end
-
-		local steer_strength = 1
-		-- TODO: don't need to prioritize steering when on straights; not sure the best way about this though
-		-- local brake_dist = distance_to_next_braking_point(section, car.segment_plus_subseg)
-		-- if (brake_dist > 31) steer_strength = 0.5
-		-- if (brake_dist > 63) steer_strength = 0.25
-		-- if (brake_dist > 127) steer_strength = 0.125
-		-- if (abs(target_x - car.x) > 2) steer_strength = 2
-
-		if target_x < car.x - 0.01 then
-			steering_input = -steer_strength
-		elseif target_x > car.x + 0.01 then
-			steering_input = steer_strength
-		else
-			steering_input = 0
-			-- HACK: logic doesn't take accumulator into account, so we would overshoot
-			-- So Just reset the track angle when we're at racing line
-			car.track_angle = 0
-		end
-	end
-
-	-- Only steer when moving (but ramp this effect up from 0)
-	local steering_scale = min(16*car.speed, 1)
-	local steering_input_scaled = steering_input * steering_scale
+	if (car.in_pit or car.ai) steering_input = ai_steering(car, section, dz_estimate)
 
 	local track_angle = car.track_angle
 
-	-- TODO: change this all to be in actual centripital acceleration units
-
-	if speed == 0 then
-		track_angle = 0
-	else
-		if sgn0(steering_input_scaled) ~= sgn0(track_angle) then
-			track_angle = toward_zero(track_angle, "{{ track_angle_decr_rate }}")
-		end
-
-		local track_angle_incr_rate = "{{ track_angle_incr_rate_coast }}"
-		if (accel_brake_input ~= 0) track_angle_incr_rate = "{{ track_angle_incr_rate_accel_brake }}"
-
-		track_angle = clip_num(track_angle + steering_input_scaled * track_angle_incr_rate, "{{ -track_angle_max }}", "{{ track_angle_max }}")
+	-- Adjust angle for corner
+	local corner_angle_shift = 0
+	-- TODO: apply this to AI too!
+	-- (right now it can't handle it)
+	if not (car.in_pit or car.ai) then
+		corner_angle_shift = -section.angle_per_seg * dz_estimate
+		track_angle += corner_angle_shift
 	end
+
+	--[[
+	Automatically straighten the car out:
+
+	If the camera fully follows the car angle, then when you stop steering, you want the car to keep moving in the same
+	direction it was pointed.
+
+	But this is an arcade-style game, so the camera mostly follows the track. If you stop holding a direction but the
+	car keeps moving that direction, this feels wrong/unnatural from the camera's POV.
+
+	Essentially, the behavior we want from left/right buttons is not directly what direction we want the steering wheel
+	to point, but rather a "move the car left/right on-track" control, which we derive steering wheel direction from.
+
+	So if we were moving to the right along a straight and then let go of right, the car should straighten back out.
+	And this should probably happen pretty quickly, otherwise it will feel very "slidey"
+
+	But corners complicate this, and I still haven't figured out a good way to make this feel natural around corners.
+	And then to take this a step further, it's not always obvious which sections count as corners or not, because only
+	counting sections where the angle is non-zero means we miss the last section before a tight corner (where you've
+	probably already started turning), or S-bends where you might want to go at an angle relative to the track.
+
+	To get around this, there's probably something we can do with comparing your current position to the ideal racing
+	line, and use that. But need to figure that out.
+
+	Also, about limiting cornering with grip:
+
+	In a proper sim, you would want to limit centripetal acceleration. But that doesn't really work here. The problem
+	is, how do you move to the right slightly? In a sim, you would turn the wheel right a little bit, then turn it back
+	to center. We don't have that option - steering is just on/off. So you might want to just hold right briefly, but in
+	realistic steering wheel terms this is equivalent to turning the steering wheel all the way right and then all the
+	way back to center. Or you might want to tap it a few times quickly, which is equivalent to wiggling the wheel back
+	& forth several times - this would be really bad if we were using a realistic centripetal acceleration based model.
+
+	So we need a different way of limiting cornering with grip (TODO)
+	]]
+
+	if section.angle == 0 then
+		-- On a straight
+
+		-- If we're not steering, or steering away from the direction we're pointed, then add an extra push
+		if (sgn0(steering_input) ~= sgn0(track_angle)) track_angle = move_toward(track_angle, "{{ track_angle_extra_decr_rate }}")
+
+		local target_angle = "{{ track_angle_target_accel_brake }}"
+		if (accel_brake_input == 0) target_angle = "{{ track_angle_target_coast }}"
+
+		track_angle = move_toward(track_angle, "{{ track_angle_incr_rate }}", target_angle*sgn0(steering_input))
+	else
+		-- On a corner
+		-- TODO: currently this uses same logic as straights, but probably want different logic! (see long comment above)
+
+		-- if sgn0(steering_input) == sgn0(track_angle) then
+		-- 	-- Steering into corner
+		-- 	-- TODO
+
+		-- elseif steering_input == 0 then
+		-- 	-- Not steering
+		-- 	-- TODO
+
+		-- else
+		-- 	-- Steering opposite corner
+		-- 	-- TODO
+		-- end
+
+		-- If we're not steering, or steering away from the direction we're pointed, then add an extra push
+		if (sgn0(steering_input) ~= sgn0(track_angle)) track_angle = move_toward(track_angle, "{{ track_angle_extra_decr_rate }}")
+
+		local target_angle = "{{ track_angle_target_accel_brake }}" + corner_angle_shift
+		if (accel_brake_input == 0) target_angle = "{{ track_angle_target_coast }}"
+
+		track_angle = move_toward(track_angle, "{{ track_angle_incr_rate }}", target_angle*sgn0(steering_input))
+	end
+
+	-- TODO: clip track angle
 
 	local dsteer = track_angle - car.track_angle
 	car.track_angle = track_angle
 
-	return steering_input_scaled, dsteer
-end
-
-function tick_car_corner(car, section, dz)
-	if (car.ai or car.in_pit) return  -- TODO: apply this to AI cars
-	-- TODO: scaling by tu is accurate compared to what is displayed on screen, but not necessarily geometric interpretation
-	-- should instead be based on section.angle_per_seg
-	-- Probably not a big deal right now, because tu is based on angle_per_seg in the first place
-
---% if turn_dx_scale != 1
-	car.x -= "{{ turn_dx_scale }}" * dz * section.tu
---% else
-	car.x -= dz * section.tu
---% endif
+	return dsteer
 end
 
 function replace_tires(car)
@@ -547,13 +607,21 @@ function replace_tires(car)
 	car.tire_health = 1
 end
 
-function tick_car_forward(car, section)
+function calc_dx_dz(car, section)
 
 	local speed = car.speed * "{{ speed_scale }}"
 
 	local dz, dx = speed * cos(car.track_angle), -speed * sin(car.track_angle)
 
 	dz = scale_dz_for_corners(car, section, dz)
+
+	return dx, dz
+end
+
+function tick_car_forward(car, section)
+
+	local dx, dz = calc_dx_dz(car, section)
+
 	dz = clip_dz(car, dz)
 
 	car.subseg += dz
@@ -623,10 +691,7 @@ function tick_car(car, accel_brake_input, steering_input)
 	local dspeed = car.speed - speed  -- TODO: this does not account for loss of speed from hitting another car!
 	update_speed(car, speed, engine_accel_brake)
 
-	-- TODO: clip_car_x() twice here isn't great, should only need to clip once
-
-	local steering_input_scaled, dsteer = tick_car_steering(car, steering_input, accel_brake_input_actual)
-	clip_car_x(car, section)
+	local dsteer = tick_car_steering(car, section, steering_input, accel_brake_input_actual)
 
 	wear_tires(car, dspeed, dsteer)
 
@@ -635,8 +700,6 @@ function tick_car(car, accel_brake_input, steering_input)
 	section = road[car.section_idx]
 
 	-- TODO: should tick corner be before or after entering pit? Could matter if pit entrance is on a curve
-
-	tick_car_corner(car, section, dz)
 
 	check_car_pit(car, section)
 
