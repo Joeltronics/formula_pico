@@ -4,15 +4,15 @@
 
 include("build/generated_data.p64.lua")
 include("src_p64/globals.p64.lua")
--- include("src_p64/init_track.p64.lua")
--- include("src_p64/bg_objects.p64.lua")
+include("src_p64/init_track.p64.lua")
+include("src_p64/bg_objects.p64.lua")
 include("src_p64/utils.p64.lua")
--- include("src_p64/drawing.p64.lua")
+include("src_p64/drawing.p64.lua")
 include("src_p64/title_screen.p64.lua")
--- include("src_p64/game_logic.p64.lua")
--- include("src_p64/minimap.p64.lua")
--- include("src_p64/sound.p64.lua")
--- include("src_p64/debug.p64.lua")
+include("src_p64/game_logic.p64.lua")
+include("src_p64/minimap.p64.lua")
+include("src_p64/sound.p64.lua")
+include("src_p64/debug.p64.lua")
 
 
 function _init()
@@ -21,8 +21,8 @@ end
 
 function _update()
 	if road then
-		-- game_tick()
-		-- update_sound()
+		game_tick()
+		update_sound()
 	else
 		update_title_screen()
 	end
@@ -30,15 +30,15 @@ end
 
 function _draw()
 	if road then
-		-- draw_bg()
-		-- draw_road()
-		-- draw_minimap()
-		-- draw_hud()
-		-- if debug then
-		-- 	draw_debug_overlay()
-		-- elseif print_cpu then
-		-- 	draw_cpu_only_overlay()
-		-- end
+		draw_bg()
+		draw_road()
+		draw_minimap()
+		draw_hud()
+		if debug then
+			draw_debug_overlay()
+		elseif print_cpu then
+			draw_cpu_only_overlay()
+		end
 	else
 		draw_title_screen()
 	end
