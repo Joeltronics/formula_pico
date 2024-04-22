@@ -615,11 +615,11 @@ class Track:
 
 		_set_normals(self.segments)
 
-	def lua_output_data(self, defaults: dict, section_types: list[dict], compress: bool):
+	def lua_output_data(self, defaults: dict, section_types: list[dict], compress: bool, lowercase: bool):
 
 		ret = dict()
 
-		ret['name'] = self.name
+		ret['name'] = self.name.casefold() if lowercase else self.name
 
 		ret['minimap_scale'] = round(1/self.minimap_scale)
 		ret['minimap_step'] = self.minimap_step
@@ -704,7 +704,7 @@ def _set_normals(segments: list[Segment]):
 
 def _process_track(yaml_track: dict, yaml_defaults: dict) -> Track:
 
-	name = yaml_track['name'].strip().lower()
+	name = yaml_track['name'].strip()
 	length_km = yaml_track.get('length_km', None)
 
 	start_heading = yaml_track.get('start_heading', yaml_defaults['start_heading'])
@@ -850,26 +850,22 @@ def generate(
 			if draw:
 
 				# vprint('Drawing full-res line map')
-				filename = MAP_DIR_OUT / f'{track.name}_linemap.png'
+				filename = MAP_DIR_OUT / f'{track.name.casefold()}_linemap.png'
 				draw_line_map(track.points, show=show, filename=filename)
 
 				# vprint('Drawing minimap')
 				minimap_points = [p * track.minimap_scale for p in track.points[::track.minimap_step]]
-				filename = MAP_DIR_OUT / f'{track.name}_minimap.png'
+				filename = MAP_DIR_OUT / f'{track.name.casefold()}_minimap.png'
 				draw_line_map(minimap_points, curve_joint=False, show=show, filename=filename)
 
 				# vprint('Drawing track')
-				draw_track(track, MAP_DIR_OUT / track.name)
+				draw_track(track, MAP_DIR_OUT / track.name.casefold())
 
-			track_lua_data_p8 = track.lua_output_data(data, section_types, compress=compress_p8)
+			track_lua_data_p8 = track.lua_output_data(data, section_types, compress=compress_p8, lowercase=True)
 			sections_p8 = track_lua_data_p8.pop('sections')				
 
-			if compress_p8 == compress_p64:
-				track_lua_data_p64 = track_lua_data_p8
-				sections_p64 = sections_p8
-			else:
-				track_lua_data_p64 = track.lua_output_data(data, section_types, compress=compress_p64)
-				sections_p64 = track_lua_data_p64.pop('sections')
+			track_lua_data_p64 = track.lua_output_data(data, section_types, compress=compress_p64, lowercase=False)
+			sections_p64 = track_lua_data_p64.pop('sections')
 
 			f8.write('{\n')
 			f64.write('{\n')

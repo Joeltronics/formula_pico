@@ -3,24 +3,23 @@
 -- License: CC BY-NC-SA 4.0
 
 include("build/generated_data.p64.lua")
-include("consts.p64.lua")
-include("globals.p64.lua")
--- include("init_track.p64.lua")
--- include("bg_objects.p64.lua")
--- include("utils.p64.lua")
--- include("drawing.p64.lua")
-include("title_screen.p64.lua")
--- include("game_logic.p64.lua")
--- include("minimap.p64.lua")
--- include("sound.p64.lua")
--- include("debug.p64.lua")
+include("src_p64/globals.p64.lua")
+-- include("src_p64/init_track.p64.lua")
+-- include("src_p64/bg_objects.p64.lua")
+include("src_p64/utils.p64.lua")
+-- include("src_p64/drawing.p64.lua")
+include("src_p64/title_screen.p64.lua")
+-- include("src_p64/game_logic.p64.lua")
+-- include("src_p64/minimap.p64.lua")
+-- include("src_p64/sound.p64.lua")
+-- include("src_p64/debug.p64.lua")
 
 
 function _init()
 	init_title_screen()
 end
 
-function _update60()
+function _update()
 	if road then
 		-- game_tick()
 		-- update_sound()

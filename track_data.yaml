@@ -9,7 +9,7 @@ shoulder_half_width: 0.125
 angle_scale: 0.03125
 
 tracks:
-  - name: austria
+  - name: Austria
     start_heading: 0.5
     length_km: 4.32
     length_scale: 2
@@ -68,7 +68,7 @@ tracks:
     - {length: 8, angle: 0.0625, x: 0.5, pit: 1}
     - {length: 15, x: 0.25, pit: 1}
 
-  - name: belgium
+  - name: Belgium
     length_km: 7.00
     length_scale: 2
     wall: 4
@@ -157,7 +157,7 @@ tracks:
     - {length: 8, x: 0}
     - {length: 4, x: 1}
 
-  - name: italy
+  - name: Italy
     length_km: 5.79
     length_scale: 2
     wall: 6
@@ -217,7 +217,7 @@ tracks:
     - {turn_num: 11, length: 30, x: -0.25, angle: 4, wall_l: 8}
     - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall_l: 6}
 
-  - name: uk
+  - name: UK
     length_km: 5.9
     length_scale: 2
     start_heading: 0.125  # North-East
@@ -274,7 +274,7 @@ tracks:
     - {turn_num: 18, length: 4, angle: 4}
     - {length: 8, wall: 6}
 
-  - name: japan
+  - name: Japan
     length_km: 5.81
     length_scale: 2
     start_heading: 0.75  # South
@@ -335,7 +335,7 @@ tracks:
     - {turn_num: 18, length: 12, angle: 4, pitch: -0.25}
     - {length: 4, pitch: -0.25}
 
-  - name: monaco
+  - name: Monaco
     # TODO: scale is accurate vs other tracks, but it feels too short - scale up a bit?
     length_km: 3.34
     length_scale: 1
@@ -444,7 +444,7 @@ tracks:
     - {length: 10, x: 0.125, angle: 1, pit: 1}
     - {length: 10, x: 0.25, pit: 1}
 
-  - name: usa
+  - name: USA
     length_scale: 2
     length_km: 4
     city_bg: true
@@ -470,7 +470,7 @@ tracks:
     - {length: 12, angle: -1.5, x: -0.375, speed: 250 }
     - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1 }
 
-  - name: usa-short
+  - name: USA-short
     length_scale: 2
     length_km: 0.847
     city_bg: true
@@ -491,7 +491,7 @@ tracks:
     - {length: 4, x: 0.25, pit: -1}
     - {length: 4, x: 0.75, pit: -1}
 
-  - name: test
+  - name: Test
     length_scale: 2
     angle_scale: 1
     tree_bg: true
@@ -519,7 +519,7 @@ tracks:
     - {length: 9, angle: -0.125}
     - {length: 9, angle: 0.125}
 
-  - name: hill test
+  - name: Hill Test
     length_scale: 2
     angle_scale: 1
     tree_bg: true
@@ -543,7 +543,7 @@ tracks:
     - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2, pit: 1}
     - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2, pit: 1}
 
-  - name: "dragstrip"
+  - name: "Dragstrip"
     track_width: 4
     lanes: 4
     city_bg: true
