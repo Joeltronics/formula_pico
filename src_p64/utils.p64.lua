@@ -30,8 +30,8 @@ function digit_to_hex_char(digit)
 end
 
 function project(x, y, z)
-	local scale = 64 / z
-	return x * scale + 64, y * scale + 64, scale
+	local scale = 135 / z
+	return x * scale + 240, y * scale + 135, scale
 end
 
 function skew(x, y, z, xd, yd)

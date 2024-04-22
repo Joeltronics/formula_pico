@@ -42,7 +42,13 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col, rotate90)
 	y += yadj
 	w += yadj * wd
 
-	local ymax = min(y2, 127)
+	local ymax
+	if rotate90 then
+		ymax = min(y2, 479)
+	else
+		ymax = min(y2, 269)
+	end
+
 	while y <= ymax do
 		if rotate90 then
 			rectfill(y, x - w, y, x + w, col)
@@ -71,7 +77,7 @@ end
 function draw_ground(y1, y2, sumct, gndcol1, gndcol2)
 	local gndcol = gndcol1
 	if ((sumct % 6) >= 3) gndcol = gndcol2
-	rectfill(0, y1, 128, y2, gndcol)
+	rectfill(0, y1, 480, y2, gndcol)
 end
 
 function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, distance)
@@ -215,9 +221,9 @@ function draw_tunnel_face(x, y, scale)
 	local wy = ceil(y - wh)
 
 	-- faces
-	if(y1 > 0) rectfill(0, wy, 128, y1-1, 6)
+	if(y1 > 0) rectfill(0, wy, 480, y1-1, 6)
 	if(x1 > 0) rectfill(0, y1, x1-1, y2-1, 6)
-	if(x2 < 128) rectfill(x2, y1, 127, y2-1, 6)
+	if(x2 < 480) rectfill(x2, y1, 479, y2-1, 6)
 end
 
 function draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
@@ -426,8 +432,8 @@ function draw_road()
 	local sp = {}
 
 	-- current clip region
-	local clp = {0, 0, 128, 128}
-	local clp_prev = {0, 0, 128, 128}
+	local clp = {0, 0, 480, 270}
+	local clp_prev = {0, 0, 480, 270}
 	clip()
 
 	-- Draw road segments
@@ -607,15 +613,17 @@ function draw_bg()
 	-- TODO: draw some hills
 
 	local section = road[cars[1].section_idx]
-	local horizon = 64 + 32*(section.pitch + section.dpitch*(cars[1].segment_idx - 1))
+	-- local horizon = 64 + 32*(section.pitch + section.dpitch*(cars[1].segment_idx - 1))
+	-- TODO picotron: double check these numbers
+	local horizon = 135 + 64*(section.pitch + section.dpitch*(cars[1].segment_idx - 1))
 
 	-- Sky
-	rectfill(0, 0, 128, horizon - 1, 12)
+	rectfill(0, 0, 480, horizon - 1, 12)
 
 	-- Horizon
 	local horizon_col = 16*(road.gndcol1 or 3) + (road.gndcol2 or 11)
 	fillp(0b0011110000111100)
-	rectfill(0, horizon, 128, 128, horizon_col)
+	rectfill(0, horizon, 480, 270, horizon_col)
 	fillp()
 
 	-- Sun
@@ -678,7 +686,7 @@ function draw_ranking()
 			pal(compound.pal)
 			spr(60, x, y)
 
-			clip(0, y, 128, round(6 - 6 * car.tire_health))
+			clip(0, y, 480, round(6 - 6 * car.tire_health))
 			pal(10, 0)
 			spr(60, x, y)
 			clip()
@@ -711,13 +719,13 @@ function draw_hud()
 
 	-- Speed & gear
 
-	cursor(116, 116, 7)
+	cursor(460, 250, 7)
 	local speed_print = '' .. round(player_car.speed * speed_to_kph)
 	if (#speed_print == 1) speed_print = ' ' .. speed_print
 	if (#speed_print == 2) speed_print = ' ' .. speed_print
-	print(speed_print .. '\nkph')
+	print(speed_print .. '\nKPH')
 
-	cursor(108, 118)
+	cursor(450, 254)
 	print(player_car.gear)
 
 	-- Tire status
@@ -726,12 +734,12 @@ function draw_hud()
 	palt(11, true)
 
 	pal({[10]=0,[9]=0})
-	spr(46, 0, 112, 2, 2)
+	spr(46, 0, 254, 2, 2)
 
 	-- Tire sprite is 16 tall, but colored band is 12 tall, so it starts at (y + 2) and ends at (y + 14)
 	pal(tire_compounds[player_car.tire_compound_idx].pal)
-	clip(0, 112 + 14 - ceil(12 * player_car.tire_health), 128, 128)
-	spr(46, 0, 112, 2, 2)
+	clip(0, 254 + 14 - ceil(12 * player_car.tire_health), 480, 270)
+	spr(46, 0, 254, 2, 2)
 
 	clip()
 	palt()

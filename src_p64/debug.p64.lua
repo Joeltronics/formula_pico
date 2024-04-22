@@ -56,12 +56,12 @@ function draw_debug_overlay()
 	local player = cars[1]
 	local section = road[player.section_idx]
 
-	cursor(52, 0, 8)
+	cursor(225, 0, 8)
 	if (frozen) print('frozen')
 	if (noclip) print('noclip')
 	if (player.in_pit) print('pit')
 
-	cursor(88, 0, 5)
+	cursor(430, 0, 5)
 	print("cpu:" .. round(stat(1) * 100))
 	print("mem:" .. round(stat(0) * 100 / 2048))
 	print(player.section_idx .. "," .. player.segment_idx .. ',' .. player.subseg)
