@@ -5,17 +5,17 @@ __lua__
 -- by Joel Geddert
 -- License: CC BY-NC-SA 4.0
 
-#include build/generated_data.lua
-#include build/init_track.lua
-#include globals.lua
-#include bg_objects.lua
-#include build/utils.lua
-#include build/drawing.lua
-#include build/title_screen.lua
-#include build/game_logic.lua
-#include build/minimap.lua
-#include build/sound.lua
-#include build/debug.lua
+#include build/generated_data.p8.lua
+#include build/init_track.p8.lua
+#include src_p8/globals.p8.lua
+#include src_p8/bg_objects.p8.lua
+#include build/utils.p8.lua
+#include build/drawing.p8.lua
+#include build/title_screen.p8.lua
+#include build/game_logic.p8.lua
+#include build/minimap.p8.lua
+#include build/sound.p8.lua
+#include build/debug.p8.lua
 
 function _init()
 	init_title_screen()

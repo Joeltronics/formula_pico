@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from enum import Enum, auto
 from math import pi as PI, ceil, floor, cos, sin, asin, isclose
 from pathlib import Path
+import shutil
 from typing import ClassVar, Final
 from warnings import warn
 
@@ -38,7 +39,8 @@ MINIMAP_MAX_HEIGHT: Final = 48
 
 BUILD_DIR: Final = Path('build')
 DATA_FILENAME_IN: Final = Path('track_data.yaml')
-DATA_FILENAME_OUT: Final = BUILD_DIR / 'generated_data.lua'
+DATA_FILENAME_OUT_P8: Final = BUILD_DIR / 'generated_data.p8.lua'
+DATA_FILENAME_OUT_P64: Final = BUILD_DIR / 'generated_data.p64.lua'
 MAP_DIR_OUT: Final = Path('maps')
 
 
@@ -803,7 +805,8 @@ def _to_lua_str(val, indent=0, quote_strings=True) -> str:
 
 
 def generate(
-		compress=True,
+		compress_p8=True,
+		compress_p64=False,
 		draw=True,
 		show=False,
 		):
@@ -814,10 +817,15 @@ def generate(
 	BUILD_DIR.mkdir(parents=True, exist_ok=True)
 	MAP_DIR_OUT.mkdir(parents=True, exist_ok=True)
 
-	if DATA_FILENAME_OUT.exists():
-		DATA_FILENAME_OUT.unlink()
+	if DATA_FILENAME_OUT_P8.exists():
+		DATA_FILENAME_OUT_P8.unlink()
 
-	with open(DATA_FILENAME_OUT, 'w', newline='\n', encoding='utf-8') as f:
+	if DATA_FILENAME_OUT_P64.exists():
+		DATA_FILENAME_OUT_P64.unlink()
+
+	with (
+			open(DATA_FILENAME_OUT_P8, 'w', newline='\n', encoding='utf-8') as f8,
+			open(DATA_FILENAME_OUT_P64, 'w', newline='\n', encoding='utf-8') as f64):
 
 		# Write common values
 
@@ -825,13 +833,15 @@ def generate(
 			# These are applied in this script; skip them
 			if k in ['length_scale', 'angle_scale']:
 				continue
-			f.write(f'{k}={_to_lua_str(v)}\n')
+			f8.write(f'{k}={_to_lua_str(v)}\n')
+			f64.write(f'{k}={_to_lua_str(v)}\n')
 
 		# Write tracks
 
 		section_types = []
 
-		f.write('tracks={\n')
+		f8.write('tracks={\n')
+		f64.write('tracks={\n')
 
 		for track_yaml in tracks:
 			vprint(f'Processing track "{track_yaml["name"]}"')
@@ -851,29 +861,46 @@ def generate(
 				# vprint('Drawing track')
 				draw_track(track, MAP_DIR_OUT / track.name)
 
-			track_lua_data = track.lua_output_data(data, section_types, compress=compress)
+			track_lua_data_p8 = track.lua_output_data(data, section_types, compress=compress_p8)
+			sections_p8 = track_lua_data_p8.pop('sections')				
 
-			sections = track_lua_data.pop('sections')
+			if compress_p8 == compress_p64:
+				track_lua_data_p64 = track_lua_data_p8
+				sections_p64 = sections_p8
+			else:
+				track_lua_data_p64 = track.lua_output_data(data, section_types, compress=compress_p64)
+				sections_p64 = track_lua_data_p64.pop('sections')
 
-			f.write('{\n')
-			for key, val in track_lua_data.items():
-				f.write(f'\t{key}={_to_lua_str(val, indent=1)},\n')
+			f8.write('{\n')
+			f64.write('{\n')
 
-			for section in sections:
-				f.write(f'\t{_to_lua_str(section, indent=1)},\n')
+			for key, val in track_lua_data_p8.items():
+				f8.write(f'\t{key}={_to_lua_str(val, indent=1)},\n')
+			for key, val in track_lua_data_p64.items():
+				f64.write(f'\t{key}={_to_lua_str(val, indent=1)},\n')
 
-			f.write('},\n')
+			for section in sections_p8:
+				f8.write(f'\t{_to_lua_str(section, indent=1)},\n')
+			for section in sections_p64:
+				f64.write(f'\t{_to_lua_str(section, indent=1)},\n')
+
+			f8.write('},\n')
+			f64.write('},\n')
 
 			vprint()
 
-		f.write('}\n')
+		f8.write('}\n')
+		f64.write('}\n')
 
-		f.write('section_types={\n')
+		f8.write('section_types={\n')
+		f64.write('section_types={\n')
 		for section_type in section_types:
-			f.write(f'\t{_to_lua_str(section_type, indent=1)},\n')
-		f.write('}\n')
+			f8.write(f'\t{_to_lua_str(section_type, indent=1)},\n')
+			f64.write(f'\t{_to_lua_str(section_type, indent=1)},\n')
+		f8.write('}\n')
+		f64.write('}\n')
 
-	vprint(f'Data saved as {DATA_FILENAME_OUT}')
+	vprint(f'Data saved as {DATA_FILENAME_OUT_P8}')
 
 
 def main():
@@ -891,7 +918,7 @@ def main():
 	generate(
 		draw=args.draw,
 		show=args.show,
-		compress=args.compress,
+		compress_p8=args.compress,
 	)
 
 

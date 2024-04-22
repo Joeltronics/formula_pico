@@ -18,10 +18,11 @@ import generate_data
 from common import load_consts, CONSTS_FILE
 
 
-FILES_DIR: Final = Path('.')
+FILES_DIR: Final = Path('src_p8')
 BUILD_DIR: Final = Path('build')
 TRACK_DATA_IN: Final = generate_data.DATA_FILENAME_IN
-TRACK_DATA_OUT: Final = generate_data.DATA_FILENAME_OUT
+TRACK_DATA_OUT_P8: Final = generate_data.DATA_FILENAME_OUT_P8
+TRACK_DATA_OUT_P64: Final = generate_data.DATA_FILENAME_OUT_P64
 
 DEPENDENCIES_ALL: Final = [
 	__file__,
@@ -84,9 +85,9 @@ def main():
 
 	done_anything = False
 
-	if args.force or needs_build(TRACK_DATA_OUT, *DEPENDENCIES_GENERATE, *DEPENDENCIES_ALL):
+	if args.force or needs_build(TRACK_DATA_OUT_P8, TRACK_DATA_OUT_P64, *DEPENDENCIES_GENERATE, *DEPENDENCIES_ALL):
 		done_anything = True
-		print(f'Generating {TRACK_DATA_IN} -> {TRACK_DATA_OUT}')
+		print(f'Generating {TRACK_DATA_IN} -> {TRACK_DATA_OUT_P8}, {TRACK_DATA_OUT_P64}')
 		generate_data.set_verbose(args.verbose)
 		generate_data.generate(draw=args.draw)
 

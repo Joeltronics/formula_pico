@@ -1,3 +1,11 @@
+## Porting to Picotron
+
+Port base logic
+
+Improve graphics for larger screen
+
+Pico-8 code was heavily optimized for tokens - there's a lot that could be done to improve the code for Picotron now that there's no token limit. Some code clean-ups, but also lots of potential logic changes, e.g. the use of globals & hard-coded numbers, as well as stuff like using 3D vectors instead of separate x/y/z vars
+
 ## Gameplay features
 
 Race logic
@@ -29,21 +37,8 @@ Cornerning & physics improvements:
 	- Essentially base it on GG diagram
 	- Kind of already operates this way, but need to determine both together rather than one then other
 * Improve "push outside of turn" logic
-	- It was too strong before the change
+	- It was too strong before the new physics model
 	- Now it's not strong enough
-
-
-
-* Currently represented by abstract "turn accumulator"
-* Will also need to change "tu" variable to be calculated based on actual geometry instead of just choosing a value that looked right
-* When being pushed toward outside of turn, also affect direction
-* Smarter dx/dz tradeoff logic
-	- Essentially base it on GG diagram
-	- Kind of already operates this way, but need to determine both together rather than one then other
-
-Other steering/cornering improvements:
-
-* Right now, logic does not line up with corner speeds, so there are some corners that you can't make
 
 Hitbox collision logic improvements:
 
