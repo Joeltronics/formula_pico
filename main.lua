@@ -4,8 +4,8 @@
 
 include("build/generated_data.p64.lua")
 include("src_p64/globals.p64.lua")
+include("src_p64/graphics_data.p64.lua")
 include("src_p64/init_track.p64.lua")
-include("src_p64/bg_objects.p64.lua")
 include("src_p64/utils.p64.lua")
 include("src_p64/drawing.p64.lua")
 include("src_p64/title_screen.p64.lua")
@@ -16,6 +16,7 @@ include("src_p64/debug.p64.lua")
 
 
 function _init()
+	load_graphics()
 	init_title_screen()
 end
 

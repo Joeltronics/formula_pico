@@ -4,7 +4,11 @@ function init_minimap()
 
 	minimap = {}
 
-	local minimap_scale = road.minimap_scale
+	-- TODO: auto calculate minimap_scale, minimap_offset_x, minimap_offset_y here
+	-- This is a holdover from Pico-8 where that had to be pre-calculated
+	-- possibly minimap_step too?
+
+	local minimap_scale = 2 * road.minimap_scale
 	minimap_step = road.minimap_step
 
 	local count, x, y, dx, dy, heading = 0, 0, 0, 0, -1, road.start_heading
@@ -31,7 +35,7 @@ function draw_minimap()
 
 	-- TODO: use a sprite or the map or something for this, don't redraw the lines every frame
 
-	camera(-127 + road.minimap_offset_x, -64 + road.minimap_offset_y)
+	camera(-478 + 2*road.minimap_offset_x, -135 + 2*road.minimap_offset_y)
 
 	-- Map
 	line(0, 0, 0, 0, 7)
