@@ -268,7 +268,7 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 		y=py,
 		w=w,
 		h=h,
-		img=bg.img,
+		sprite=bg.sprite,
 		palette=bg.palette,
 		palt=bg.palt,
 		flip_x=(bg.flip or side > 0 and bg.flip_r),
@@ -358,9 +358,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 	add_bg_sprite(
 		sprite_list, sumct, seg,
 		{
-			img={
-				8 + min(3, round(abs(sprite_turn))),
-				24, 16},
+			sprite=sprites.car[min(#sprites.car, 1 + round(abs(sprite_turn)))],
 			siz={car_draw_width, car_draw_height},
 			palt=11,
 			palette=car.palette,
@@ -389,8 +387,8 @@ function draw_bg_sprite(s)
 		local y2=ceil(s.y)
 
 		sspr(
-			spritesheet[s.img[1]].bmp,
-			0, 0, s.img[2], s.img[3], -- sx, sy, sw, sh
+			s.sprite.bmp,
+			0, 0, s.sprite.width, s.sprite.height, -- sx, sy, sw, sh
 			x1, y1, x2-x1, y2-y1, -- dx, dy, dw, dh
 			s.flip_x  -- flip_x
 		)
@@ -634,8 +632,8 @@ function draw_bg()
 
 	-- Trees/Buildings
 	local spr1, spr2
-	if (road.tree_bg) spr1, spr2 = sprites.tree_bg_1, sprites.tree_bg_2
-	if (road.city_bg) spr1, spr2 = sprites.city_bg_1, sprites.city_bg_2
+	if (road.tree_bg) spr1, spr2 = sprites.tree_bg_1.bmp, sprites.tree_bg_2.bmp
+	if (road.city_bg) spr1, spr2 = sprites.city_bg_1.bmp, sprites.city_bg_2.bmp
 	if (not spr1) return
 
 	for off = -64,480,64 do
@@ -669,7 +667,6 @@ function draw_ranking()
 		-- For now, just use car index as car number
 		local text = '\#0\f7' .. pos_num .. '\-h\#' .. bgcol .. '\f' .. fgcol .. car_idx .. '\-h\#0\f7'
 
-		-- TODO: print tire status (once that's implemented)
 		-- TODO: figure out approx time delta and print it (instead of number of laps; "1 lap" or something if lapped)
 
 		if car.finished then
@@ -692,11 +689,11 @@ function draw_ranking()
 			-- TODO: more granular than this? (i.e. use all the colors)
 
 			pal(compound.pal)
-			spr(sprites.tire_small, x, y)
+			spr(sprites.tire_small.bmp, x, y)
 
 			clip(0, y, 480, round(8 - 8 * car.tire_health))
 			pal(10, 0)
-			spr(sprites.tire_small, x, y)
+			spr(sprites.tire_small.bmp, x, y)
 			clip()
 		end
 		-- print('\n\0')
@@ -709,8 +706,8 @@ function draw_race_start_lights()
 	palt(0, false)
 	for i = 1,5 do
 		if (i == 1 + race_start_num_lights) pal(palette_race_start_light_out)
-		spr(sprites.race_start_light, 240 - 12*2.5 + 10*i, 24)
-		spr(sprites.race_start_light, 240 - 12*2.5 + 10*i, 32)
+		spr(sprites.race_start_light.bmp, 240 - 12*2.5 + 10*i, 24)
+		spr(sprites.race_start_light.bmp, 240 - 12*2.5 + 10*i, 32)
 	end
 	pal()
 end
@@ -742,12 +739,12 @@ function draw_hud()
 	palt(11, true)
 
 	pal({[10]=0,[9]=0})
-	spr(sprites.tire_large, 0, 254, 2, 2)
+	spr(sprites.tire_large.bmp, 0, 254)
 
 	-- Tire sprite is 16 tall, but colored band is 12 tall, so it starts at (y + 2) and ends at (y + 14)
 	pal(tire_compounds[player_car.tire_compound_idx].pal)
 	clip(0, 254 + 14 - ceil(12 * player_car.tire_health), 480, 270)
-	spr(sprites.tire_large, 0, 254, 2, 2)
+	spr(sprites.tire_large.bmp, 0, 254)
 
 	clip()
 	palt()

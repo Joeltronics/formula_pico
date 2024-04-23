@@ -57,7 +57,7 @@ function init_track()
 
 		section.pitch = section.pitch or 0
 		section.angle = section.angle or 0
-		section.entrance_x = section.entrance_x or 0
+		section.entrance_x = section.entrance_x or section.x or 0
 		section.max_speed = section.max_speed or 1
 		section.pit = section.pit or 0
 

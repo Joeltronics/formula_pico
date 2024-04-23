@@ -55,13 +55,13 @@ function draw_minimap()
 	for idx = 2, #cars do
 		coord = minimap[(cars[idx].segment_total - 1) \ minimap_step + 1]
 		x, y = coord[1], coord[2]
-		line(x, y, x, y, cars[idx].palette[8])
+		circfill(x, y, 1, cars[idx].palette[8])
 	end
 
 	-- Always draw self last
 	coord = minimap[(cars[1].segment_total - 1) \ minimap_step + 1]
 	x, y = coord[1], coord[2]
-	line(x, y, x, y, cars[1].palette[8])
+	circfill(x, y, 1, cars[1].palette[8])
 
 	camera()
 end
