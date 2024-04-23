@@ -706,8 +706,8 @@ function draw_race_start_lights()
 	palt(0, false)
 	for i = 1,5 do
 		if (i == 1 + race_start_num_lights) pal(palette_race_start_light_out)
-		spr(sprites.race_start_light.bmp, 240 - 12*2.5 + 10*i, 24)
-		spr(sprites.race_start_light.bmp, 240 - 12*2.5 + 10*i, 32)
+		spr(sprites.race_start_light.bmp, 240 - 18*2.5 + 18*(i - 1), 48)
+		spr(sprites.race_start_light.bmp, 240 - 18*2.5 + 18*(i - 1), 48 + 16)
 	end
 	pal()
 end
@@ -739,12 +739,16 @@ function draw_hud()
 	palt(11, true)
 
 	pal({[10]=0,[9]=0})
-	spr(sprites.tire_large.bmp, 0, 254)
+	-- spr(sprites.tire_large.bmp, 0, 270 - 16)
+	spr(sprites.tire_large.bmp, 0, 270 - 32)
 
 	-- Tire sprite is 16 tall, but colored band is 12 tall, so it starts at (y + 2) and ends at (y + 14)
+	-- FIXME: for larger sprite, 32 tall but band is 26
 	pal(tire_compounds[player_car.tire_compound_idx].pal)
-	clip(0, 254 + 14 - ceil(12 * player_car.tire_health), 480, 270)
-	spr(sprites.tire_large.bmp, 0, 254)
+	-- clip(0, 270 - 16 + 14 - ceil(12 * player_car.tire_health), 480, 270)
+	clip(0, 270 - 32 + 29 - ceil(26 * player_car.tire_health), 480, 270)
+	-- spr(sprites.tire_large.bmp, 0, 270 - 16)
+	spr(sprites.tire_large.bmp, 0, 270 - 32)
 
 	clip()
 	palt()

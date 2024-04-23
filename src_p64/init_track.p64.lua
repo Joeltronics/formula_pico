@@ -28,6 +28,7 @@ function init_track()
 
 	road.start_heading = road.start_heading or start_heading
 	road.track_width = road.track_width or track_width
+	road.track_width *= 1.5  -- TODO: bake this into data instead of doing it here
 	road.half_width = 0.5 * road.track_width
 
 	road.minimap_scale = 1 / road.minimap_scale

@@ -19,11 +19,12 @@ function load_graphics()
 			{bmp=spritesheet[11].bmp, width=24, height=16},
 		},
 
-		race_start_light = {bmp=spritesheet[16].bmp, width=8, height=8},
+		race_start_light = {bmp=spritesheet[16].bmp, width=16, height=16},
 
 		tire_tiny = {bmp=spritesheet[17].bmp, width=8, height=8},
 		tire_small = {bmp=spritesheet[18].bmp, width=8, height=8},
-		tire_large = {bmp=spritesheet[19].bmp, width=16, height=16},
+		-- tire_large = {bmp=spritesheet[19].bmp, width=16, height=16},
+		tire_large = {bmp=spritesheet[20].bmp, width=32, height=32},
 
 		tree_bg_1 = {bmp=spritesheet[32].bmp, width=8, height=8},
 		tree_bg_2 = {bmp=spritesheet[33].bmp, width=8, height=8},
