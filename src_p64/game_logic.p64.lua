@@ -21,14 +21,6 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 
 	for idx = 1, num_other_cars+1 do
 		local palette = palettes[team_idx]
-		palette = {
-			[8]=palette[1],  -- main
-			[14]=palette[2],  -- accent 1
-			[12]=palette[3],  -- wing top
-			[1]=palette[4],  -- wing back
-			[2]=palette[5],  -- dark
-			[13]=palette[6],  -- floor
-		}
 
 		local ai = (idx > 1) or ai_only
 

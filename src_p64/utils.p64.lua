@@ -1,4 +1,12 @@
 
+function shallowcopy(tbl)
+	out = {}
+	for key, value in pairs(tbl) do
+		out[key] = value
+	end
+	return out
+end
+
 function round(val)
 	return flr(val + 0.5)
 end

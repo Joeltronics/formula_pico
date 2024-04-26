@@ -1,9 +1,5 @@
 ## Porting to Picotron
 
-Port base logic
-
-Improve graphics for larger screen
-
 Pico-8 code was heavily optimized for tokens - there's a lot that could be done to improve the code for Picotron now that there's no token limit. Some code clean-ups, but also lots of potential logic changes, e.g. the use of globals & hard-coded numbers, as well as stuff like using 3D vectors instead of separate x/y/z vars
 
 ## Gameplay features

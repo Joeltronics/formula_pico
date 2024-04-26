@@ -108,15 +108,15 @@ cam_x_scale, cam_angle_scale = 0.75, 0
 -- cam_x_scale, cam_angle_scale = 1, 1
 
 palettes = {
-	-- main, accent, wing top, wing rear, dark, floor
-	{ 8, 14, 5, 0, 2, 2, name='Red' },
-	{ 1, 8, 5, 0, 0, 0, name='Blue' },
-	{ 0, 11, 5, 1, 1, 1, name='Black' },
-	{ 9, 12, 5, 0, 4, 4, name='Orange' },
-	{ 3, 11, 5, 0, 5, 0, name='Green' },
-	{ 10, 0, 5, 0, 5, 0, name='Yellow' },
-	{ 14, 7, 5, 0, 2, 2, name='Pink' },
-	{ 6, 7, 5, 0, 5, 0, name='Silver' },
+	-- main, accent, wing top, wing rear, dark, highlight, taillight
+	{ [8]=8, [14]=14, [12]=6, [1]=0, [2]=2, [7]=7, [15]=0, name='Red' },
+	{ [8]=1, [14]=8, [12]=12, [1]=0, [2]=2, [7]=7, [15]=0, name='Blue' },
+	{ [8]=0, [14]=11, [12]=3, [1]=0, [2]=1, [7]=7, [15]=0, name='Black' },
+	{ [8]=9, [14]=12, [12]=6, [1]=0, [2]=4, [7]=7, [15]=0, name='Orange' },
+	{ [8]=3, [14]=11, [12]=6, [1]=0, [2]=5, [7]=7, [15]=0, name='Green' },
+	{ [8]=10, [14]=0, [12]=9, [1]=0, [2]=5, [7]=7, [15]=0, name='Yellow' },
+	{ [8]=14, [14]=7, [12]=6, [1]=0, [2]=2, [7]=6, [15]=0, name='Pink' },
+	{ [8]=6, [14]=7, [12]=5, [1]=0, [2]=5, [7]=6, [15]=0, name='Silver' },
 }
 
 palette_ghost = {

@@ -12,11 +12,17 @@ function load_graphics()
 	-- I would think you could get the sprite width & height from the sprite object, but it seems not?
 	-- TODO: add palt() info in here
 	sprites = {
-		car = {
+		car_small = {
 			{bmp=spritesheet[8].bmp, width=24, height=16},
 			{bmp=spritesheet[9].bmp, width=24, height=16},
 			{bmp=spritesheet[10].bmp, width=24, height=16},
 			{bmp=spritesheet[11].bmp, width=24, height=16},
+		},
+		car = {
+			{bmp=spritesheet[12].bmp, width=48, height=32},
+			{bmp=spritesheet[13].bmp, width=48, height=32},
+			{bmp=spritesheet[14].bmp, width=48, height=32},
+			{bmp=spritesheet[15].bmp, width=48, height=32},
 		},
 
 		race_start_light = {bmp=spritesheet[16].bmp, width=16, height=16},

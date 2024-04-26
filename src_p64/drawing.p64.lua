@@ -355,13 +355,24 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 	if (abs(d_center) > 32) sprite_turn -= sgn(d_center)
 	if (abs(d_center) > 96) sprite_turn -= sgn(d_center)
 
+	local palette = car.palette
+
+	-- Tail light on/off
+	if (car.engine_accel_brake <= 0) then
+		-- Palettes aren't reused, so don't actually need to copy
+		-- palette = shallowcopy(palette)
+		palette[15] = 8
+	else
+		palette[15] = 0
+	end
+
 	add_bg_sprite(
 		sprite_list, sumct, seg,
 		{
 			sprite=sprites.car[min(#sprites.car, 1 + round(abs(sprite_turn)))],
 			siz={car_draw_width, car_draw_height},
 			palt=11,
-			palette=car.palette,
+			palette=palette,
 			flip=sprite_turn < 0,
 		},
 		0, x, y, scale, clp)

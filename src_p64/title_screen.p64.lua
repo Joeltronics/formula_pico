@@ -119,6 +119,23 @@ function draw_title_screen()
 		print('\145', 128 + xoff, 65 + yoff + 8 * row_zidx)
 	end
 
+	local x = 90
+	local y = 135
+	for dx = -16, 54 do
+		line(
+			x + dx,      y + 32 + 8,
+			x + dx + 12, y - 4,
+			5)
+	end
+
+	pal(palettes[team_zidx + 1])
+	palt(0, false)
+	palt(11, true)
+	-- spr(sprites.car[#sprites.car].bmp, x, y)
+	spr(sprites.car[2].bmp, x, y)
+	palt()
+	pal()
+
 	-- DEBUG
 	-- print(debug_test, 0, 0)
 end
