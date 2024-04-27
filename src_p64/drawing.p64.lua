@@ -522,6 +522,10 @@ function draw_road()
 		else
 			clp[4] = min(clp[4], ceil(y2))
 		end
+
+		-- Stop drawing if the clip window size is zero
+		if (clp[3] <= clp[1] or clp[4] <= clp[2]) break
+
 		setclip(clp)
 
 		-- Advance
