@@ -393,7 +393,7 @@ tracks:
     - {turn_num: 8, length: 4, x: 0.5, angle: 4, speed: 80}  # Portier
     - {turn_num: 8, length: 4, x: 1, angle: 4, speed: 80, gndcol1l: 16, gndcol2l: 16}
     - {length: 8, x: 0.25, gndcol1l: 16, gndcol2l: 16}
-    - {length: 16, x: -0.5, tnl: true}  # Tunnel
+    - {length: 16, x: -0.5, tnl: true, tnl_height: 16, tnl_l: 8}  # Tunnel
     - {length: 4, x: -0.125, angle: 1, tnl: true}
     - {length: 4, x: 0, tnl: true}
     - {turn_num: 9, length: 10, x: 0.375, angle: 2, tnl: true}

@@ -137,6 +137,9 @@ class Section:
 	dwall_r: float | None = None
 	pitch: float = 0.0
 	tnl: bool = False
+	tnl_height: float | None = None
+	tnl_l: float | None = None
+	tnl_r: float | None = None
 	pit: int = 0
 	dpit: float | None = None
 
@@ -182,6 +185,9 @@ class Section:
 	LUA_KW_FIELDS_PICOTRON: ClassVar[list[str]] = [
 		'pit',
 		'tnl',
+		'tnl_height',
+		'tnl_l',
+		'tnl_r',
 		'lanes',
 		'gndcol1',
 		'gndcol2',

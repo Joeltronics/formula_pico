@@ -232,18 +232,23 @@ function clip_to_tunnel(px,py,scale,clp)
 	clp[4] = min(clp[4], y2)
 end
 
-function draw_tunnel_face(x, y, scale)
+function draw_tunnel_face(section, x, y, scale)
 	local x1, y1, x2, y2 = get_tunnel_rect(x, y, scale)
 
-	-- tunnel wall top
-	-- TODO: variable tunnel height per section
-	local wh = 8*scale
-	local wy = ceil(y - wh)
+	-- Face top
+	local wh = (section.tnl_height or 8) * scale
+	local face_top_y = ceil(y - wh)
 
-	-- faces
-	if(y1 > 0) rectfill(0, wy, 480, y1-1, 6)
-	if(x1 > 0) rectfill(0, y1, x1-1, y2-1, 6)
-	if(x2 < 480) rectfill(x2, y1, 479, y2-1, 6)
+	-- Left & right bounds
+	local face_x1 = 0
+	local face_x2 = 479
+	if (section.tnl_l) face_x1 = max(0, x1 - scale * section.tnl_l)
+	if (section.tnl_r) face_x2 = min(479, x2 + scale * section.tnl_r)
+
+	-- Draw the faces
+	if(y1 > 0) rectfill(face_x1, face_top_y, face_x2, y1-1, 6) -- Top
+	if(x1 > 0) rectfill(face_x1, y1, x1-1, y2-1, 6) -- Left
+	if(x2 < 480) rectfill(x2, y1, face_x2, y2-1, 6) -- Right
 end
 
 function draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
@@ -490,7 +495,7 @@ function draw_road()
 
 		local tnl = section.tnl
 		if tnl and not ptnl then
-			draw_tunnel_face(x1, y1, scale1)
+			draw_tunnel_face(section, x1, y1, scale1)
 			clip_to_tunnel(x1, y1, scale1, clp)
 			setclip(clp)
 		end
