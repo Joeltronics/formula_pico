@@ -74,10 +74,30 @@ end
 -- 	)
 -- end
 
-function draw_ground(y1, y2, sumct, gndcol1, gndcol2)
-	local gndcol = gndcol1
-	if ((sumct % 6) >= 3) gndcol = gndcol2
+function draw_ground(section, seg, sumct, x1, y1, scale1, x2, y2, scale2)
+
+	local gndcol1 = section.gndcol1 or road.gndcol1 or 3
+	local gndcol2 = section.gndcol2 or road.gndcol2 or 11
+
+	local gndcol, gndcol_l, gndcol_r = gndcol1, section.gndcol1l, section.gndcol1r
+	if ((sumct % 6) >= 3) gndcol, gndcol_l, gndcol_r = gndcol2, section.gndcol2l, section.gndcol2r
 	rectfill(0, y1, 480, y2, gndcol)
+
+	if gndcol_l and (gndcol_l != gndcol) then
+		local wall1 = section.wall_l + section.dwall_l * (seg - 1)
+		local wall2 = section.wall_l + section.dwall_l * seg
+		local wx1, wx2 = x1 + 2*scale1*wall1, x2 + 2*scale2*wall2
+		local x = min(wx1, wx2)
+		rectfill(0, y1, x, y2, gndcol_l)
+	end
+
+	if gndcol_r and (gndcol_r != gndcol) then
+		local wall1 = section.wall_r + section.dwall_r * (seg - 1)
+		local wall2 = section.wall_r + section.dwall_r * seg
+		local wx1, wx2 = x1 + 2*scale1*wall1, x2 + 2*scale2*wall2
+		local x = max(wx1, wx2)
+		rectfill(x, y1, 480, y2, gndcol_r)
+	end
 end
 
 function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, distance)
@@ -89,9 +109,9 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	if section.tnl then
 		draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
 	elseif (y2 >= y1) then
-		draw_ground(y1, y2, sumct,
-			section.gndcol1 or road.gndcol1 or 3,
-			section.gndcol2 or road.gndcol2 or 11)
+		draw_ground(
+			section, seg, sumct,
+			x1, y1, scale1, x2, y2, scale2)
 	end
 
 	if (y2 < y1 or distance > road_draw_distance) return

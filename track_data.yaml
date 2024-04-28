@@ -356,16 +356,16 @@ tracks:
     - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2, lanes: 1, pit: 1}
     - {length: 12, x: 0.25, wall: 2, lanes: 3, pit: 1}
     - {length: 4, x: -1, angle: -1, pitch: 1, lanes: 3}
-    - {length: 24, x: -0.75, pitch: 1, lanes: 3}
-    - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3}
-    - {length: 3, x: 0, pitch: 1, lanes: 3}
-    - {length: 6, x: 0, angle: -2, pitch: 1, lanes: 3}
-    - {length: 3, x: 0.25, pitch: 1, lanes: 3}
-    - {turn_num: 2, length: 2, x: 0.5, angle: 1.5, pitch: 0.25, lanes: 3}  # Beau Rivage
-    - {turn_num: 2, length: 2, x: 0.75, angle: 1.5, pitch: 0.25, lanes: 3}
-    - {length: 6, x: 0.5, pitch: 0.25, lanes: 1}
-    - {turn_num: 3, x: 0, length: 10, angle: -4, speed: 165, lanes: 1}  # Massenet
-    - {turn_num: 3, x: -1, length: 6, angle: -4, speed: 165, lanes: 1}
+    - {length: 24, x: -0.75, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
+    - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
+    - {length: 3, x: 0, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
+    - {length: 6, x: 0, angle: -2, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
+    - {length: 3, x: 0.25, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
+    - {turn_num: 2, length: 2, x: 0.5, angle: 1.5, pitch: 0.25, lanes: 3, gndcol1r: 12, gndcol2r: 12}  # Beau Rivage
+    - {turn_num: 2, length: 2, x: 0.75, angle: 1.5, pitch: 0.25, lanes: 3, gndcol1r: 12, gndcol2r: 12}
+    - {length: 6, x: 0.5, pitch: 0.25, lanes: 1, gndcol1r: 12, gndcol2r: 12}
+    - {turn_num: 3, x: 0, length: 10, angle: -4, speed: 165, lanes: 1, gndcol1r: 12, gndcol2r: 12}  # Massenet
+    - {turn_num: 3, x: -1, length: 6, angle: -4, speed: 165, lanes: 1, gndcol1r: 12, gndcol2r: 12}
     - {turn_num: 3, x: -0.5, length: 10, angle: -4, speed: 165, lanes: 1}
     - {length: 8, x: 0.5, lanes: 1}
     - {length: 4, x: -0.5, speed: 165, lanes: 1}
@@ -391,36 +391,36 @@ tracks:
     - {length: 4, x: -0.5, angle: 2, speed: 80}
     - {length: 2, x: 0, speed: 80}
     - {turn_num: 8, length: 4, x: 0.5, angle: 4, speed: 80}  # Portier
-    - {turn_num: 8, length: 4, x: 1, angle: 4, speed: 80}
-    - {length: 8, x: 0.25}
+    - {turn_num: 8, length: 4, x: 1, angle: 4, speed: 80, gndcol1l: 16, gndcol2l: 16}
+    - {length: 8, x: 0.25, gndcol1l: 16, gndcol2l: 16}
     - {length: 16, x: -0.5, tnl: true}  # Tunnel
     - {length: 4, x: -0.125, angle: 1, tnl: true}
     - {length: 4, x: 0, tnl: true}
     - {turn_num: 9, length: 10, x: 0.375, angle: 2, tnl: true}
     - {turn_num: 9, length: 10, x: 1, angle: 2, tnl: true}
     - {length: 28, x: 0.375, tnl: true}
-    - {length: 4, x: -0.375, pitch: -0.5}  # Tunnel exit
-    - {length: 10, x: -0.125, angle: 1.5, pitch: -0.5}
-    - {length: 8, x: 0.5}
-    - {length: 8, x: 1}
-    - {turn_num: 10, length: 4, x: -1, angle: -8, speed: 85, lanes: 1}  # Nouvelle Chicane
-    - {length: 2, x: 0, speed: 70, wall_r: 6, lanes: 1}
-    - {length: 4, x: 1, angle: 8, speed: 70, wall_r: 6, lanes: 1}  # Not numbered
-    - {length: 4, x: 0.5, wall_r: 4, lanes: 1}
-    - {turn_num: 11, length: 4, x: 0.25, angle: 4, wall_r: 4, lanes: 1}  # Chicane exit
-    - {turn_num: 11, length: 2, x: -0.25, wall_r: 4, lanes: 1}
-    - {turn_num: 11, length: 2, x: -0.75, angle: -2, wall_r: 4, lanes: 1}
-    - {turn_num: 11, length: 2, x: -1, angle: -2, wall_r: 4, lanes: 1}
-    - {length: 14, x: -0.5, wall_r: 2}
-    - {length: 6, x: 1}
-    - {turn_num: 12, x: 0, length: 9, angle: -5}  # Tabac
-    - {length: 12, x: -1, angle: -3}
-    - {turn_num: 13, x: 0.5, length: 4, angle: -4}  # Louis Chiron
-    - {length: 2, x: 0.5, speed: 250}
-    - {turn_num: 14, x: 1, length: 4, angle: 4, speed: 250}
-    - {length: 8, x: 0.25}
-    - {length: 6, x: -0.75}
-    - {length: 6, x: -1, speed: 125}
+    - {length: 4, x: -0.375, pitch: -0.5, gndcol1l: 16, gndcol2l: 16}  # Tunnel exit
+    - {length: 10, x: -0.125, angle: 1.5, pitch: -0.5, gndcol1l: 16, gndcol2l: 16}
+    - {length: 8, x: 0.5, gndcol1l: 16, gndcol2l: 16}
+    - {length: 8, x: 1, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 10, length: 4, x: -1, angle: -8, speed: 85, lanes: 1, gndcol1l: 16, gndcol2l: 16}  # Nouvelle Chicane
+    - {length: 2, x: 0, speed: 70, wall_r: 6, lanes: 1, gndcol1l: 16, gndcol2l: 16}
+    - {length: 4, x: 1, angle: 8, speed: 70, wall_r: 6, lanes: 1, gndcol1l: 16, gndcol2l: 16}  # Not numbered
+    - {length: 4, x: 0.5, wall_r: 4, lanes: 1, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 11, length: 4, x: 0.25, angle: 4, wall_r: 4, lanes: 1, gndcol1l: 16, gndcol2l: 16}  # Chicane exit
+    - {turn_num: 11, length: 2, x: -0.25, wall_r: 4, lanes: 1, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 11, length: 2, x: -0.75, angle: -2, wall_r: 4, lanes: 1, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 11, length: 2, x: -1, angle: -2, wall_r: 4, lanes: 1, gndcol1l: 16, gndcol2l: 16}
+    - {length: 14, x: -0.5, wall_r: 2, gndcol1l: 16, gndcol2l: 16}
+    - {length: 6, x: 1, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 12, x: 0, length: 9, angle: -5, gndcol1l: 16, gndcol2l: 16}  # Tabac
+    - {length: 12, x: -1, angle: -3, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 13, x: 0.5, length: 4, angle: -4, gndcol1l: 16, gndcol2l: 16}  # Louis Chiron
+    - {length: 2, x: 0.5, speed: 250, gndcol1l: 16, gndcol2l: 16}
+    - {turn_num: 14, x: 1, length: 4, angle: 4, speed: 250, gndcol1l: 16, gndcol2l: 16}
+    - {length: 8, x: 0.25, gndcol1l: 16, gndcol2l: 16}
+    - {length: 6, x: -0.75, gndcol1l: 16, gndcol2l: 16}
+    - {length: 6, x: -1, speed: 125, gndcol1l: 16, gndcol2l: 16}
     - {turn_num: 15, length: 4, x: 0.5, angle: 8, speed: 125, lanes: 1}
     - {length: 2, x: 0, speed: 125, lanes: 1}
     - {turn_num: 16, x: -0.75, length: 4, angle: -8, speed: 125, lanes: 1}
@@ -526,18 +526,18 @@ tracks:
     sections:
     - {length: 8, x: 0, pit: 1}
     - {length: 12, x: -0.875, pit: 1}
-    - {length: 20, x: -0.75, gndcol1: 8, gndcol2: 2}
-    - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
-    - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2}
+    - {length: 20, x: -0.75, gndcol1: 8, gndcol2: 2, gndcol1r: 3, gndcol2r: 11}
+    - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2, gndcol1r: 3, gndcol2r: 11}
+    - {length: 20, x: -0.5, pitch: 1, gndcol1: 8, gndcol2: 2, gndcol1r: 3, gndcol2r: 11}
     - {length: 15, x: -0.75}
     - {length: 5, x: -1, speed: 100, lanes: 2}
     - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2}
     - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2}
     - {length: 8, x: 0, lanes: 2}
     - {length: 12, x: -0.875}
-    - {length: 20, x: -0.75, gndcol1: 1, gndcol2: 12}
-    - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
-    - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12}
+    - {length: 20, x: -0.75, gndcol1: 1, gndcol2: 12, gndcol1r: 3, gndcol2r: 11}
+    - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12, gndcol1r: 3, gndcol2r: 11}
+    - {length: 20, x: -0.5, pitch: -1, gndcol1: 1, gndcol2: 12, gndcol1r: 3, gndcol2r: 11}
     - {length: 15, x: -0.75}
     - {length: 5, x: -1, speed: 100, lanes: 2}
     - {length: 6, x: 0, speed: 100, angle: 0.25, lanes: 2, pit: 1}

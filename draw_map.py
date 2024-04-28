@@ -56,6 +56,9 @@ PALETTE: Final = [Color.from_hex(c) for c in [
 	'#83769C',
 	'#FF77A8',
 	'#FFCCAA',
+
+	'#0a62be',
+	# TODO: remaining Picotron colors
 ]]
 
 BLACK: Final = PALETTE[0]
@@ -261,10 +264,25 @@ def draw_track(track, path_base, scale=16):
 
 			if section.tnl:
 				gndcol = 1 if (idx % 4 < 2) else 0
+				gndcol_l = gndcol_r = None
+			elif (idx % 6) < 3:
+				gndcol = gndcol1
+				gndcol_l = section.gndcol1l
+				gndcol_r = section.gndcol1r
 			else:
-				gndcol = gndcol2 if ((idx % 6) >= 3) else gndcol1
+				gndcol = gndcol2
+				gndcol_l = section.gndcol2l
+				gndcol_r = section.gndcol2r
+
+			# TODO: use wall distances
 
 			polygon(segment.points(-2*track_width, 2*track_width), PALETTE[gndcol], stroke=2)
+
+			if gndcol_l is not None:
+				polygon(segment.points(-3*track_width, -1.5*track_width), PALETTE[gndcol_l], stroke=2)
+
+			if gndcol_r is not None:
+				polygon(segment.points(1.5*track_width, 3*track_width), PALETTE[gndcol_r], stroke=2)
 
 		# Track surface
 

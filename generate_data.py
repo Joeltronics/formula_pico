@@ -148,6 +148,10 @@ class Section:
 	lanes: int | None = None
 	gndcol1: int | None = None
 	gndcol2: int | None = None
+	gndcol1l: int | None = None
+	gndcol2l: int | None = None
+	gndcol1r: int | None = None
+	gndcol2r: int | None = None
 	bgl: str = ''
 	bgr: str = ''
 	bgc: str = ''
@@ -164,12 +168,27 @@ class Section:
 		'wall',
 	]
 
-	LUA_KW_FIELDS: ClassVar[list[str]] = [
+	LUA_KW_FIELDS_PICO8: ClassVar[list[str]] = [
 		'pit',
 		'tnl',
 		'lanes',
 		'gndcol1',
 		'gndcol2',
+		'bgl',
+		'bgr',
+		'bgc',
+	]
+
+	LUA_KW_FIELDS_PICOTRON: ClassVar[list[str]] = [
+		'pit',
+		'tnl',
+		'lanes',
+		'gndcol1',
+		'gndcol2',
+		'gndcol1l',
+		'gndcol2l',
+		'gndcol1r',
+		'gndcol2r',
 		'bgl',
 		'bgr',
 		'bgc',
@@ -209,7 +228,7 @@ class Section:
 		if not (isinstance(self.wall_l, int) and isinstance(self.wall_r, int) and (0 <= self.wall_l < 16) and (0 <= self.wall_r < 16)):
 			raise ValueError(f'Invalid wall value(s): {self.wall_l=}, {self.wall_r=}')
 
-	def to_lua_dict(self) -> dict:
+	def to_lua_dict(self, pico8: bool) -> dict:
 
 		ret = dict()
 
@@ -229,16 +248,17 @@ class Section:
 
 		# Only add keyword fields if non-default
 		default = Section(length=1, wall_l=15, wall_r=15)
-		for attr_name in self.LUA_KW_FIELDS:
+		field_names = self.LUA_KW_FIELDS_PICO8 if pico8 else self.LUA_KW_FIELDS_PICOTRON
+		for attr_name in field_names:
 			val = getattr(self, attr_name)
 			if val != getattr(default, attr_name):
 				ret[attr_name] = val
 
 		return ret
 
-	def to_lua_compressed(self, section_types) -> str:
+	def to_lua_compressed(self, section_types, pico8: bool) -> str:
 
-		vals_uncompressed = self.to_lua_dict()
+		vals_uncompressed = self.to_lua_dict(pico8=pico8)
 
 		vals_uncompressed['length'] = vals_uncompressed['length'] - 1
 		vals_uncompressed['x'] = round((vals_uncompressed['x'] or 0) * 64) + 128
@@ -615,16 +635,19 @@ class Track:
 
 		_set_normals(self.segments)
 
-	def lua_output_data(self, defaults: dict, section_types: list[dict], compress: bool, lowercase: bool):
+	def lua_output_data(self, defaults: dict, section_types: list[dict], compress: bool, pico8: bool):
 
 		ret = dict()
 
-		ret['name'] = self.name.casefold() if lowercase else self.name
-
-		ret['minimap_scale'] = round(1/self.minimap_scale)
-		ret['minimap_step'] = self.minimap_step
-		ret['minimap_offset_x'] = self.minimap_offset_x
-		ret['minimap_offset_y'] = self.minimap_offset_y
+		if pico8:
+			ret['name'] = self.name.casefold()
+			ret['minimap_scale'] = round(1/self.minimap_scale)
+			ret['minimap_step'] = self.minimap_step
+			ret['minimap_offset_x'] = self.minimap_offset_x
+			ret['minimap_offset_y'] = self.minimap_offset_y
+		else:
+			ret['name'] = self.name
+			ret['title'] = self.name.strip().replace(' ', '_').casefold()
 
 		if self.start_heading != defaults['start_heading']:
 			ret['start_heading'] = self.start_heading
@@ -654,11 +677,11 @@ class Track:
 		ret['total_segment_count'] = sum(s.length for s in self.sections)
 
 		if compress:
-			sections_compressed = ''.join(s.to_lua_compressed(section_types) for s in self.sections)
+			sections_compressed = ''.join(s.to_lua_compressed(section_types, pico8=pico8) for s in self.sections)
 			ret['sections_compressed'] = sections_compressed
 			ret['sections'] = []
 		else:
-			ret['sections'] = [section.to_lua_dict() for section in self.sections]
+			ret['sections'] = [section.to_lua_dict(pico8=pico8) for section in self.sections]
 
 		return ret
 
@@ -861,10 +884,10 @@ def generate(
 				# vprint('Drawing track')
 				draw_track(track, MAP_DIR_OUT / track.name.casefold())
 
-			track_lua_data_p8 = track.lua_output_data(data, section_types, compress=compress_p8, lowercase=True)
-			sections_p8 = track_lua_data_p8.pop('sections')				
+			track_lua_data_p8 = track.lua_output_data(data, section_types, compress=compress_p8, pico8=True)
+			sections_p8 = track_lua_data_p8.pop('sections')
 
-			track_lua_data_p64 = track.lua_output_data(data, section_types, compress=compress_p64, lowercase=False)
+			track_lua_data_p64 = track.lua_output_data(data, section_types, compress=compress_p64, pico8=False)
 			sections_p64 = track_lua_data_p64.pop('sections')
 
 			f8.write('{\n')
