@@ -640,8 +640,8 @@ function draw_bg()
 	fillp()
 
 	-- Sun
-	local sun_x = (cars[1].heading * 512 + 192) % 512 - 256
-	if sun_x >= -64 and sun_x <= 192 then
+	local sun_x = (cars[1].heading * 1920 + 720) % 1920 - 960
+	if sun_x >= -64 and sun_x <= (480 + 64) then
 		circfill(sun_x, horizon - 52, 8, 10)
 	end
 

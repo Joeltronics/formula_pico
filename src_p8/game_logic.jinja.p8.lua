@@ -5,8 +5,8 @@ function init_game(track_idx, team_idx, is_race, ghost, num_other_cars, ai_only)
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 --% endif
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
-	init_cars(team_idx, ghost, num_other_cars, ai_only)
 	init_track()
+	init_cars(team_idx, ghost, num_other_cars, ai_only)
 	init_minimap()
 
 	race_started = not is_race
@@ -67,7 +67,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			ghost=is_ghost,
 			engine_accel_brake=0,
 			track_angle=0,
-			heading=start_heading,
+			heading=road.start_heading,
 --% if false
 			finished=false,
 			in_pit=false,

@@ -59,7 +59,7 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			ghost=is_ghost,
 			engine_accel_brake=0,
 			track_angle=0,
-			heading=start_heading,
+			heading=road.start_heading,
 			finished=false,
 			in_pit=false,
 			touched_wall=false,
