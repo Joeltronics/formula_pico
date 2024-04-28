@@ -24,14 +24,15 @@ function decompress_sections()
 	end
 end
 
-function init_track()
+function load_track(track_idx)
+	road = tracks[track_idx]
+
+	if (road.init) return
 
 	road.start_heading = road.start_heading or start_heading
 	road.track_width = road.track_width or track_width
 	road.track_width *= 1.5  -- TODO: bake this into data instead of doing it here
 	road.half_width = 0.5 * road.track_width
-
-	road.minimap_scale = 1 / road.minimap_scale
 
 	road.curb_x = road.half_width - shoulder_half_width - car_half_width
 	road.grass_x = road.half_width + car_half_width
@@ -45,7 +46,8 @@ function init_track()
 
 	road.lanes = road.lanes or 1
 
-	if (road.sections_compressed) decompress_sections()
+	if (road.sections_compressed and not road.decompressed) decompress_sections()
+	road.decompressed = true
 
 	local total_segment_count, heading = 0, road.start_heading
 	for section_idx = 1,#road do
@@ -110,10 +112,14 @@ function init_track()
 		if (section.bgr) section.bgr = bg_objects[section.bgr]
 	end
 
-	if (total_segment_count ~= road.total_segment_count) printh('WARNING: track data had segment count: ' .. road.total_segment_count .. ', actual count: ' .. total_segment_count)
+	if (total_segment_count ~= road.total_segment_count) then
+		printh('WARNING: track data had segment count: ' .. road.total_segment_count .. ', actual count: ' .. total_segment_count)
+	end
 	road.total_segment_count = total_segment_count
 
-	if (heading ~= road.start_heading) printh('WARNING: Start heading: ' .. road.start_heading .. ', end heading: ' .. heading)
+	if (heading ~= road.start_heading) then
+		printh('WARNING: Start heading: ' .. road.start_heading .. ', end heading: ' .. heading)
+	end
 
 	-- Now calculate parameters that depend on multiple sections
 	-- Iterate in reverse for the sake of braking speeds
@@ -144,4 +150,6 @@ function init_track()
 		section0.next_braking_distance = next_braking_distance
 		next_braking_distance += section0.length
 	end
+
+	road.init = true
 end

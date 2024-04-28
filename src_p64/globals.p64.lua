@@ -128,18 +128,20 @@ palette_race_start_light_out = {
 	[8]=5,
 }
 
+minimap_max_width = 64
+minimap_max_height = 64
+
 --
 -- Globals that are effectively const after init
 --
 
 minimap = {}
-minimap_step = 1
 
 --
 -- Runtime options
 --
 
-debug = true
+debug = true -- TODO: rename this, it masks built-in
 print_cpu = true
 draw_racing_line = true
 brake_assist = true
@@ -154,7 +156,8 @@ frozen = false
 noclip = false
 
 -- TODO: rename to "track"
-road = nil  -- Setting this also acts as "game started" flag
+road = nil
+started = false
 cars = {}
 car_positions = {}
 

@@ -15,6 +15,8 @@ last_row_zidx = num_rows - 1
 
 
 function init_title_screen()
+	load_track(track_zidx + 1)
+	init_minimap()
 end
 
 -- debug_test = 0
@@ -56,8 +58,13 @@ function update_title_screen()
 
 	if (row_zidx == 0) mode += incr
 	mode %= 3
-	if (row_zidx == 1) track_zidx += incr
-	track_zidx %= #tracks
+	if row_zidx == 1 then
+		track_zidx += incr
+		track_zidx %= #tracks
+		road = tracks[track_zidx + 1]
+		load_track(track_zidx + 1)
+		init_minimap()
+	end
 	if (row_zidx == 2) team_zidx += incr
 	team_zidx %= #palettes
 
@@ -136,6 +143,7 @@ function draw_title_screen()
 	palt()
 	pal()
 
-	-- DEBUG
-	-- print(debug_test, 0, 0)
+	if minimap then
+		draw_minimap(128 + 40 + xoff, 150)
+	end
 end

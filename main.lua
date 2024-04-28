@@ -21,7 +21,7 @@ function _init()
 end
 
 function _update()
-	if road then
+	if started then
 		game_tick()
 		update_sound()
 	else
@@ -30,7 +30,7 @@ function _update()
 end
 
 function _draw()
-	if road then
+	if started then
 		draw_bg()
 		draw_road()
 		draw_minimap()

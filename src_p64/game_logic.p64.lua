@@ -1,15 +1,17 @@
 
 function init_game(track_idx, team_idx, is_race, ghost, num_other_cars, ai_only)
-	road = tracks[track_idx]
+
+	load_track(track_idx)
+	init_minimap()
+
 	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
 	init_cars(team_idx, ghost, num_other_cars, ai_only)
-	init_track()
-	init_minimap()
 
 	race_started = not is_race
 	race_start_counter = 0
 	race_start_num_lights = 0
+	started = true
 end
 
 function init_cars(team_idx, ghost, num_other_cars, ai_only)
