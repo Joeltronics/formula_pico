@@ -83,19 +83,19 @@ function draw_ground(section, seg, sumct, x1, y1, scale1, x2, y2, scale2)
 	if ((sumct % 6) >= 3) gndcol, gndcol_l, gndcol_r = gndcol2, section.gndcol2l, section.gndcol2r
 	rectfill(0, y1, 480, y2, gndcol)
 
+	local wl1, wl2, wr1, wr2 = get_wall_locs(section, seg)
+
 	if gndcol_l and (gndcol_l != gndcol) then
-		local wall1 = section.wall_l + section.dwall_l * (seg - 1)
-		local wall2 = section.wall_l + section.dwall_l * seg
-		local wx1, wx2 = x1 + 2*scale1*wall1, x2 + 2*scale2*wall2
-		local x = min(wx1, wx2)
+		local x = min(
+			x1 + 2*scale1*wl1,
+			x2 + 2*scale2*wl2)
 		rectfill(0, y1, x, y2, gndcol_l)
 	end
 
 	if gndcol_r and (gndcol_r != gndcol) then
-		local wall1 = section.wall_r + section.dwall_r * (seg - 1)
-		local wall2 = section.wall_r + section.dwall_r * seg
-		local wx1, wx2 = x1 + 2*scale1*wall1, x2 + 2*scale2*wall2
-		local x = max(wx1, wx2)
+		local x = max(
+			x1 + 2*scale1*wr1,
+			x2 + 2*scale2*wr2)
 		rectfill(x, y1, 480, y2, gndcol_r)
 	end
 end
@@ -267,7 +267,7 @@ function setclip(clp)
 	clip(clp[1], clp[2], clp[3]-clp[1], clp[4]-clp[2])
 end
 
-function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
+function add_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp, wall)
 
 	if (not bg) return
 
@@ -280,6 +280,7 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 	end
 
 	-- find position
+
 	px += 3*scale*side
 	if bg.pos then
 		px += bg.pos[1]*scale*side
@@ -288,6 +289,10 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 
 	local w, h = bg.siz[1]*scale, bg.siz[2]*scale
 
+	if (wall) px += 2*scale*wall + 0.5*w*side
+
+	-- TODO: Don't add if completely outside clp
+
 	add(sprite_list, {
 		x=px,
 		y=py,
@@ -295,10 +300,20 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 		h=h,
 		sprite=bg.sprite,
 		palette=bg.palette,
-		palt=bg.palt,
+		palt=bg.palt or bg.sprite.palt,
 		flip_x=(bg.flip or side > 0 and bg.flip_r),
 		clp={clp[1],clp[2],clp[3],clp[4]}
 	})
+end
+
+function get_wall_locs(section, seg)
+	local wl1 = section.wall_l + section.dwall_l * (seg - 1)
+	local wl2 = section.wall_l + section.dwall_l * seg
+
+	local wr1 = section.wall_r + section.dwall_r * (seg - 1)
+	local wr2 = section.wall_r + section.dwall_r * seg
+
+	return wl1, wl2, wr1, wr2
 end
 
 function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp, detail)
@@ -308,13 +323,9 @@ function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scal
 
 	-- TODO: invisible walls if very far out
 
-	local walls={{
-		section.wall_l + section.dwall_l * (seg - 1),
-		section.wall_l + section.dwall_l * seg
-	}, {
-		section.wall_r + section.dwall_r * (seg - 1),
-		section.wall_r + section.dwall_r * seg
-	}}
+	local wl1, wl2, wr1, wr2 = get_wall_locs(section, seg)
+
+	local walls={{wl1, wl2}, {wr1, wr2}}
 
 	if section.pit_wall then
 		add(walls, {section.pit_wall, section.pit_wall})
@@ -391,7 +402,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		palette[15] = 0
 	end
 
-	add_bg_sprite(
+	add_sprite(
 		sprite_list, sumct, seg,
 		{
 			sprite=sprites.car[min(#sprites.car, 1 + round(abs(sprite_turn)))],
@@ -505,15 +516,20 @@ function draw_road()
 		if i < sprite_draw_distance then
 			-- TODO: token optimizations - a lot of repeated stuff here
 			if sumct == road[1].length then
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
-				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, seg, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, seg, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, seg, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, seg, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, seg, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
 			end
-			add_bg_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
+
+			local wl2 = section.wall_l + section.dwall_l * seg
+			local wr2 = section.wall_r + section.dwall_r * seg
+			assert(wl2 < 0 and wr2 > 0)
+
+			add_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp, wl2)
+			add_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
+			add_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp, wr2)
 
 			-- Iterate in reverse order of car positions, in order to prevent Z-order problems
 			-- TODO: optimize this, don't need to iterate all cars every segment

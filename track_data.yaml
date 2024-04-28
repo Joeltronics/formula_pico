@@ -17,56 +17,56 @@ tracks:
     wall: 4
     tree_bg: true
     sections:
-    - {length: 8, x: 0, wall: 1, pit: 1}  # start/finish
-    - {length: 32, x: -0.25, wall: 1, pit: 1}
+    - {length: 8, x: 0, wall: 1, pit: 1, bgl: stands}  # start/finish
+    - {length: 32, x: -0.25, wall: 1, pit: 1, bgl: stands, bgr: garages}
     - {turn_num: 1, length: 8, x: -1, speed: 140, pit: 1}
     - {turn_num: 1, length: 3, angle: 0.125, x: 0.25, speed: 140, pit: 1}
     - {turn_num: 1, length: 3, angle: 0.125, x: 1, speed: 140, pit: 1}
-    - {length: 6, angle: -0.0625, x: 0.5, pit: 1}
-    - {length: 16, x: -1}
-    - {length: 14, angle: 0.03125, x: 0}
-    - {length: 14, angle: 0.03125, x: 1}
-    - {length: 8, pitch: 0.5, x: 0.5}
+    - {length: 6, angle: -0.0625, x: 0.5, pit: 1, bgl: stands}
+    - {length: 16, x: -1, bgl: stands}
+    - {length: 14, angle: 0.03125, x: 0, bgl: forest}
+    - {length: 14, angle: 0.03125, x: 1, bgl: forest}
+    - {length: 8, pitch: 0.5, x: 0.5, bgl: forest}
     - {turn_num: 2, length: 10, angle: -0.0625, pitch: 0.75, x: -0.25}
     - {turn_num: 2, length: 10, angle: -0.0625, pitch: 0.75, x: -1}
     - {length: 12, pitch: 1, x: -0.5}
     - {length: 4, pitch: 0.25, x: -1, speed: 90}
     - {turn_num: 3, length: 4, angle: 0.1875, x: 0, speed: 90}  # high point
     - {turn_num: 3, length: 4, angle: 0.1875, x: 1, speed: 90}
-    - {length: 4, x: 0, speed: 90}
-    - {length: 4, x: -0.75}
-    - {length: 10, angle: 0.03125, pitch: -0.25, x: -0.25}
-    - {length: 10, angle: 0.03125, pitch: -0.25, x: 0.5}
-    - {length: 44, pitch: -0.5, x: 1}
-    - {length: 4, pitch: -0.25, x: -1, speed: 120}
-    - {turn_num: 4, length: 4, angle: 0.15625, pitch: -0.25, x: 0, speed: 120}
-    - {turn_num: 4, length: 4, angle: 0.15625, pitch: -0.25, x: 1, speed: 120}
-    - {length: 2, pitch: -0.25, x: -0.25, speed: 120}
-    - {turn_num: 5, length: 9, angle: 0.09375, pitch: -0.25, x: -0.5, speed: 270}
-    - {turn_num: 5, length: 9, angle: 0.09375, pitch: -0.25, x: 1, speed: 270}
+    - {length: 4, x: 0, speed: 90, bgl: stands_small}
+    - {length: 4, x: -0.75, bgl: stands_small}
+    - {length: 10, angle: 0.03125, pitch: -0.25, x: -0.25, bgl: stands_small}
+    - {length: 10, angle: 0.03125, pitch: -0.25, x: 0.5, bgl: stands_small}
+    - {length: 44, pitch: -0.5, x: 1, bgl: stands_small}
+    - {length: 4, pitch: -0.25, x: -1, speed: 120, bgl: stands_small}
+    - {turn_num: 4, length: 4, angle: 0.15625, pitch: -0.25, x: 0, speed: 120, bgl: forest}
+    - {turn_num: 4, length: 4, angle: 0.15625, pitch: -0.25, x: 1, speed: 120, bgl: stands}
+    - {length: 2, pitch: -0.25, x: -0.25, speed: 120, bgl: forest}
+    - {turn_num: 5, length: 9, angle: 0.09375, pitch: -0.25, x: -0.5, speed: 270, bgl: forest}
+    - {turn_num: 5, length: 9, angle: 0.09375, pitch: -0.25, x: 1, speed: 270, bgl: forest}
     - {length: 12, x: -0.5, speed: 270}
     - {turn_num: 6, length: 10, angle: -0.1875, pitch: -0.125, x: 1, speed: 195}
     - {turn_num: 6, length: 10, angle: -0.1875, pitch: -0.125, x: -1, speed: 195}
-    - {length: 6, pitch: -0.25, x: 0.25, speed: 195}
-    - {length: 8, pitch: -0.5, x: 1}
-    - {length: 6, pitch: -0.25, x: 1, speed: 230}
+    - {length: 6, pitch: -0.25, x: 0.25, speed: 195, bgl: stands}
+    - {length: 8, pitch: -0.5, x: 1, bgl: stands}
+    - {length: 6, pitch: -0.25, x: 1, speed: 230, bgl: stands}
     - {turn_num: 7, length: 10, angle: -0.15625, x: 0.25, speed: 230}
     - {turn_num: 7, length: 10, angle: -0.15625, x: -1, speed: 230}
     - {length: 4, x: -0.25}
     - {turn_num: 8, length: 10, angle: 0.09375, x: 0.25}
     - {turn_num: 8, length: 10, angle: 0.09375, x: 1}
     - {length: 8, x: -0.25}
-    - {length: 16, pitch: 0.125, x: -1}
-    - {length: 6, pitch: 0.125, x: -1, speed: 240}
-    - {turn_num: 9, length: 6, angle: 0.09375, x: 0, speed: 240}
-    - {turn_num: 9, length: 6, angle: 0.09375, x: 1, speed: 240}
-    - {length: 4, pitch: -0.125, x: 0.25}
-    - {length: 6, pitch: -0.125, x: -0.5}
-    - {turn_num: 10, length: 3, angle: 0.09375, x: 0.375, speed: 200, pit: 1}  # low point
-    - {turn_num: 10, length: 3, angle: 0.09375, x: 1, speed: 200, pit: 1}
-    - {length: 6, x: 0.75, pit: 1}
-    - {length: 8, angle: 0.0625, x: 0.5, pit: 1}
-    - {length: 15, x: 0.25, pit: 1}
+    - {length: 16, pitch: 0.125, x: -1, bgl: forest, bgr: forest}
+    - {length: 6, pitch: 0.125, x: -1, speed: 240, bgl: forest, bgr: forest}
+    - {turn_num: 9, length: 6, angle: 0.09375, x: 0, speed: 240, bgl: forest}
+    - {turn_num: 9, length: 6, angle: 0.09375, x: 1, speed: 240, bgl: forest}
+    - {length: 4, pitch: -0.125, x: 0.25, bgl: stands}
+    - {length: 6, pitch: -0.125, x: -0.5, bgl: stands}
+    - {turn_num: 10, length: 3, angle: 0.09375, x: 0.375, speed: 200, pit: 1, bgl: forest}  # low point
+    - {turn_num: 10, length: 3, angle: 0.09375, x: 1, speed: 200, pit: 1, bgl: forest}
+    - {length: 6, x: 0.75, pit: 1, bgl: forest}
+    - {length: 8, angle: 0.0625, x: 0.5, pit: 1, bgl: forest}
+    - {length: 15, x: 0.25, pit: 1, bgl: stands}
 
   - name: Belgium
     length_km: 7.00
@@ -74,60 +74,60 @@ tracks:
     wall: 4
     tree_bg: true
     sections:
-    - {length: 8, x: 0.5, wall: 1}  # start/finish; heading 0.25
-    - {length: 14, x: 0, wall: 1}
-    - {length: 6, x: -1, speed: 95}
-    - {turn_num: 1, length: 4, angle: 6, x: 0.25, speed: 95, wall_l: 8, wall_r: 2}  # La Source
+    - {length: 8, x: 0.5, wall: 1, bgl: stands, bgr: garages}  # start/finish; heading 0.25
+    - {length: 14, x: 0, wall: 1, bgl: stands, bgr: garages}
+    - {length: 6, x: -1, speed: 95, bgr: garages}
+    - {turn_num: 1, length: 4, angle: 6, x: 0.25, speed: 95, wall_l: 8, wall_r: 2, bgl: stands_single}  # La Source
     - {turn_num: 1, length: 4, angle: 6, x: 1, speed: 95, wall_l: 12, wall_r: 2}
-    - {length: 8, pitch: -0.125, x: 0.25, wall_l: 8, wall_r: 2}
-    - {length: 8, pitch: -0.5, x: -0.5}
-    - {turn_num: 2, length: 8, angle: 1.25, x: 0.25}
-    - {turn_num: 2, length: 8, angle: 1.25, x: 1}
+    - {length: 8, pitch: -0.125, x: 0.25, wall_l: 8, wall_r: 2, bgr: garages}
+    - {length: 8, pitch: -0.5, x: -0.5, bgl: stands_small, bgr: garages}
+    - {turn_num: 2, length: 8, angle: 1.25, x: 0.25, bgl: stands_small}
+    - {turn_num: 2, length: 8, angle: 1.25, x: 1, bgl: stands_small}
     - {length: 16, pitch: -0.25, x: 0.25}
     - {turn_num: 3, length: 2, angle: -2.25, x: -0.5}  # Eau Rouge
     - {turn_num: 3, length: 2, angle: -2.25, x: -1}
-    - {turn_num: 4, length: 8, angle: 4.75, pitch: 2, x: -0.5}  # Raidillon
-    - {turn_num: 4, length: 8, angle: 4.5, pitch: 2, x: 1, wall_l: 8}
-    - {turn_num: 5, length: 8, angle: -2.25, x: 0, wall_l: 8}
-    - {turn_num: 5, length: 8, angle: -2.25, x: -1, wall_l: 8}
-    - {length: 16, pitch: 1, x: -0.25, wall_l: 8}
-    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 0.5, wall_l: 6}
-    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 1}
-    - {length: 40, pitch: 0.5, x: 0.25} # kemmel straight
-    - {length: 8, pitch: 0.125, x: -1}
+    - {turn_num: 4, length: 8, angle: 4.75, pitch: 2, x: -0.5, bgl: stands_single}  # Raidillon
+    - {turn_num: 4, length: 8, angle: 4.5, pitch: 2, x: 1, wall_l: 8, bgl: stands_single}
+    - {turn_num: 5, length: 8, angle: -2.25, x: 0, wall_l: 8, bgl: forest, bgr: forest}
+    - {turn_num: 5, length: 8, angle: -2.25, x: -1, wall_l: 8, bgl: forest, bgr: forest}
+    - {length: 16, pitch: 1, x: -0.25, wall_l: 8, bgl: forest, bgr: forest}
+    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 0.5, wall_l: 6, bgl: forest, bgr: forest}
+    - {turn_num: 6, length: 8, angle: 0.75, pitch: 0.5, x: 1, bgl: forest, bgr: forest}
+    - {length: 40, pitch: 0.5, x: 0.25, bgl: stands_small, bgr: forest} # kemmel straight
+    - {length: 8, pitch: 0.125, x: -1, bgl: stands_small, bgr: forest}
     - {turn_num: 7, length: 4, angle: 4, speed: 180, x: 0}  # high point
-    - {turn_num: 7, length: 4, angle: 4, speed: 180, x: 1}
-    - {length: 4, x: 0.25}
-    - {turn_num: 8, length: 4, angle: -4, speed: 180, x: -0.25}
-    - {turn_num: 8, length: 4, angle: -4, speed: 180, x: -1}
-    - {length: 8, pitch: -0.25, x: -0.25}
-    - {turn_num: 9, length: 4, angle: 4, pitch: -0.25, x: 0.25}
-    - {turn_num: 9, length: 4, angle: 4, pitch: -0.25, x: 1}
-    - {length: 6, pitch: -0.25, x: 0}
+    - {turn_num: 7, length: 4, angle: 4, speed: 180, x: 1, bgr: forest}
+    - {length: 4, x: 0.25, bgr: forest}
+    - {turn_num: 8, length: 4, angle: -4, speed: 180, x: -0.25, bgr: forest}
+    - {turn_num: 8, length: 4, angle: -4, speed: 180, x: -1, bgr: forest}
+    - {length: 8, pitch: -0.25, x: -0.25, bgr: forest}
+    - {turn_num: 9, length: 4, angle: 4, pitch: -0.25, x: 0.25, bgr: forest}
+    - {turn_num: 9, length: 4, angle: 4, pitch: -0.25, x: 1, bgr: forest}
+    - {length: 6, pitch: -0.25, x: 0, bgr: forest}
     - {length: 20, pitch: -0.75, x: -1}
-    - {length: 6, pitch: -0.5, x: -1}
-    - {turn_num: 10, length: 12, angle: 8, pitch: -0.25, speed: 140, x: -0.25}
-    - {turn_num: 10, length: 12, angle: 8, pitch: -0.25, speed: 140, x: 1}
+    - {length: 6, pitch: -0.5, x: -1, bgr: forest}
+    - {turn_num: 10, length: 12, angle: 8, pitch: -0.25, speed: 140, x: -0.25, bgl: grandstand_single, bgr: forest}
+    - {turn_num: 10, length: 12, angle: 8, pitch: -0.25, speed: 140, x: 1, bgr: forest}
     - {length: 8, pitch: -0.5, x: 0}
     - {turn_num: 11, length: 4, angle: -4, pitch: -0.5, speed: 195, x: -0.25}
     - {turn_num: 11, length: 4, angle: -4, pitch: -0.5, speed: 195, x: -1}
-    - {length: 6, pitch: -0.5, x: -0.25}
-    - {length: 22, pitch: -0.75, x: 0.25}
-    - {length: 8, pitch: -0.75, x: 1}
-    - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: 0, wall_r: 8}  # Pouhon
+    - {length: 6, pitch: -0.5, x: -0.25, bgl: forest, bgr: forest}
+    - {length: 22, pitch: -0.75, x: 0.25, bgl: forest, bgr: forest}
+    - {length: 8, pitch: -0.75, x: 1, bgl: forest, bgr: forest}
+    - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: 0, wall_r: 8, bgl: forest, bgr: grandstand}  # Pouhon
     - {turn_num: 12, length: 6, angle: -3.25, pitch: -0.5, x: -1, wall_r: 8}
-    - {length: 4, pitch: -0.5, x: 0, wall_r: 8}
-    - {length: 9, angle: -2.75, pitch: -0.5, x: 0.5, wall_r: 8}
-    - {length: 9, angle: -2.75, pitch: -0.5, x: -1, wall_r: 8}
-    - {length: 6, pitch: -0.625, x: 0, wall_r: 8}
-    - {length: 12, pitch: -0.75, x: 1}
-    - {length: 6, pitch: -0.75, x: -1}
-    - {turn_num: 13, length: 8, angle: 4, pitch: -0.25, x: 0}
-    - {turn_num: 13, length: 8, angle: 4, pitch: -0.25, x: 1}
-    - {length: 4, x: 0.25}
-    - {turn_num: 14, length: 8, angle: -4, speed: 175, x: -0.25}
-    - {turn_num: 14, length: 8, angle: -4, speed: 175, x: -1}
-    - {length: 2, x: 0}
+    - {length: 4, pitch: -0.5, x: 0, wall_r: 8, bgl: forest, bgr: forest}
+    - {length: 9, angle: -2.75, pitch: -0.5, x: 0.5, wall_r: 8, bgl: forest, bgr: forest}
+    - {length: 9, angle: -2.75, pitch: -0.5, x: -1, wall_r: 8, bgl: forest, bgr: forest}
+    - {length: 6, pitch: -0.625, x: 0, wall_r: 8, bgl: forest, bgr: forest}
+    - {length: 12, pitch: -0.75, x: 1, bgl: forest, bgr: forest}
+    - {length: 6, pitch: -0.75, x: -1, bgl: forest, bgr: forest}
+    - {turn_num: 13, length: 8, angle: 4, pitch: -0.25, x: 0, bgl: forest, bgr: forest}
+    - {turn_num: 13, length: 8, angle: 4, pitch: -0.25, x: 1, bgl: forest, bgr: forest}
+    - {length: 4, x: 0.25, bgl: forest, bgr: forest}
+    - {turn_num: 14, length: 8, angle: -4, speed: 175, x: -0.25, bgl: forest, bgr: forest}
+    - {turn_num: 14, length: 8, angle: -4, speed: 175, x: -1, bgl: forest, bgr: forest}
+    - {length: 2, x: 0, bgl: forest, bgr: forest}
     - {length: 6, x: 0.5}
     - {length: 4, x: -1}
     - {turn_num: 15, length: 4, angle: 4, speed: 175, x: 0}
@@ -137,25 +137,25 @@ tracks:
     - {turn_num: 16, length: 6, angle: 4, x: -0.375}  # Low point
     - {turn_num: 16, length: 6, angle: 4, x: 1}
     - {length: 8, pitch: 0.25, x: 0}
-    - {length: 16, angle: 2, pitch: 0.25, x: -0.75}
-    - {length: 16, angle: 2, pitch: 0.25, x: 0.5}
-    - {length: 18, pitch: 0.25, x: 0.75}
-    - {turn_num: 17, length: 6, angle: -2, pitch: 0.25, x: -0.25} # Blanchimont
-    - {turn_num: 17, length: 6, angle: -2, pitch: 0.25, x: -1}
-    - {length: 8, pitch: 0.25, x: -0.25}
-    - {length: 8, pitch: 0.25, x: 0.25}
-    - {turn_num: 18, length: 6, angle: -2, pitch: 0.25, x: -0.25}
-    - {turn_num: 18, length: 6, angle: -2, pitch: 0.25, x: -1}
-    - {length: 8, pitch: 1, x: -0.25}
-    - {length: 10, pitch: 1, angle: 2, x: 0.25}
-    - {length: 4, pitch: 1, x: -0.5}
-    - {length: 4, pitch: 0.5, x: -1}
+    - {length: 16, angle: 2, pitch: 0.25, x: -0.75, bgl: forest}
+    - {length: 16, angle: 2, pitch: 0.25, x: 0.5, bgl: forest}
+    - {length: 18, pitch: 0.25, x: 0.75, bgl: forest}
+    - {turn_num: 17, length: 6, angle: -2, pitch: 0.25, x: -0.25, bgl: forest, bgr: forest} # Blanchimont
+    - {turn_num: 17, length: 6, angle: -2, pitch: 0.25, x: -1, bgl: forest, bgr: forest}
+    - {length: 8, pitch: 0.25, x: -0.25, bgl: forest, bgr: forest}
+    - {length: 8, pitch: 0.25, x: 0.25, bgl: forest, bgr: forest}
+    - {turn_num: 18, length: 6, angle: -2, pitch: 0.25, x: -0.25, bgl: forest, bgr: forest}
+    - {turn_num: 18, length: 6, angle: -2, pitch: 0.25, x: -1, bgl: forest, bgr: forest}
+    - {length: 8, pitch: 1, x: -0.25, bgl: forest, bgr: forest}
+    - {length: 10, pitch: 1, angle: 2, x: 0.25, bgl: forest}
+    - {length: 4, pitch: 1, x: -0.5, bgl: forest}
+    - {length: 4, pitch: 0.5, x: -1, bgl: stands_single}
     - {turn_num: 19, length: 3, angle: 4, speed: 110, x: 0}
     - {turn_num: 19, length: 3, angle: 4, speed: 110, x: 1, wall_l: 8}
     - {turn_num: 20, length: 3, angle: -5, speed: 110, x: 0, wall_l: 8}
     - {turn_num: 20, length: 3, angle: -5, speed: 110, x: -1, wall_l: 8}
-    - {length: 8, x: 0}
-    - {length: 4, x: 1}
+    - {length: 8, x: 0, bgl: stands}
+    - {length: 4, x: 1, bgl: stands}
 
   - name: Italy
     length_km: 5.79
@@ -163,59 +163,60 @@ tracks:
     wall: 6
     tree_bg: true
     sections:
-    - {length: 8, x: 0.25, pitch: 0.125, wall: 1}  # start/finish; heading 0.25
-    - {length: 42, x: -0.25, pitch: 0.125, wall: 1}
+    - {length: 8, x: 0.25, pitch: 0.125, wall: 1, bgl: stands, bgr: garages}  # start/finish; heading 0.25
+    - {length: 42, x: -0.25, pitch: 0.125, wall: 1, bgl: stands, bgr: garages}
     - {length: 4, x: -1, pitch: 0.125, speed: 90}
     - {turn_num: 1, x: 0, length: 3, angle: 4, speed: 90} # Rettifilo
     - {turn_num: 1, x: 1, length: 3, angle: 4, speed: 90, wall_l: 12}
     - {turn_num: 2, x: 0, length: 4, angle: -6, speed: 70, wall_l: 12}
     - {turn_num: 2, x: -1 , length: 4, angle: -6, speed: 70, wall_l: 12}
-    - {turn_num: 2, x: 0, length: 8, angle: 2, wall_l: 8}
-    - {turn_num: 2, x: 0.5, length: 8, angle: 2}
-    - {length: 8, x: 0, pitch: 0.125}
-    - {turn_num: 3, x: -0.25, length: 11, angle: 1.25} # Curva Grande
-    - {turn_num: 3, x: 0.875, length: 22, angle: 3.5}
-    - {turn_num: 3, x: 0.875, length: 11, angle: 1.5}
-    - {length: 16, x: 0}
-    - {length: 12, x: 0.25, pitch: 0.5}
-    - {length: 4, x: 1, pitch: 0.125, speed: 130}
-    - {turn_num: 4, x: 0, length: 3, angle: -4, speed: 130}
+    - {turn_num: 2, x: 0, length: 8, angle: 2, wall_l: 8, bgr: forest}
+    - {turn_num: 2, x: 0.5, length: 8, angle: 2, bgr: forest}
+    - {length: 8, x: 0, pitch: 0.125, bgr: forest}
+    - {turn_num: 3, x: -0.25, length: 11, angle: 1.25, bgl: forest, bgr: forest} # Curva Grande
+    - {turn_num: 3, x: 0.875, length: 22, angle: 3.5, bgl: forest, bgr: forest}
+    - {turn_num: 3, x: 0.875, length: 11, angle: 1.5, bgl: forest, bgr: forest}
+    - {length: 16, x: 0, bgr: forest}
+    - {length: 12, x: 0.25, pitch: 0.5, bgr: forest}
+    - {length: 4, x: 1, pitch: 0.125, speed: 130, bgr: forest}
+    - {turn_num: 4, x: 0, length: 3, angle: -4, speed: 130, bgr: forest}
     - {turn_num: 4, x: -1, length: 3, angle: -4, speed: 130, wall_r: 12}
     - {turn_num: 5, x: 0, length: 3, angle: 4, speed: 130, wall_r: 12}
-    - {turn_num: 5, x: 1, length: 3, angle: 4, speed: 130, wall_r: 12}
-    - {length: 8, x: 0, wall_r: 12}
-    - {length: 8, x: -1, speed: 200}
-    - {turn_num: 6, x: 0, length: 6, angle: 4, speed: 200} # Lesmo 1
-    - {turn_num: 6, x: 1, length: 6, angle: 4, speed: 200}
-    - {length: 8, x: 0}
-    - {length: 8, x: -1}
-    - {turn_num: 7, length: 4, x: 0, angle: 3.25, speed: 185} # Lesmo 2
-    - {turn_num: 7, length: 4, x: 1, angle: 3.25, speed: 185}
-    - {length: 12, x: 0}
-    - {length: 6, x: -0.5, angle: -1} # Serraglio
-    - {length: 6, x: -1, angle: -1}
-    - {length: 8, x: -0.5}
-    - {length: 8, x: 0}
-    - {length: 8, x: 0.25, pitch: -0.75}
+    - {turn_num: 5, x: 1, length: 3, angle: 4, speed: 130, wall_r: 12, bgr: stands}
+    - {length: 8, x: 0, wall_r: 12, bgr: stands}
+    - {length: 8, x: -1, speed: 200, bgr: forest}
+    - {turn_num: 6, x: 0, length: 6, angle: 4, speed: 200, bgr: forest} # Lesmo 1
+    - {turn_num: 6, x: 1, length: 6, angle: 4, speed: 200, bgr: forest}
+    - {length: 8, x: 0, bgr: forest}
+    - {length: 8, x: -1, bgr: forest}
+    - {turn_num: 7, length: 4, x: 0, angle: 3.25, speed: 185, bgr: forest} # Lesmo 2
+    - {turn_num: 7, length: 4, x: 1, angle: 3.25, speed: 185, bgr: forest}
+    - {length: 12, x: 0, bgr: forest}
+    - {length: 6, x: -0.5, angle: -1, bgl: forest, bgr: forest} # Serraglio
+    - {length: 6, x: -1, angle: -1, bgl: forest, bgr: forest}
+    - {length: 8, x: -0.5, bgl: forest, bgr: forest}
+    - {length: 8, x: 0, bgl: forest, bgr: forest}
+    - {length: 8, x: 0.25, pitch: -0.75, bgl: forest, bgr: forest}
     - {length: 4, x: 0.5, tnl: true}
-    - {length: 8, x: 0.75}
-    - {length: 8, x: 0.875, pitch: 0.75}
-    - {length: 4, x: 1}
-    - {length: 4, x: 1, speed: 220}
-    - {turn_num: 8, length: 4, x: 0, angle: -2, speed: 220} # Ascari
-    - {turn_num: 8, length: 4, x: -1, angle: -2, speed: 220}
-    - {turn_num: 9, length: 4, x: 0, angle: 3, speed: 240}
-    - {turn_num: 9, length: 4, x: 1, angle: 3, speed: 240}
-    - {turn_num: 10, length: 4, x: 0, angle: -2.25}
+    - {length: 8, x: 0.75, bgl: forest, bgr: forest}
+    - {length: 8, x: 0.875, pitch: 0.75, bgl: forest, bgr: forest}
+    - {length: 4, x: 1, bgl: forest, bgr: forest}
+    - {length: 4, x: 1, speed: 220, bgl: forest, bgr: forest}
+    - {turn_num: 8, length: 4, x: 0, angle: -2, speed: 220, bgl: forest} # Ascari
+    - {turn_num: 8, length: 4, x: -1, angle: -2, speed: 220, bgl: forest}
+    - {turn_num: 9, length: 4, x: 0, angle: 3, speed: 240, bgl: forest}
+    - {turn_num: 9, length: 4, x: 1, angle: 3, speed: 240, bgl: forest}
+    - {turn_num: 10, length: 4, x: 0, angle: -2.25, bgl: forest}
     - {turn_num: 10, length: 4, x: -1, angle: -2.25}
-    - {length: 6, x: -0.25, pitch: -0.25}
-    - {length: 68, x: 1, pitch: -0.25}
-    - {length: 6, x: -1, pitch: -0.25}
-    - {turn_num: 11, length: 6, x: 0, angle: 4, speed: 220, wall_l: 12} # Parabolica
+    - {length: 6, x: -0.25, pitch: -0.25, bgr: stands}
+    - {length: 48, x: 1, pitch: -0.25}
+    - {length: 20, x: 1, pitch: -0.25, bgl: stands}
+    - {length: 6, x: -1, pitch: -0.25, bgl: stands}
+    - {turn_num: 11, length: 6, x: 0, angle: 4, speed: 220, wall_l: 12, bgl: stands} # Parabolica
     - {turn_num: 11, length: 6, x: 1, angle: 4, speed: 220, wall_l: 12}
-    - {turn_num: 11, length: 16, x: 0.5, angle: 4, wall_l: 12}
-    - {turn_num: 11, length: 30, x: -0.25, angle: 4, wall_l: 8}
-    - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall_l: 6}
+    - {turn_num: 11, length: 16, x: 0.5, angle: 4, wall_l: 12, bgl: forest}
+    - {turn_num: 11, length: 30, x: -0.25, angle: 4, wall_l: 8, bgl: forest}
+    - {turn_num: 11, length: 16, x: 0.5, pitch: 0.125, wall_l: 6, bgl: forest}
 
   - name: UK
     length_km: 5.9
@@ -223,13 +224,13 @@ tracks:
     start_heading: 0.125  # North-East
     wall: 8
     sections:
-    - {length: 8, pitch: 0.125, wall: 1}  # start/finish
-    - {length: 36, pitch: 0.125, wall: 1}
+    - {length: 8, pitch: 0.125, wall: 1, bgl: stands}  # start/finish
+    - {length: 36, pitch: 0.125, wall: 1, bgl: stands}
     - {turn_num: 1, length: 4, angle: 4, pitch: 0.125, wall_l: 12}  # Abbey
     - {turn_num: 1, length: 6, angle: 3, pitch: 0.125, wall_l: 12}
     - {length: 4, pitch: 0.125, wall_l: 12}
     - {turn_num: 2, length: 12, angle: -6, pitch: 0.125}
-    - {length: 20, pitch: 0.125}
+    - {length: 20, pitch: 0.125, bgl: stands}
     - {turn_num: 3, length: 8, angle: 10, pitch: 0.125, speed: 125}
     - {length: 8, pitch: 0.125}
     - {turn_num: 4, length: 10, angle: -13, speed: 90}
@@ -243,14 +244,14 @@ tracks:
     - {turn_num: 6, length: 8, angle: -4, speed: 190}
     - {turn_num: 6, length: 4, angle: -4}
     - {length: 4}
-    - {turn_num: 7, length: 20, angle: 18, speed: 125}  # Luffield
-    - {length: 18}
+    - {turn_num: 7, length: 20, angle: 18, speed: 125, bgl: stands_single}  # Luffield
+    - {length: 18, bgl: stands}
     - {turn_num: 8, length: 24, angle: 5, wall: 4}  # Woodcote
     - {length: 8, pitch: 0.125, wall: 2}
-    - {length: 24, pitch: 0.125, wall: 2}
-    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125, wall_l: 12}  # Copse
-    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625, wall_l: 12}
-    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625, wall_l: 12}
+    - {length: 24, pitch: 0.125, wall: 2, bgl: stands_single}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125, wall_l: 12, bgl: stands_single}  # Copse
+    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625, wall_l: 12, bgl: stands_single}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625, wall_l: 12, bgl: stands_single}
     - {length: 20, pitch: 0.125, wall_l: 12}
     - {length: 20, angle: 1}
     - {length: 12, pitch: -0.125}
@@ -258,21 +259,21 @@ tracks:
     - {length: 4, pitch: -0.125}
     - {turn_num: 11, length: 6, angle: 5}
     - {length: 8, pitch: 0.125}
-    - {turn_num: 12, length: 14, angle: -6, pitch: -0.125}  # Becketts
-    - {turn_num: 13, length: 18, angle: 11, pitch: -0.125, speed: 220}  # Chapel
+    - {turn_num: 12, length: 14, angle: -6, pitch: -0.125, bgl: stands_single}  # Becketts
+    - {turn_num: 13, length: 18, angle: 11, pitch: -0.125, speed: 220, bgl: stands_single}  # Chapel
     - {length: 4, pitch: -0.125}
     - {turn_num: 14, length: 4, angle: -4, pitch: -0.125}
     - {length: 52, pitch: -0.25}
     - {length: 20, pitch: 0.5}
-    - {turn_num: 15, length: 20, angle: 11, pitch: 0.25, speed: 250, wall_l: 12}  # Stowe
-    - {length: 20, angle: -2, pitch: -0.5, wall_l: 12}
+    - {turn_num: 15, length: 20, angle: 11, pitch: 0.25, speed: 250, wall_l: 12, bgl: stands_single}  # Stowe
+    - {length: 20, angle: -2, pitch: -0.5, wall_l: 12, bgl: stands_single}
     - {length: 16}
     - {turn_num: 16, length: 8, angle: -8, speed: 115}  # Vale
     - {turn_num: 17, length: 8, angle: 8, speed: 130}  # Club
-    - {length: 8}
+    - {length: 8, bgl: stands}
     - {turn_num: 18, length: 10, angle: 4}
     - {turn_num: 18, length: 4, angle: 4}
-    - {length: 8, wall: 6}
+    - {length: 8, wall: 6, bgl: stands}
 
   - name: Japan
     length_km: 5.81
@@ -281,59 +282,59 @@ tracks:
     wall: 4
     city_bg: true
     sections:
-    - {length: 8, pitch: -0.25, wall: 1}  # start/finish
-    - {length: 42, pitch: -0.25, wall: 1}
+    - {length: 8, pitch: -0.25, wall: 1, bgl: stands}  # start/finish
+    - {length: 42, pitch: -0.25, wall: 1, bgl: stands}
     - {turn_num: 1, length: 8, angle: 5, pitch: -0.25, speed: 290}
     - {length: 4, pitch: -0.125, speed: 195}
-    - {turn_num: 2, length: 12, angle: 12, speed: 165}
-    - {length: 8, pitch: 0.125}
+    - {turn_num: 2, length: 12, angle: 12, speed: 165, bgl: stands_single}
+    - {length: 8, pitch: 0.125, bgl: stands}
     - {turn_num: 3, length: 8, angle: -6, speed: 255}
     - {length: 4}
     - {turn_num: 4, length: 8, angle: 7}
     - {length: 4}
     - {turn_num: 5, length: 8, angle: -7, speed: 220}
-    - {length: 6}
-    - {turn_num: 6, length: 12, angle: 10, speed: 200}
-    - {length: 6, pitch: 0.5}
-    - {turn_num: 7, length: 8, angle: -8, pitch: 0.125}
-    - {turn_num: 7, length: 4}
-    - {turn_num: 7, length: 24, angle: -6}
-    - {length: 10}
-    - {turn_num: 8, length: 4, angle: 4, speed: 250}  # Degner
-    - {length: 10}
-    - {turn_num: 9, length: 7, angle: 8, speed: 160}
+    - {length: 6, bgl: stands_small}
+    - {turn_num: 6, length: 12, angle: 10, speed: 200, bgl: stands_small}
+    - {length: 6, pitch: 0.5, bgl: stands_small}
+    - {turn_num: 7, length: 8, angle: -8, pitch: 0.125, bgl: forest}
+    - {turn_num: 7, length: 4, bgl: forest}
+    - {turn_num: 7, length: 24, angle: -6, bgl: forest}
+    - {length: 10, bgl: forest}
+    - {turn_num: 8, length: 4, angle: 4, speed: 250, bgl: forest}  # Degner
+    - {length: 10, bgl: forest}
+    - {turn_num: 9, length: 7, angle: 8, speed: 160, bgl: forest}
     - {length: 10}
     - {length: 4, tnl: true}
-    - {length: 4}
+    - {length: 4, bgr: stands}
     - {length: 8, pitch: 0.25}
     - {turn_num: 10, length: 10, angle: 3, pitch: 0.125}
     - {length: 6, pitch: 0.125, wall_l: 2}
     - {turn_num: 11, length: 8, angle: -15, speed: 95, wall_l: 2}  # Hairpin
-    - {length: 12, wall_l: 2}
+    - {length: 12, wall_l: 2, bgr: stands}
     - {turn_num: 12, length: 8, angle: 4}
     - {length: 12, angle: 3, pitch: -0.125}
-    - {length: 4}
-    - {length: 16, angle: 4, pitch: 0.125}
-    - {length: 8}
-    - {turn_num: 13, length: 6, angle: -4, speed: 230} # Spoon
-    - {turn_num: 13, length: 10, angle: -4}
-    - {length: 4}
-    - {turn_num: 14, length: 8, angle: -8, speed: 175}
-    - {turn_num: 14, length: 8, angle: -2}
-    - {length: 32, angle: -2.5, pitch: -0.25}
-    - {length: 32}
+    - {length: 4, bgr: forest}
+    - {length: 16, angle: 4, pitch: 0.125, bgr: forest}
+    - {length: 8, bgr: stands_small}
+    - {turn_num: 13, length: 6, angle: -4, speed: 230, bgr: stands_small} # Spoon
+    - {turn_num: 13, length: 10, angle: -4, bgr: stands_small}
+    - {length: 4, bgr: stands_small}
+    - {turn_num: 14, length: 8, angle: -8, speed: 175, bgr: forest}
+    - {turn_num: 14, length: 8, angle: -2, bgr: forest}
+    - {length: 32, angle: -2.5, pitch: -0.25, bgl: forest, bgr: forest}
+    - {length: 32, bgr: stands_small}
     - {length: 8, wall: 0}  # Bridge
     - {turn_num: 15, length: 6, angle: -3, speed: 275, wall: 0}  # 130R
     - {turn_num: 15, length: 6}
-    - {turn_num: 15, length: 16, angle: -2.5}
-    - {length: 12, pitch: 0.125}
+    - {turn_num: 15, length: 16, angle: -2.5, bgl: stands}
+    - {length: 12, pitch: 0.125, bgl: stands}
     - {turn_num: 16, length: 4, angle: 8, speed: 110}
     - {length: 2}
     - {turn_num: 17, length: 4, angle: -8, speed: 110}
     - {length: 7, pitch: -0.125}
     - {turn_num: 18, length: 6, angle: 4, pitch: -0.25}
     - {turn_num: 18, length: 12, angle: 4, pitch: -0.25}
-    - {length: 4, pitch: -0.25}
+    - {length: 4, pitch: -0.25, bgl: stands}
 
   - name: Monaco
     # TODO: scale is accurate vs other tracks, but it feels too short - scale up a bit?
@@ -414,19 +415,19 @@ tracks:
     - {length: 14, x: -0.5, wall_r: 2, gndcol1l: 16, gndcol2l: 16}
     - {length: 6, x: 1, gndcol1l: 16, gndcol2l: 16}
     - {turn_num: 12, x: 0, length: 9, angle: -5, gndcol1l: 16, gndcol2l: 16}  # Tabac
-    - {length: 12, x: -1, angle: -3, gndcol1l: 16, gndcol2l: 16}
+    - {length: 12, x: -1, angle: -3, gndcol1l: 16, gndcol2l: 16, bgr: stands}
     - {turn_num: 13, x: 0.5, length: 4, angle: -4, gndcol1l: 16, gndcol2l: 16}  # Louis Chiron
     - {length: 2, x: 0.5, speed: 250, gndcol1l: 16, gndcol2l: 16}
     - {turn_num: 14, x: 1, length: 4, angle: 4, speed: 250, gndcol1l: 16, gndcol2l: 16}
     - {length: 8, x: 0.25, gndcol1l: 16, gndcol2l: 16}
     - {length: 6, x: -0.75, gndcol1l: 16, gndcol2l: 16}
     - {length: 6, x: -1, speed: 125, gndcol1l: 16, gndcol2l: 16}
-    - {turn_num: 15, length: 4, x: 0.5, angle: 8, speed: 125, lanes: 1}
-    - {length: 2, x: 0, speed: 125, lanes: 1}
-    - {turn_num: 16, x: -0.75, length: 4, angle: -8, speed: 125, lanes: 1}
-    - {length: 8, x: -0.75, lanes: 1}
-    - {length: 16, x: 0.5, angle: -4, lanes: 1}
-    - {length: 4, x: -0.25, lanes: 1}
+    - {turn_num: 15, length: 4, x: 0.5, angle: 8, speed: 125, lanes: 1, bgl: stands}
+    - {length: 2, x: 0, speed: 125, lanes: 1, bgl: stands}
+    - {turn_num: 16, x: -0.75, length: 4, angle: -8, speed: 125, lanes: 1, bgl: stands}
+    - {length: 8, x: -0.75, lanes: 1, bgl: stands}
+    - {length: 16, x: 0.5, angle: -4, lanes: 1, bgl: stands}
+    - {length: 4, x: -0.25, lanes: 1, bgl: stands}
     - {turn_num: 17, x: -0.75, length: 8, angle: 3, lanes: 1}  # Rascasse
     - {turn_num: 17, x: 0.25, length: 4, angle: 4, speed: 70}
     - {turn_num: 17, x: 1, length: 4, angle: 4, speed: 70}
@@ -440,9 +441,9 @@ tracks:
     - {turn_num: 19, length: 2, x: -0.5, angle: -1.5, speed: 80, pit: 1}
     - {length: 10, x: -0.75, pit: 1}
     - {length: 10, x: -0.25, angle: 2, pit: 1}
-    - {length: 12, x: 0, pit: 1}
-    - {length: 10, x: 0.125, angle: 1, pit: 1}
-    - {length: 10, x: 0.25, pit: 1}
+    - {length: 12, x: 0, pit: 1, bgr: garages}
+    - {length: 10, x: 0.125, angle: 1, pit: 1, bgr: garages}
+    - {length: 10, x: 0.25, pit: 1, bgr: garages}
 
   - name: USA
     length_scale: 2
@@ -452,11 +453,11 @@ tracks:
     wall: 0
     start_heading: 0.75
     sections:
-    - {length: 8, x: 0, pit: -1}
-    - {length: 8, x: 0.25, pit: -1}
-    - {length: 12, angle: -1.5, x: 0, speed: 250, pit: -1 }
-    - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1 }
-    - {length: 48, x: -0.375}
+    - {length: 8, x: 0, pit: -1, bgr: stands }
+    - {length: 8, x: 0.25, pit: -1, bgr: stands }
+    - {length: 12, angle: -1.5, x: 0, speed: 250, pit: -1, bgr: stands }
+    - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1, bgr: stands }
+    - {length: 48, x: -0.375, bgr: stands }
     - {length: 4, angle: -1, x: 0.75, speed: 275 }
     - {length: 32, angle: -4, x: 0.5, speed: 300 }
     - {length: 32, angle: -4, x: -0.75, speed: 300 }
@@ -466,9 +467,9 @@ tracks:
     - {length: 32, angle: -4, x: -0.5, speed: 300 }
     - {length: 32, angle: -4, x: -0.75, speed: 300 }
     - {length: 4, angle: -1, x: 0.5, speed: 275 }
-    - {length: 48, x: 0.75}
-    - {length: 12, angle: -1.5, x: -0.375, speed: 250 }
-    - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1 }
+    - {length: 48, x: 0.75, bgr: stands }
+    - {length: 12, angle: -1.5, x: -0.375, speed: 250, bgr: stands }
+    - {length: 12, angle: -1.5, x: -0.5, speed: 250, pit: -1, bgr: stands }
 
   - name: USA-short
     length_scale: 2
@@ -478,26 +479,26 @@ tracks:
     wall: 0
     lanes: 3
     sections:
-    - {length: 8, x: 0.75, pit: -1}
-    - {length: 12, x: 0.75, pit: -1}
-    - {length: 4, x: 0.75, speed: 100, pit: -1}
-    - {length: 8, angle: -8, x: 0.25, speed: 100, pit: -1}
-    - {length: 8, angle: -8, x: -0.75, speed: 100, pit: -1}
-    - {length: 4, x: 0.25, pit: -1}
+    - {length: 8, x: 0.75, pit: -1, bgr: stands}
+    - {length: 12, x: 0.75, pit: -1, bgr: stands}
+    - {length: 4, x: 0.75, speed: 100, pit: -1, bgr: stands}
+    - {length: 8, angle: -8, x: 0.25, speed: 100, pit: -1, bgr: stands}
+    - {length: 8, angle: -8, x: -0.75, speed: 100, pit: -1, bgr: stands}
+    - {length: 4, x: 0.25, pit: -1, bgr: stands}
     - {length: 24, x: 0.75}
     - {length: 4, x: 0.75, speed: 100}
-    - {length: 8, angle: -8, x: 0.25, speed: 100, pit: -1}
-    - {length: 8, angle: -8, x: -0.75, speed: 100, pit: -1}
-    - {length: 4, x: 0.25, pit: -1}
-    - {length: 4, x: 0.75, pit: -1}
+    - {length: 8, angle: -8, x: 0.25, speed: 100, pit: -1, bgr: stands}
+    - {length: 8, angle: -8, x: -0.75, speed: 100, pit: -1, bgr: stands}
+    - {length: 4, x: 0.25, pit: -1, bgr: stands}
+    - {length: 4, x: 0.75, pit: -1, bgr: stands}
 
   - name: Test
     length_scale: 2
     angle_scale: 1
     tree_bg: true
     sections:
-    - {length: 8, wall: 1}
-    - {length: 12, wall: 1}
+    - {length: 8, wall: 0, bgl: stands}
+    - {length: 12, wall: 0, bgl: stands}
     - {length: 12, angle: -0.25, bgr: sign}
     - {length: 12, pitch: -0.75, bgl: tree3}
     - {length: 8, angle: 0.125, bgl: sign, lanes: 2}
@@ -550,11 +551,11 @@ tracks:
     gndcol1: 4
     gndcol2: 15
     sections:
-    - {length: 16, x: 0, wall: 1, pit: -1}
-    - {length: 8, x: 0, wall: 1, pit: -1}
+    - {length: 16, x: 0, wall: 1, pit: -1, bgl: stands, bgr: stands}
+    - {length: 8, x: 0, wall: 1, pit: -1, bgl: stands, bgr: stands}
     - {length: 256, x: 0}
     - {length: 256, x: 0}
     - {length: 256, x: 0}
     - {length: 224, x: 0}
-    - {length: 8, x: 0, wall: 8}
+    - {length: 8, x: 0, wall: 8, bgl: stands, bgr: stands}
 

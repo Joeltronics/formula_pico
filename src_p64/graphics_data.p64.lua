@@ -8,9 +8,7 @@ bg_objects = {}
 function load_graphics()
 	spritesheet = fetch("gfx/0.gfx")
 
-
 	-- I would think you could get the sprite width & height from the sprite object, but it seems not?
-	-- TODO: add palt() info in here
 	sprites = {
 		car_small = {
 			{bmp=spritesheet[8].bmp, width=24, height=16},
@@ -40,8 +38,14 @@ function load_graphics()
 		tree = {bmp=spritesheet[24].bmp, width=8, height=16},
 		sign = {bmp=spritesheet[25].bmp, width=8, height=16},
 
-		finishline_top = {bmp=spritesheet[27].bmp, width=32, height=8},
-		finishline_post = {bmp=spritesheet[28].bmp, width=8, height=24},
+		forest = {bmp=spritesheet[39].bmp, width=32, height=16},
+
+		finishline_top = {bmp=spritesheet[27].bmp, width=32, height=8, palt=11},
+		finishline_post = {bmp=spritesheet[28].bmp, width=8, height=24, palt=11},
+
+		stands_small = {bmp=spritesheet[29].bmp, width=48, height=16, palt=15},
+		stands = {bmp=spritesheet[30].bmp, width=48, height=32, palt=15},
+		garage = {bmp=spritesheet[31].bmp, width=32, height=32, palt=15},
 	}
 
 	bg_objects = {
@@ -69,6 +73,14 @@ function load_graphics()
 			siz={1.5, 3},
 			spacing=7
 		},
+
+		forest={
+			-- TODO: make a way to cycle different sprites
+			sprite=sprites.forest,
+			pos={1, 0},
+			siz={12, 6},
+			spacing=3,
+		},
 		
 		sign={
 			sprite=sprites.sign,
@@ -83,21 +95,58 @@ function load_graphics()
 			pos={3.75, -5},
 			siz={6.75, 1.25},
 			spacing=1,
-			palt=11,
 		},
 		finishline_c = {
 			sprite=sprites.finishline_top,
 			pos={0, -5},
 			siz={6.75, 1.25},
 			spacing=1,
-			palt=11,
 		},
 		finishline_post = {
 			sprite=sprites.finishline_post,
 			pos={6.25, 0},
 			siz={1.6875, 5},
 			spacing=1,
-			palt=11,
+		},
+
+		stands = {
+			sprite=sprites.stands,	
+			pos={0, 0},
+			siz={12, 8},
+			spacing=4,
+			flip_r=true,
+		},
+
+		stands_single = {
+			sprite=sprites.stands,	
+			pos={0, 0},
+			siz={12, 8},
+			spacing=0,
+			flip_r=true,
+		},
+
+		stands_small = {
+			sprite=sprites.stands_small,
+			pos={0, 0},
+			siz={12, 4},
+			spacing=4,
+			flip_r=true,
+		},
+
+		stands_small_single = {
+			sprite=sprites.stands_small,
+			pos={0, 0},
+			siz={12, 6},
+			spacing=0,
+			flip_r=true,
+		},
+
+		garages = {
+			sprite=sprites.garage,	
+			pos={0, 0},
+			siz={8, 8},
+			spacing=3,
+			flip_r=true,
 		},
 	}
 
