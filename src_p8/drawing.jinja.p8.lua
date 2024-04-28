@@ -265,7 +265,7 @@ function add_bg_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp)
 		img=bg.img,
 		palette=bg.palette,
 		palt=bg.palt,
-		flip_x=(bg.flip or side > 0 and bg.flip_r),
+		flip_x=bg.flip,
 		clp={clp[1],clp[2],clp[3],clp[4]}
 	})
 end
@@ -471,9 +471,6 @@ function draw_road()
 				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
 				add_bg_sprite(sp, sumct, seg, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
 			end
-			add_bg_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
-			add_bg_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp)
 
 			-- Iterate in reverse order of car positions, in order to prevent Z-order problems
 			-- TODO: optimize this, don't need to iterate all cars every segment

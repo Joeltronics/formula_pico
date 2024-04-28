@@ -177,9 +177,6 @@ class Section:
 		'lanes',
 		'gndcol1',
 		'gndcol2',
-		'bgl',
-		'bgr',
-		'bgc',
 	]
 
 	LUA_KW_FIELDS_PICOTRON: ClassVar[list[str]] = [

@@ -103,10 +103,6 @@ function init_track()
 		section.entrance_x = asin(section.entrance_x)
 		if (section.entrance_x >= 0.5) section.entrance_x -= 1
 --% endif
-
-		if (section.bgl) section.bgl = bg_objects[section.bgl]
-		if (section.bgc) section.bgc = bg_objects[section.bgc]
-		if (section.bgr) section.bgr = bg_objects[section.bgr]
 	end
 
 	if (total_segment_count ~= road.total_segment_count) printh('WARNING: track data had segment count: ' .. road.total_segment_count .. ', actual count: ' .. total_segment_count)
