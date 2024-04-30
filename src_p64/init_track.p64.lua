@@ -80,6 +80,9 @@ function load_track(track_idx)
 		if section.tnl then
 			section.wall_l, section.wall_r = 0, 0
 		else
+			if (section.wall and not section.wall_l) section.wall_l = section.wall \ 16
+			if (section.wall and not section.wall_r) section.wall_r = section.wall % 16
+
 			section.wall_r = section.wall_r or road.wall or 15
 			section.wall_l = section.wall_l or road.wall or 15
 		end
