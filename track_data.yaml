@@ -225,7 +225,7 @@ tracks:
     wall: 8
     sections:
     - {length: 8, pitch: 0.125, wall: 1, bgl: stands}  # start/finish
-    - {length: 36, pitch: 0.125, wall: 1, bgl: stands}
+    - {length: 36, pitch: 0.125, wall: 1, bgl: stands, bgr: garages}
     - {turn_num: 1, length: 4, angle: 4, pitch: 0.125, wall_l: 12}  # Abbey
     - {turn_num: 1, length: 6, angle: 3, pitch: 0.125, wall_l: 12}
     - {length: 4, pitch: 0.125, wall_l: 12}
@@ -245,20 +245,20 @@ tracks:
     - {turn_num: 6, length: 4, angle: -4}
     - {length: 4}
     - {turn_num: 7, length: 20, angle: 18, speed: 125, bgl: stands_single}  # Luffield
-    - {length: 18, bgl: stands}
-    - {turn_num: 8, length: 24, angle: 5, wall: 4}  # Woodcote
-    - {length: 8, pitch: 0.125, wall: 2}
-    - {length: 24, pitch: 0.125, wall: 2, bgl: stands_single}
-    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125, wall_l: 12, bgl: stands_single}  # Copse
-    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625, wall_l: 12, bgl: stands_single}
-    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625, wall_l: 12, bgl: stands_single}
+    - {length: 18, bgl: ferris}
+    - {turn_num: 8, length: 24, angle: 5, wall: 4, bgl: stands}  # Woodcote
+    - {length: 8, pitch: 0.125, wall: 2, bgl: stands}
+    - {length: 24, pitch: 0.125, wall: 2, bgr: garages}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.125, wall_l: 12, bgl: stands}  # Copse
+    - {turn_num: 9, length: 8, angle: 4, pitch: 0.0625, wall_l: 12, bgl: stands}
+    - {turn_num: 9, length: 8, angle: 2, pitch: 0.0625, wall_l: 12, bgl: stands}
     - {length: 20, pitch: 0.125, wall_l: 12}
     - {length: 20, angle: 1}
     - {length: 12, pitch: -0.125}
-    - {turn_num: 10, length: 8, angle: -3, pitch: -0.125, speed: 295}  # Maggots
-    - {length: 4, pitch: -0.125}
-    - {turn_num: 11, length: 6, angle: 5}
-    - {length: 8, pitch: 0.125}
+    - {turn_num: 10, length: 8, angle: -3, pitch: -0.125, speed: 295, bgl: stands_small}  # Maggots
+    - {length: 4, pitch: -0.125, bgl: stands_small}
+    - {turn_num: 11, length: 6, angle: 5, bgl: stands_small}
+    - {length: 8, pitch: 0.125, bgl: stands_small}
     - {turn_num: 12, length: 14, angle: -6, pitch: -0.125, bgl: stands_single}  # Becketts
     - {turn_num: 13, length: 18, angle: 11, pitch: -0.125, speed: 220, bgl: stands_single}  # Chapel
     - {length: 4, pitch: -0.125}
@@ -334,7 +334,7 @@ tracks:
     - {length: 7, pitch: -0.125}
     - {turn_num: 18, length: 6, angle: 4, pitch: -0.25}
     - {turn_num: 18, length: 12, angle: 4, pitch: -0.25}
-    - {length: 4, pitch: -0.25, bgl: stands}
+    - {length: 4, pitch: -0.25, bgl: ferris}
 
   - name: Monaco
     # TODO: scale is accurate vs other tracks, but it feels too short - scale up a bit?
@@ -347,29 +347,29 @@ tracks:
     gndcol1: 5
     gndcol2: 6
     sections:
-    - {length: 16, x: 0, pit: 1}  # start/finish
-    - {length: 8, x: 0, pit: 1}
-    - {length: 4, x: 0, angle: 2, pitch: 0.25, pit: 1}
-    - {length: 4, x: -0.25, pitch: 0.25, pit: 1}
-    - {length: 4, x: -0.875, angle: -2, pitch: 0.25, pit: 1}
-    - {length: 4, x: -0.5, pitch: 0.25, speed: 115, pit: 1}
+    - {length: 16, x: 0, pit: 1, bgl: building, bgr: building}  # start/finish
+    - {length: 8, x: 0, pit: 1, bgl: building, bgr: building}
+    - {length: 4, x: 0, angle: 2, pitch: 0.25, pit: 1, bgl: building, bgr: building}
+    - {length: 4, x: -0.25, pitch: 0.25, pit: 1, bgl: building, bgr: building}
+    - {length: 4, x: -0.875, angle: -2, pitch: 0.25, pit: 1, bgl: building, bgr: building}
+    - {length: 4, x: -0.5, pitch: 0.25, speed: 115, pit: 1, bgl: building, bgr: building}
     - {turn_num: 1, length: 4, x: 0.25, angle: 4, speed: 115, wall: 2, lanes: 1, pit: 1}  # Sainte Devote
     - {turn_num: 1, length: 4, x: 1, angle: 4, speed: 115, wall: 2, lanes: 1, pit: 1}
-    - {length: 12, x: 0.25, wall: 2, lanes: 3, pit: 1}
-    - {length: 4, x: -1, angle: -1, pitch: 1, lanes: 3}
-    - {length: 24, x: -0.75, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
-    - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
-    - {length: 3, x: 0, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
-    - {length: 6, x: 0, angle: -2, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
-    - {length: 3, x: 0.25, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12}
-    - {turn_num: 2, length: 2, x: 0.5, angle: 1.5, pitch: 0.25, lanes: 3, gndcol1r: 12, gndcol2r: 12}  # Beau Rivage
-    - {turn_num: 2, length: 2, x: 0.75, angle: 1.5, pitch: 0.25, lanes: 3, gndcol1r: 12, gndcol2r: 12}
-    - {length: 6, x: 0.5, pitch: 0.25, lanes: 1, gndcol1r: 12, gndcol2r: 12}
-    - {turn_num: 3, x: 0, length: 10, angle: -4, speed: 165, lanes: 1, gndcol1r: 12, gndcol2r: 12}  # Massenet
-    - {turn_num: 3, x: -1, length: 6, angle: -4, speed: 165, lanes: 1, gndcol1r: 12, gndcol2r: 12}
-    - {turn_num: 3, x: -0.5, length: 10, angle: -4, speed: 165, lanes: 1}
-    - {length: 8, x: 0.5, lanes: 1}
-    - {length: 4, x: -0.5, speed: 165, lanes: 1}
+    - {length: 12, x: 0.25, wall: 2, lanes: 3, pit: 1, bgl: building}
+    - {length: 4, x: -1, angle: -1, pitch: 1, lanes: 3, bgl: building}
+    - {length: 24, x: -0.75, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {length: 4, x: -0.125, angle: 1, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {length: 3, x: 0, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {length: 6, x: 0, angle: -2, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {length: 3, x: 0.25, pitch: 1, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {turn_num: 2, length: 2, x: 0.5, angle: 1.5, pitch: 0.25, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}  # Beau Rivage
+    - {turn_num: 2, length: 2, x: 0.75, angle: 1.5, pitch: 0.25, lanes: 3, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {length: 6, x: 0.5, pitch: 0.25, lanes: 1, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {turn_num: 3, x: 0, length: 10, angle: -4, speed: 165, lanes: 1, gndcol1r: 12, gndcol2r: 12, bgl: building}  # Massenet
+    - {turn_num: 3, x: -1, length: 6, angle: -4, speed: 165, lanes: 1, gndcol1r: 12, gndcol2r: 12, bgl: building}
+    - {turn_num: 3, x: -0.5, length: 10, angle: -4, speed: 165, lanes: 1, bgl: building}
+    - {length: 8, x: 0.5, lanes: 1, bgl: building}
+    - {length: 4, x: -0.5, speed: 165, lanes: 1, bgl: building}
     - {turn_num: 4, length: 5, x: 0, angle: 4, speed: 165, lanes: 1}  # Casino
     - {turn_num: 4, length: 5, x: 1, angle: 4, speed: 165, lanes: 1}
     - {length: 6, x: 0, pitch: -0.25}
@@ -428,22 +428,22 @@ tracks:
     - {length: 8, x: -0.75, lanes: 1, bgl: stands}
     - {length: 16, x: 0.5, angle: -4, lanes: 1, bgl: stands}
     - {length: 4, x: -0.25, lanes: 1, bgl: stands}
-    - {turn_num: 17, x: -0.75, length: 8, angle: 3, lanes: 1}  # Rascasse
-    - {turn_num: 17, x: 0.25, length: 4, angle: 4, speed: 70}
-    - {turn_num: 17, x: 1, length: 4, angle: 4, speed: 70}
-    - {length: 4, x: 0.5, pitch: 0.25}
-    - {length: 4, x: 0, angle: 1.5, pitch: 0.25}
-    - {length: 6, x: -1, pitch: 0.25, speed: 80}
-    - {turn_num: 18, x: 0.25, length: 3, angle: 4, speed: 80, pit: 1}  # Anthony Noghes
-    - {turn_num: 18, x: 0.875, length: 3, angle: 4, speed: 80, pit: 1}
-    - {length: 2, x: 0.25, speed: 80, pit: 1}
-    - {turn_num: 19, length: 2, x: -0.25, angle: -1.5, speed: 80, pit: 1}
-    - {turn_num: 19, length: 2, x: -0.5, angle: -1.5, speed: 80, pit: 1}
-    - {length: 10, x: -0.75, pit: 1}
-    - {length: 10, x: -0.25, angle: 2, pit: 1}
-    - {length: 12, x: 0, pit: 1, bgr: garages}
-    - {length: 10, x: 0.125, angle: 1, pit: 1, bgr: garages}
-    - {length: 10, x: 0.25, pit: 1, bgr: garages}
+    - {turn_num: 17, x: -0.75, length: 8, angle: 3, lanes: 1, bgl: building}  # Rascasse
+    - {turn_num: 17, x: 0.25, length: 4, angle: 4, speed: 70, bgl: building}
+    - {turn_num: 17, x: 1, length: 4, angle: 4, speed: 70, bgl: building}
+    - {length: 4, x: 0.5, pitch: 0.25, bgl: building}
+    - {length: 4, x: 0, angle: 1.5, pitch: 0.25, bgl: building}
+    - {length: 6, x: -1, pitch: 0.25, speed: 80, bgl: building}
+    - {turn_num: 18, x: 0.25, length: 3, angle: 4, speed: 80, pit: 1, bgl: building}  # Anthony Noghes
+    - {turn_num: 18, x: 0.875, length: 3, angle: 4, speed: 80, pit: 1, bgl: building}
+    - {length: 2, x: 0.25, speed: 80, pit: 1, bgl: building}
+    - {turn_num: 19, length: 2, x: -0.25, angle: -1.5, speed: 80, pit: 1, bgl: building}
+    - {turn_num: 19, length: 2, x: -0.5, angle: -1.5, speed: 80, pit: 1, bgl: building}
+    - {length: 10, x: -0.75, pit: 1, bgl: building, bgr: building}
+    - {length: 10, x: -0.25, angle: 2, pit: 1, bgl: building, bgr: building}
+    - {length: 12, x: 0, pit: 1, bgl: building, bgr: garages}
+    - {length: 10, x: 0.125, angle: 1, pit: 1, bgl: building, bgr: garages}
+    - {length: 10, x: 0.25, pit: 1, bgl: building, bgr: garages}
 
   - name: USA
     length_scale: 2

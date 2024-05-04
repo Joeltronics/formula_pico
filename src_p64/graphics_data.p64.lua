@@ -46,6 +46,8 @@ function load_graphics()
 		stands_small = {bmp=spritesheet[29].bmp, width=48, height=16, palt=15},
 		stands = {bmp=spritesheet[30].bmp, width=48, height=32, palt=15},
 		garage = {bmp=spritesheet[31].bmp, width=32, height=32, palt=15},
+
+		ferris = {bmp=spritesheet[36].bmp, width=48, height=48, palt=11},
 	}
 
 	bg_objects = {
@@ -148,6 +150,21 @@ function load_graphics()
 			spacing=3,
 			flip_r=true,
 		},
+
+		ferris = {
+			sprite=sprites.ferris,
+			pos={32, 0},
+			siz={32, 32},
+			spacing=0,
+			flip_r=true,
+		},
+		
+		building = {
+			building=true,
+			pos={8, 16},
+			spacing=1,
+		},
+
 	}
 
 end

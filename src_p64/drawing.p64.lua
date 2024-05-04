@@ -267,9 +267,50 @@ function setclip(clp)
 	clip(clp[1], clp[2], clp[3]-clp[1], clp[4]-clp[2])
 end
 
+function draw_building(section, sumct, bg, side, px, py, scale, clp, wall)
+
+	local pos = bg.pos or {0, 999}
+	local height = pos[2]
+
+	px += 3*scale*side + pos[1]*scale*side
+
+	if (wall) px += 2*scale*wall
+
+	local y0 = max(clp[2], py - height*scale)
+	local y1 = min(clp[4], py)
+
+	if y1 >= y0 then
+
+		local x0, xy
+		if side < 0 then
+			-- Left side
+			x0 = max(0, clp[1])
+			x1 = ceil(px)
+		else
+			-- Right side
+			x0 = flr(px - 1)
+			x1 = min(clp[3], 480)
+		end
+
+		local col = section.gndcol1 or road.gndcol1 or 3
+		if ((sumct % 6) >= 3) col = section.gndcol2 or road.gndcol2 or 11
+
+		if x1 >= x0 then
+			-- clip()
+			-- setclip(clp)
+			rectfill(x0, y0, x1, y1, col)
+			-- clip()
+		end
+	end
+
+	return px
+end
+
 function add_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp, wall)
 
 	if (not bg) return
+
+	if (bg.building) return -- Already dealt with
 
 	if bg.spacing then
 		if bg.spacing == 0 then
@@ -513,6 +554,14 @@ function draw_road()
 
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
+		local bld_l, bld_r = nil, nil
+		if section.bgl and section.bgl.building then
+			bld_l = draw_building(section, sumct, section.bgl, -1, x2, y2, scale2, clp, wl2)
+		end
+		if section.bgr and section.bgr.building then
+			bld_r = draw_building(section, sumct, section.bgr, 1, x2, y2, scale2, clp, wr2)
+		end
+
 		if i < sprite_draw_distance then
 			-- TODO: token optimizations - a lot of repeated stuff here
 			if sumct == road[1].length then
@@ -561,6 +610,13 @@ function draw_road()
 		if tnl then
 			clip_to_tunnel(x2, y2, scale2, clp)
 		else
+			if bld_l then
+				clp[1] = max(clp[1], bld_l)
+			end
+			if bld_r then
+				clp[3] = min(clp[3], bld_r)
+			end
+
 			clp[4] = min(clp[4], ceil(y2))
 		end
 
