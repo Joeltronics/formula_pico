@@ -4,7 +4,6 @@ function init_game(track_idx, team_idx, is_race, ghost, num_other_cars, ai_only)
 	load_track(track_idx)
 	init_minimap()
 
-	if (debug) poke(0x5F2D, 1)  -- enable keyboard
 	poke(0x5f36, 0x40)  -- prevent printing at bottom of screen from triggering scroll
 	init_cars(team_idx, ghost, num_other_cars, ai_only)
 
@@ -631,7 +630,7 @@ function heal_car_section(car)
 	end
 	assert (subseg < 1)
 
-	if (enable_debug) then
+	if allow_debug then
 		-- Should only be possible with debug stuff
 		while subseg < 0 do
 			subseg += 1
@@ -717,7 +716,7 @@ end
 
 function game_tick()
 
-	if (debug) tick_debug()
+	if (debug_enabled) tick_debug()
 
 	local steering_input, accel_brake_input = 0, 0
 	if (btn(0)) steering_input -= 1

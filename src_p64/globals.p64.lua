@@ -5,8 +5,7 @@
 
 -- Build options
 
-enable_debug = true
-debug_draw_extra = false
+allow_debug = true
 enable_minimap = true
 enable_sound = true
 
@@ -138,10 +137,31 @@ minimap_max_height = 64
 minimap = {}
 
 --
+-- Debug stuff
+--
+
+debug_enabled = true
+enable_draw = {
+
+	horizon_ground = true,
+	horizon_objects = true,
+
+	tunnel = true,
+	ground = true,
+	road = true,
+	curbs = true,
+
+	walls = true,
+	bg_sprites = true,
+	cars = true,
+
+	debug_extra = false,
+}
+
+--
 -- Runtime options
 --
 
-debug = true -- TODO: rename this, it masks built-in
 print_cpu = true
 draw_racing_line = true
 brake_assist = true

@@ -1,9 +1,10 @@
 function tick_debug()
 
-	if (not debug) return
+	if (not debug_enabled) return
 
 	local player_car = cars[1]
 	local shift = key("shift")
+	local ctrl = key("ctrl")
 
 	if race_started then
 		if (keyp('t')) replace_tires(player_car)
@@ -33,16 +34,31 @@ function tick_debug()
 		end
 	end
 
-	if (keyp('7')) cam_x_scale = max(cam_x_scale - 0.25, 0)
-	if (keyp('8')) cam_x_scale = min(cam_x_scale + 0.25, 1)
-	if (keyp('9')) cam_dy = max(cam_dy - 0.25, 0.25)
-	if (keyp('0')) cam_dy += 0.25
-	if (keyp('-')) cam_dz = max(cam_dz - 0.25, 0.25)
-	if (keyp('=')) cam_dz += 0.25
-	if (keyp('<')) player_car.heading -= 1/256
-	if (keyp('>')) player_car.heading += 1/256
-	if (keyp('f')) frozen = not frozen
-	if (keyp('n')) noclip = not noclip
+	if shift and not ctrl then
+		if (keyp('1')) enable_draw.horizon_ground = not enable_draw.horizon_ground
+		if (keyp('2')) enable_draw.horizon_objects = not enable_draw.horizon_objects
+		if (keyp('3')) enable_draw.tunnel = not enable_draw.tunnel
+		if (keyp('4')) enable_draw.ground = not enable_draw.ground
+		if (keyp('5')) enable_draw.road = not enable_draw.road
+		if (keyp('6')) enable_draw.curbs = not enable_draw.curbs
+		if (keyp('7')) enable_draw.walls = not enable_draw.walls
+		if (keyp('8')) enable_draw.bg_sprites = not enable_draw.bg_sprites
+		if (keyp('9')) enable_draw.cars = not enable_draw.cars
+		if (keyp('0')) enable_draw.debug_extra = not enable_draw.debug_extra
+	end
+
+	if not (ctrl or shift) then
+		if (keyp('7')) cam_x_scale = max(cam_x_scale - 0.25, 0)
+		if (keyp('8')) cam_x_scale = min(cam_x_scale + 0.25, 1)
+		if (keyp('9')) cam_dy = max(cam_dy - 0.25, 0.25)
+		if (keyp('0')) cam_dy += 0.25
+		if (keyp('-')) cam_dz = max(cam_dz - 0.25, 0.25)
+		if (keyp('=')) cam_dz += 0.25
+		if (keyp('<')) player_car.heading -= 1/256
+		if (keyp('>')) player_car.heading += 1/256
+		if (keyp('f')) frozen = not frozen
+		if (keyp('n')) noclip = not noclip
+	end
 
 	player_car.segment_plus_subseg = player_car.segment_idx + player_car.subseg
 end
@@ -51,19 +67,27 @@ _prev_tire = 1
 
 function draw_debug_overlay()
 
-	if (not debug) return
+	if (not debug_enabled) return
 
 	local player = cars[1]
 	local section = road[player.section_idx]
 
 	cursor(225, 0, 8)
-	if (frozen) print('frozen')
-	if (noclip) print('noclip')
-	if (player.in_pit) print('pit')
+	if (frozen) print('Frozen')
+	if (noclip) print('Noclip')
+	if (player.in_pit) print('Pit')
+	if (not enable_draw.horizon_ground) print('Horizon ground hidden')
+	if (not enable_draw.horizon_objects) print('Horizon objects hidden')
+	if (not enable_draw.tunnel) print('Tunnel hidden')
+	if (not enable_draw.ground) print('Ground hidden')
+	if (not enable_draw.road) print('Road hidden')
+	if (not enable_draw.curbs) print('Curbs hidden')
+	if (not enable_draw.walls) print('Walls hidden')
+	if (not enable_draw.bg_sprites) print('BG objects hidden')
+	if (not enable_draw.cars) print('Cars hidden')
 
 	cursor(430, 0, 5)
 	print("cpu:" .. round(stat(1) * 100))
-	print("mem:" .. round(stat(0) * 100 / 2048))
 	print(player.section_idx .. "," .. player.segment_idx .. ',' .. player.subseg)
 	print('carx:' .. player.x)
 	-- print('hw:' .. road.half_width)

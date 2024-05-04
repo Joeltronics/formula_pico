@@ -107,8 +107,8 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	y1, yt = ceil(y1), flr(y2)
 
 	if section.tnl then
-		draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
-	elseif (y2 >= y1) then
+		if (enable_draw.tunnel) draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
+	elseif (y2 >= y1) and enable_draw.ground then
 		draw_ground(
 			section, seg, sumct,
 			x1, y1, scale1, x2, y2, scale2)
@@ -126,15 +126,15 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	-- if (pit1 ~= 0 or pit2 ~= 0) filltrapz(x1 + pit1*scale1*pit_lane_width, y1, w1, x2 + pit2*scale2*pit_lane_width, y2, w2, 5)
 	pit1 *= scale1 * pit_lane_width
 	pit2 *= scale2 * pit_lane_width
-	if (pit1 ~= 0 or pit2 ~= 0) filltrapz(x1 + pit1, y1, w1, x2 + pit2, y2, w2, 5)
+	if ((pit1 ~= 0 or pit2 ~= 0) and enable_draw.road) filltrapz(x1 + pit1, y1, w1, x2 + pit2, y2, w2, 5)
 
-	filltrapz(x1, y1, w1, x2, y2, w2, 5)
+	if (enable_draw.road) filltrapz(x1, y1, w1, x2, y2, w2, 5)
 
 	-- Start/finish line
 
 	if (not detail) fillp(0b0101101001011010)
 
-	if sumct == road[1].length + 1 then
+	if sumct == road[1].length + 1 and enable_draw.road then
 		if detail then
 			fillp(0b0011001111001100)
 			-- Just fill 1st 50% of segment
@@ -147,55 +147,59 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 			filltrapz(x1, y1, w1, x2, y2, w2, 0x07)
 		end
 	end
+	fillp()
 
-	-- Curbs
+	if enable_draw.curbs then
+		-- Curbs
 
-	if section.dpit ~= 0 then
-		-- Pit entrance/exit
-		if max(pit1, pit2) > 0 then
-			-- TODO
-			x1r += pit1
-			x2r += pit2
-		else
-			-- TODO: is sign right?
-			x1l += pit1
-			x2l += pit2
-		end
-	end
-
-	if detail then
-		local linecol = 7
-		if (sumct % 2 == 0) linecol = 8
-		local sw1, sw2 = shoulder_half_width*scale1, shoulder_half_width*scale2
-		-- filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
-		-- filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
-		filltrapz(x1l, y1, sw1, x2l, y2, sw2, linecol)
-		filltrapz(x1r, y1, sw1, x2r, y2, sw2, linecol)
-	else
-		-- line(x1-w1, y1, x2-w2, y2, 0x060e)
-		-- line(x1+w1, y1, x2+w2, y2, 0x060e)
-		line(x1l, y1, x2l, y2, 0x060e)
-		line(x1r, y1, x2r, y2, 0x060e)
-		fillp()
-	end
-
-	-- Lane lines
-
-	local lanes = section.lanes or road.lanes
-	if (sumct % 4) == 0 then
-		for lane_idx = 1,lanes-1 do
-
-			local lx_rel = 2*lane_idx/lanes - 1
-			local lx1, lx2 = x1 + w1*lx_rel, x2 + w2*lx_rel
-
-			if detail then
-				local cw1, cw2 = lane_line_width*scale1, lane_line_width*scale2
-				filltrapz(lx1, y1, cw1, lx2, y2, cw2, 7)
+		if section.dpit ~= 0 then
+			-- Pit entrance/exit
+			if max(pit1, pit2) > 0 then
+				-- TODO
+				x1r += pit1
+				x2r += pit2
 			else
-				line(lx1, ceil(y1), lx2, y2, 6)
+				-- TODO: is sign right?
+				x1l += pit1
+				x2l += pit2
+			end
+		end
+
+		if detail then
+			local linecol = 7
+			if (sumct % 2 == 0) linecol = 8
+			local sw1, sw2 = shoulder_half_width*scale1, shoulder_half_width*scale2
+			-- filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
+			-- filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
+			filltrapz(x1l, y1, sw1, x2l, y2, sw2, linecol)
+			filltrapz(x1r, y1, sw1, x2r, y2, sw2, linecol)
+		else
+			-- line(x1-w1, y1, x2-w2, y2, 0x060e)
+			-- line(x1+w1, y1, x2+w2, y2, 0x060e)
+			line(x1l, y1, x2l, y2, 0x060e)
+			line(x1r, y1, x2r, y2, 0x060e)
+			fillp()
+		end
+
+		-- Lane lines
+
+		local lanes = section.lanes or road.lanes
+		if (sumct % 4) == 0 then
+			for lane_idx = 1,lanes-1 do
+
+				local lx_rel = 2*lane_idx/lanes - 1
+				local lx1, lx2 = x1 + w1*lx_rel, x2 + w2*lx_rel
+
+				if detail then
+					local cw1, cw2 = lane_line_width*scale1, lane_line_width*scale2
+					filltrapz(lx1, y1, cw1, lx2, y2, cw2, 7)
+				else
+					line(lx1, ceil(y1), lx2, y2, 6)
+				end
 			end
 		end
 	end
+	fillp()
 
 	-- TODO: draw start boxes for first segment
 
@@ -547,7 +551,7 @@ function draw_road()
 
 		local tnl = section.tnl
 		if tnl and not ptnl then
-			draw_tunnel_face(section, x1, y1, scale1)
+			if (enable_draw.tunnel) draw_tunnel_face(section, x1, y1, scale1)
 			clip_to_tunnel(x1, y1, scale1, clp)
 			setclip(clp)
 		end
@@ -555,16 +559,18 @@ function draw_road()
 		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
 		local bld_l, bld_r = nil, nil
-		if section.bgl and section.bgl.building then
-			bld_l = draw_building(section, sumct, section.bgl, -1, x2, y2, scale2, clp, wl2)
-		end
-		if section.bgr and section.bgr.building then
-			bld_r = draw_building(section, sumct, section.bgr, 1, x2, y2, scale2, clp, wr2)
+		if enable_draw.tunnel then
+			if section.bgl and section.bgl.building then
+				bld_l = draw_building(section, sumct, section.bgl, -1, x2, y2, scale2, clp, wl2)
+			end
+			if section.bgr and section.bgr.building then
+				bld_r = draw_building(section, sumct, section.bgr, 1, x2, y2, scale2, clp, wr2)
+			end
 		end
 
 		if i < sprite_draw_distance then
 			-- TODO: token optimizations - a lot of repeated stuff here
-			if sumct == road[1].length then
+			if sumct == road[1].length and enable_draw.bg_sprites then
 				add_sprite(sp, sumct, seg, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
 				add_sprite(sp, sumct, seg, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
 				add_sprite(sp, sumct, seg, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
@@ -576,16 +582,18 @@ function draw_road()
 			local wr2 = section.wall_r + section.dwall_r * seg
 			assert(wl2 < 0 and wr2 > 0)
 
-			add_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp, wl2)
-			add_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
-			add_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp, wr2)
+			if enable_draw.bg_sprites then
+				add_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp, wl2)
+				add_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp, wr2)
+			end
 
 			-- Iterate in reverse order of car positions, in order to prevent Z-order problems
 			-- TODO: optimize this, don't need to iterate all cars every segment
 			-- FIXME: there still could be z-order problems if 1 car is lapped
 			for pos = #car_positions,1,-1 do
 				local car = cars[car_positions[pos]]
-				if car.section_idx == sect and car.segment_idx == seg then
+				if car.section_idx == sect and car.segment_idx == seg and enable_draw.cars then
 					-- TODO: figure out why 2x is necessary - seem to be confusing width & half-width somewhere
 					local car_x = x_prev + car.subseg * xd + 2*car.x
 					local car_y = y_prev + car.subseg * yd
@@ -596,7 +604,7 @@ function draw_road()
 			end
 		end
 
-		if i < wall_draw_distance and not section.tnl then
+		if i < wall_draw_distance and (not section.tnl) and enable_draw.walls then
 			-- TODO: I think there's an off by 1 error here
 			-- (Why do we have to use previous section's clip rectangle?)
 			-- Also visible at tunnel entrance/exit
@@ -642,11 +650,7 @@ function draw_road()
 
 	clip()
 
-	if (enable_debug and debug_draw_extra) then
-
-		if (not debug) return
-
-		-- DEBUG: on-track stuff
+	if enable_draw.debug_extra then
 
 		local playerx, player_subseg = player_car.x, player_car.subseg
 
@@ -660,12 +664,23 @@ function draw_road()
 		local x1, y1, scale1 = project(x, y, z)
 		local x2, y2, scale2 = project(x + xd, y + yd, z + zd)
 
+		-- TODO: these need skew to be applied differently
+		local x_rel_1, y_rel_1, scale1 = project(x + xd*subseg, y + yd*subseg, z + subseg)
+		local x_rel_2, y_rel_2, scale2 = project(x + xd*(1+subseg), y + yd*(1+subseg), z + zd + subseg)
+
 		-- On-track X Ruler
 		for n = -5, 5 do
-			line(x1 - n*scale1, y1, x2 - n*scale2, y2, 15)
+			local linecol = 15
+			if (n == 0) linecol = 14
+			line(
+				x_rel_1 - n*scale1, y_rel_1,
+				x_rel_2 - n*scale2, y_rel_2,
+				linecol)
 		end
 
 		-- Draw hitboxes/clipping info
+
+		-- TODO: if there's slope, also draw that
 
 		local car_rear_x, car_rear_y, car_rear_scale = project(
 			x + player_subseg * xd + 2*playerx,
@@ -677,11 +692,26 @@ function draw_road()
 			y + (player_subseg + car_depth) * yd,
 			z + (player_subseg + car_depth) * zd)
 
+		local car_front_x_level, car_front_y_level, car_front_scale_level = project(
+			x + player_subseg * xd + 2*playerx,
+			y + player_subseg * yd,
+			z + (player_subseg + car_depth) * zd)
+
 		local car_rear_left_x = car_rear_x - car_width*car_rear_scale
 		local car_rear_right_x = car_rear_x + car_width*car_rear_scale
 		local car_front_left_x = car_front_x - car_width*car_front_scale
 		local car_front_right_x = car_front_x + car_width*car_front_scale
+		local car_front_left_x_level = car_front_x_level - car_width*car_front_scale_level
+		local car_front_right_x_level = car_front_x_level + car_width*car_front_scale_level
 
+		-- Hitbox if car was level
+		line(car_front_left_x_level, car_front_y_level, car_front_right_x_level, car_front_y_level, 15)
+		line(car_front_left_x_level, car_front_y_level, car_front_left_x, car_front_y, 15)
+		line(car_front_right_x_level, car_front_y_level, car_front_right_x, car_front_y, 15)
+		line(car_rear_left_x, car_rear_y, car_front_left_x_level, car_front_y_level, 15)
+		line(car_rear_right_x, car_rear_y, car_front_right_x_level, car_front_y_level, 15)
+
+		-- Hitbox on ground
 		line(car_rear_left_x, car_rear_y, car_rear_right_x, car_rear_y, 10)
 		line(car_front_left_x, car_front_y, car_front_right_x, car_front_y, 10)
 		line(car_rear_left_x, car_rear_y, car_front_left_x, car_front_y, 10)
@@ -728,13 +758,15 @@ function draw_bg()
 	local horizon = 135 + 64*(section.pitch + section.dpitch*(cars[1].segment_idx - 1))
 
 	-- Sky
-	rectfill(0, 0, 480, horizon - 1, 12)
+	cls(12)
 
 	-- Horizon
-	local horizon_col = 256*(road.gndcol1 or 3) + (road.gndcol2 or 11)
-	fillp(0b0011110000111100)
-	rectfill(0, horizon, 480, 270, horizon_col)
-	fillp()
+	if enable_draw.horizon_ground then
+		local horizon_col = 256*(road.gndcol1 or 3) + (road.gndcol2 or 11)
+		fillp(0b0011110000111100)
+		rectfill(0, horizon, 480, 270, horizon_col)
+		fillp()
+	end
 
 	-- Sun
 	local sun_x = (cars[1].heading * 1920 + 720) % 1920 - 960
@@ -746,18 +778,19 @@ function draw_bg()
 	local spr1, spr2
 	if (road.tree_bg) spr1, spr2 = sprites.tree_bg_1.bmp, sprites.tree_bg_2.bmp
 	if (road.city_bg) spr1, spr2 = sprites.city_bg_1.bmp, sprites.city_bg_2.bmp
-	if (not spr1) return
 
-	for off = -64,480,64 do
-		local x, y = sun_x % 64 + off, horizon - 7
-		spr(spr1, x     , y)
-		spr(spr2, x + 8 , y)
-		spr(spr1, x + 16, y, true)
-		spr(spr2, x + 24, y, true)
-		spr(spr1, x + 32, y)
-		spr(spr2, x + 40, y, true)
-		spr(spr1, x + 48, y, true)
-		spr(spr2, x + 56, y)
+	if spr1 and enable_draw.horizon_objects then
+		for off = -64,480,64 do
+			local x, y = sun_x % 64 + off, horizon - 7
+			spr(spr1, x     , y)
+			spr(spr2, x + 8 , y)
+			spr(spr1, x + 16, y, true)
+			spr(spr2, x + 24, y, true)
+			spr(spr1, x + 32, y)
+			spr(spr2, x + 40, y, true)
+			spr(spr1, x + 48, y, true)
+			spr(spr2, x + 56, y)
+		end
 	end
 end
 

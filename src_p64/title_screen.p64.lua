@@ -5,7 +5,7 @@ track_zidx = 0
 team_zidx = 0
 mode = 0
 
-if enable_debug then
+if allow_debug then
 	num_rows = 6
 else
 	num_rows = 5
@@ -70,9 +70,9 @@ function update_title_screen()
 
 	if (row_zidx == 3) brake_assist = not brake_assist
 
-	if enable_debug then
+	if allow_debug then
 		-- TODO: add separate debug option to print CPU or not
-		if (row_zidx == 4) debug = not debug
+		if (row_zidx == 4) debug_enabled = not debug_enabled
 	end
 end
 
@@ -112,8 +112,8 @@ function draw_title_screen()
 	print_centered("Team: " .. palettes[team_zidx+1].name, 240, 80 + yoff, 7)
 	print_centered("Brake assist: " .. (brake_assist and "On" or "Off"), 240, 88 + yoff, 7)
 
-	if enable_debug then
-		print_centered("Debug: " .. (debug and "On" or "Off"), 240, 96 + yoff, 7)
+	if allow_debug then
+		print_centered("Debug: " .. (debug_enabled and "On" or "Off"), 240, 96 + yoff, 7)
 		print_centered('Start', 240, 112 + yoff, 7)
 	else
 		print_centered('Start', 240, 104 + yoff, 7)
