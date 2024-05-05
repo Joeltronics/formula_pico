@@ -18,12 +18,18 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 	collisions = num_other_cars > 0 and not ghost
 	cars = {}
 
-	local teams = {1, 2, 3, 4, 5, 6, 7, 8}
+	local unused_teams = {1, 2, 3, 4, 5, 6, 7, 8}
 
 	for idx = 1, num_other_cars+1 do
 		local palette = palettes[team_idx]
 
 		local ai = (idx > 1) or ai_only
+
+		local x = 0
+		if num_other_cars > 0 and not ghost then
+			x = -0.5
+			if (idx % 2 ~= 0) x = 0.5
+		end
 
 		local segment_idx = idx
 		local is_ghost = ghost and idx == 2
@@ -32,15 +38,17 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			palette = palette_ghost
 			segment_idx = 1
 		end
+
 		-- Start reaction time: 0.15 - 0.5 seconds (9-30 frames)
 		local start_delay_counter, tire_compound_idx = 0, 2
 		if ai and not is_ghost then
 			start_delay_counter = 9 + flr(rnd(21))
 			tire_compound_idx = 1 + flr(rnd(#tire_compounds))
 		end
+
 		add(cars, {
 			idx=idx,
-			x=0,
+			x=x,
 			laps=-1,
 			section_idx=1,
 			segment_idx=segment_idx,
@@ -74,8 +82,8 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			}
 		})
 
-		del(teams, team_idx)
-		team_idx = rnd(teams)
+		del(unused_teams, team_idx)
+		team_idx = rnd(unused_teams)
 	end
 
 	car_positions = {}
