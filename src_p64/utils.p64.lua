@@ -38,6 +38,8 @@ function digit_to_hex_char(digit)
 end
 
 function project(x, y, z)
+	if (z <= 0) return 480, 270, 240
+
 	local scale = 135 / z
 	return x * scale + 240, y * scale + 135, scale
 end

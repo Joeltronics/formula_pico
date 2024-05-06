@@ -42,6 +42,12 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col, rotate90)
 	y += yadj
 	w += yadj * wd
 
+	if y <= 0 then
+		x += -y * xd
+		w += -y * wd
+		y = 0
+	end
+
 	local ymax = min(y2, 127)
 	while y <= ymax do
 		if rotate90 then

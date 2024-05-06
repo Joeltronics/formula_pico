@@ -42,6 +42,12 @@ function filltrapz(cx1, y1, w1, cx2, y2, w2, col, rotate90)
 	y += yadj
 	w += yadj * wd
 
+	if y <= 0 then
+		x += -y * xd
+		w += -y * wd
+		y = 0
+	end
+
 	local ymax
 	if rotate90 then
 		ymax = min(y2, 479)
@@ -74,7 +80,7 @@ end
 -- 	)
 -- end
 
-function draw_ground(section, seg, sumct, x1, y1, scale1, x2, y2, scale2)
+function draw_ground(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2)
 
 	local gndcol1 = section.gndcol1 or road.gndcol1 or 3
 	local gndcol2 = section.gndcol2 or road.gndcol2 or 11
@@ -83,7 +89,7 @@ function draw_ground(section, seg, sumct, x1, y1, scale1, x2, y2, scale2)
 	if ((sumct % 6) >= 3) gndcol, gndcol_l, gndcol_r = gndcol2, section.gndcol2l, section.gndcol2r
 	rectfill(0, y1, 480, y2, gndcol)
 
-	local wl1, wl2, wr1, wr2 = get_wall_locs(section, seg)
+	local wl1, wl2, wr1, wr2 = get_wall_locs(section, segment_idx)
 
 	if gndcol_l and (gndcol_l != gndcol) then
 		local x = min(
@@ -100,7 +106,7 @@ function draw_ground(section, seg, sumct, x1, y1, scale1, x2, y2, scale2)
 	end
 end
 
-function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, distance)
+function draw_segment(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2, distance)
 
 	detail = (distance <= road_detail_draw_distance)
 
@@ -110,7 +116,7 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 		if (enable_draw.tunnel) draw_tunnel_walls(x1, y1, scale1, x2, y2, scale2, sumct)
 	elseif (y2 >= y1) and enable_draw.ground then
 		draw_ground(
-			section, seg, sumct,
+			section, segment_idx, sumct,
 			x1, y1, scale1, x2, y2, scale2)
 	end
 
@@ -121,29 +127,38 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 	local w1, w2 = road.track_width*scale1, road.track_width*scale2
 	local x1l, x1r, x2l, x2r = x1 - w1, x1 + w1, x2 - w2, x2 + w2
 
-	local pit1 = section.pit + seg*section.dpit
-	local pit2 = section.pit + (seg - 1)*section.dpit
-	-- if (pit1 ~= 0 or pit2 ~= 0) filltrapz(x1 + pit1*scale1*pit_lane_width, y1, w1, x2 + pit2*scale2*pit_lane_width, y2, w2, 5)
-	pit1 *= scale1 * pit_lane_width
-	pit2 *= scale2 * pit_lane_width
-	if ((pit1 ~= 0 or pit2 ~= 0) and enable_draw.road) filltrapz(x1 + pit1, y1, w1, x2 + pit2, y2, w2, 5)
+	-- TODO: pit lane over-draws, which wastes a bunch of extra CPU cycles
+	local pit1 = (section.pit + segment_idx*section.dpit) * scale1 * pit_lane_width
+	local pit2 = (section.pit + (segment_idx - 1)*section.dpit) * scale2 * pit_lane_width
+	if section.pit ~= 0 then
+		if ((pit1 ~= 0 or pit2 ~= 0) and enable_draw.road) filltrapz(x1 + pit1, y1, w1, x2 + pit2, y2, w2, 5)
+	end
 
 	if (enable_draw.road) filltrapz(x1, y1, w1, x2, y2, w2, 5)
 
-	-- Start/finish line
+	if (enable_draw.debug_extra and (detail or not enable_draw.road)) line(x2 - w2, y2, x2 + w2, y2, 6)
 
-	if (not detail) fillp(0b0101101001011010)
+	-- Start/finish line
 
 	if sumct == road[1].length + 1 and enable_draw.road then
 		if detail then
-			fillp(0b0011001111001100)
+			fillp(
+				0b00001111,
+				0b00001111,
+				0b00001111,
+				0b00001111,
+				0b11110000,
+				0b11110000,
+				0b11110000,
+				0b11110000)
 			-- Just fill 1st 50% of segment
 			filltrapz(
-				x1, flr(y1 + 0.5*(y2 - y1)), w1,
+				x1, flr(y1 + 0.5*(y2 - y1)), 0.5*(w2 + w1),
 				x2, ceil(y2), w2,
 				0x07)
 			fillp()
 		else
+			fillp(0b0101101001011010)
 			filltrapz(x1, y1, w1, x2, y2, w2, 0x07)
 		end
 	end
@@ -155,11 +170,9 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 		if section.dpit ~= 0 then
 			-- Pit entrance/exit
 			if max(pit1, pit2) > 0 then
-				-- TODO
 				x1r += pit1
 				x2r += pit2
 			else
-				-- TODO: is sign right?
 				x1l += pit1
 				x2l += pit2
 			end
@@ -169,13 +182,10 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 			local linecol = 7
 			if (sumct % 2 == 0) linecol = 8
 			local sw1, sw2 = shoulder_half_width*scale1, shoulder_half_width*scale2
-			-- filltrapz(x1-w1, y1, sw1, x2-w2, y2, sw2, linecol)
-			-- filltrapz(x1+w1, y1, sw1, x2+w2, y2, sw2, linecol)
 			filltrapz(x1l, y1, sw1, x2l, y2, sw2, linecol)
 			filltrapz(x1r, y1, sw1, x2r, y2, sw2, linecol)
 		else
-			-- line(x1-w1, y1, x2-w2, y2, 0x060e)
-			-- line(x1+w1, y1, x2+w2, y2, 0x060e)
+			fillp(0b0101101001011010)
 			line(x1l, y1, x2l, y2, 0x060e)
 			line(x1r, y1, x2r, y2, 0x060e)
 			fillp()
@@ -211,11 +221,11 @@ function draw_segment(section, seg, sumct, x1, y1, scale1, x2, y2, scale2, dista
 
 	local col = 11
 	if (section.max_speed < 0.999 and speed > section.max_speed - 0.01) col = 10
-	if (need_to_brake(section, seg, 0, speed, cars[1].grip)) col = 2
+	if (need_to_brake(section, segment_idx, 0, speed, cars[1].grip)) col = 2
 	if (section.max_speed < 0.999 and speed > section.max_speed + 0.01) col = 8
 
-	local dx1 = section.entrance_x + seg*section.racing_line_dx
-	local dx2 = section.entrance_x + (seg - 1)*section.racing_line_dx
+	local dx1 = section.entrance_x + segment_idx*section.racing_line_dx
+	local dx2 = section.entrance_x + (segment_idx - 1)*section.racing_line_dx
 	if (racing_line_sine_interp) then
 		dx1, dx2 = sin(dx1), sin(dx2)
 	end
@@ -310,7 +320,7 @@ function draw_building(section, sumct, bg, side, px, py, scale, clp, wall)
 	return px
 end
 
-function add_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp, wall)
+function add_sprite(sprite_list, sumct, segment_idx, bg, side, px, py, scale, clp, wall)
 
 	if (not bg) return
 
@@ -318,7 +328,7 @@ function add_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp, wall)
 
 	if bg.spacing then
 		if bg.spacing == 0 then
-			if (seg ~= 1) return
+			if (segment_idx ~= 1) return
 		elseif (sumct % bg.spacing) ~= 0 then
 			return
 		end
@@ -336,11 +346,18 @@ function add_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp, wall)
 
 	if (wall) px += 2*scale*wall + 0.5*w*side
 
-	-- TODO: Don't add if completely outside clp
+	local bounds = {
+		round(px - 0.5*w),
+		round(py - h),
+		round(px + 0.5*w),
+		round(py)
+	}
+
+	-- Don't add if completely outside clp
+	if (bounds[1] > clp[3] or bounds[3] < clp[1] or bounds[2] > clp[4] or bounds[4] < clp[2]) return
 
 	add(sprite_list, {
-		x=px,
-		y=py,
+		bounds=bounds,
 		w=w,
 		h=h,
 		sprite=bg.sprite,
@@ -351,24 +368,24 @@ function add_sprite(sprite_list, sumct, seg, bg, side, px, py, scale, clp, wall)
 	})
 end
 
-function get_wall_locs(section, seg)
-	local wl1 = section.wall_l + section.dwall_l * (seg - 1)
-	local wl2 = section.wall_l + section.dwall_l * seg
+function get_wall_locs(section, segment_idx)
+	local wl1 = section.wall_l + section.dwall_l * (segment_idx - 1)
+	local wl2 = section.wall_l + section.dwall_l * segment_idx
 
-	local wr1 = section.wall_r + section.dwall_r * (seg - 1)
-	local wr2 = section.wall_r + section.dwall_r * seg
+	local wr1 = section.wall_r + section.dwall_r * (segment_idx - 1)
+	local wr2 = section.wall_r + section.dwall_r * segment_idx
 
 	return wl1, wl2, wr1, wr2
 end
 
-function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp, detail)
+function add_wall(sprite_list, section, segment_idx, sumct, x2, y2, scale2, x1, y1, scale1, clp, detail)
 
 	local col = section.wallcol1 or road.wallcol1 or 6
 	if ((sumct % 6) >= 3) col = section.wallcol1 or road.wallcol1 or 7
 
 	-- TODO: invisible walls if very far out
 
-	local wl1, wl2, wr1, wr2 = get_wall_locs(section, seg)
+	local wl1, wl2, wr1, wr2 = get_wall_locs(section, segment_idx)
 
 	local walls={{wl1, wl2}, {wr1, wr2}}
 
@@ -376,10 +393,10 @@ function add_wall(sprite_list, section, seg, sumct, x2, y2, scale2, x1, y1, scal
 		add(walls, {section.pit_wall, section.pit_wall})
 	end
 
-	-- local wall_l1 = section.wall_l + section.dwall_l * (seg - 1)
-	-- local wall_l2 = section.wall_l + section.dwall_l * seg
-	-- local wall_r1 = section.wall_r + section.dwall_r * (seg - 1)
-	-- local wall_r2 = section.wall_r + section.dwall_r * seg
+	-- local wall_l1 = section.wall_l + section.dwall_l * (segment_idx - 1)
+	-- local wall_l2 = section.wall_l + section.dwall_l * segment_idx
+	-- local wall_r1 = section.wall_r + section.dwall_r * (segment_idx - 1)
+	-- local wall_r2 = section.wall_r + section.dwall_r * segment_idx
 
 	add(sprite_list, {
 		walls=walls,
@@ -393,22 +410,25 @@ end
 
 function draw_wall(s)
 
-	local h1, h2 = s.scale1 / 2, s.scale2 / 2
-	local cy1, cy2 = s.y1 - h1, s.y2 - h2
+	local h1, h2 = s.scale1, s.scale2
 
 	for w in all(s.walls) do
 		local x1, x2 = s.x1 + 2*s.scale1*w[1], s.x2 + 2*s.scale2*w[2]
 		if s.detail then
-			filltrapz(cy1, x1, h1, cy2, x2, h2, s.col, true) -- Fill
-			line(x1, s.y1, x2, s.y2, 6) -- Bottom
+			filltrapz(s.y1 - 0.5*h1, x1, 0.5*h1, s.y2 - 0.5*h2, x2, 0.5*h2, s.col, true) -- Fill
 		else
-			line(x1, cy1, x2, cy2, s.col) -- Center
+			line(x1, s.y1 - 0.5*h1, x2, s.y2 - 0.5*h2, s.col)
+			if h1 > 2.5 then
+				line(x1, s.y1 - 0.25*h1, x2, s.y2 - 0.25*h2, s.col)
+				line(x1, s.y1 - 0.75*h1, x2, s.y2 - 0.75*h2, s.col)
+			end
 		end
-		line(x1, s.y1 - 2*h1, x2, s.y2 - 2*h2, 6) -- Top
+		line(x1, s.y1, x2, s.y2, 6) -- Bottom
+		line(x1, s.y1 - h1, x2, s.y2 - h2, 6) -- Top
 	end
 end
 
-function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
+function add_car_sprite(sprite_list, car, segment_idx, x, y, scale, clp)
 
 	-- TODO: may want to offset drawing location by 1 pixel in some cases?
 	-- TODO: use track x value to add extra turn? (i.e. cars ahead after a corner)
@@ -448,7 +468,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 	end
 
 	add_sprite(
-		sprite_list, sumct, seg,
+		sprite_list, sumct, segment_idx,
 		{
 			sprite=sprites.car[min(#sprites.car, 1 + round(abs(sprite_turn)))],
 			siz={car_draw_width, car_draw_height},
@@ -459,7 +479,7 @@ function add_car_sprite(sprite_list, car, seg, x, y, scale, clp)
 		0, x, y, scale, clp)
 end
 
-function draw_bg_sprite(s)
+function draw_sprite(s)
 
 	setclip(s.clp)
 
@@ -473,10 +493,10 @@ function draw_bg_sprite(s)
 	if s.walls then
 		draw_wall(s)
 	else
-		local x1=ceil(s.x-s.w/2)
-		local x2=ceil(s.x+s.w/2)
-		local y1=ceil(s.y-s.h)
-		local y2=ceil(s.y)
+		local x1 = s.bounds[1]
+		local y1 = s.bounds[2]
+		local x2 = s.bounds[3]
+		local y2 = s.bounds[4]
 
 		sspr(
 			s.sprite.bmp,
@@ -493,14 +513,13 @@ end
 function draw_road()
 
 	local player_car = cars[1]
-	local section_idx, segment_idx, subseg = player_car.section_idx, player_car.segment_idx, player_car.subseg
-	local section, sect, seg = road[section_idx], section_idx, segment_idx
+	local section = road[player_car.section_idx]
 
 	-- direction
 	-- TODO: look ahead a bit more than this to determine camera
-	local camang = subseg * section.tu
+	local camang = player_car.subseg * section.tu
 	local xd, zd = -camang, 1
-	local yd = -(section.pitch + section.dpitch*(segment_idx - 1))
+	local yd = -(section.pitch + section.dpitch*(player_car.segment_idx - 1))
 
 	xd += sin(cam_angle_scale * player_car.track_angle)
 	zd *= cos(cam_angle_scale * player_car.track_angle)
@@ -512,10 +531,10 @@ function draw_road()
 
 	-- TODO: figure out which is the better way to do this
 	-- Option 1
-	-- local cx, cy, cz = skew(road.track_width*cam_x, 0, subseg, xd, yd)
+	-- local cx, cy, cz = skew(road.track_width*cam_x, 0, player_car.subseg, xd, yd)
 	-- local x, y, z = -cx, -cy + cam_dy, -cz + cam_dz
 	-- Option 2
-	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
+	local cx, cy, cz = skew(0, 0, player_car.subseg, xd, yd)
 	local x, y, z = -cx - road.track_width*cam_x, -cy + cam_dy, -cz + cam_dz
 
 	-- sprites
@@ -528,11 +547,21 @@ function draw_road()
 
 	-- Draw road segments
 
-	-- TODO: start 1 segment behind the player - walls and other cars have a problem with pop-in
+	local section_idx, segment_idx = player_car.section_idx, player_car.segment_idx
+
+	-- Start 1 segment behind the player - walls and other cars have a problem with pop-in
+	-- TODO: enable this - currently leads to lots of judder on corners (need to deal with skew?)
+	if false then
+		section_idx, segment_idx = reverse(section_idx, segment_idx - 1)
+		-- TODO: why is this 2x?
+		x -= 2*xd
+		y -= 2*yd
+		z -= 2*zd
+	end
 
 	local x1, y1, scale1 = project(x, y, z)
 
-	local section = road[sect]
+	local section = road[section_idx]
 
 	local ptnl = section.tnl
 
@@ -547,7 +576,7 @@ function draw_road()
 
 		local x2, y2, scale2 = project(x, y, z)
 
-		local sumct = section.sumct + seg
+		local sumct = section.sumct + segment_idx
 
 		local tnl = section.tnl
 		if tnl and not ptnl then
@@ -556,7 +585,7 @@ function draw_road()
 			setclip(clp)
 		end
 
-		draw_segment(section, seg, sumct, x2, y2, scale2, x1, y1, scale1, i)
+		draw_segment(section, segment_idx, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
 		local bld_l, bld_r = nil, nil
 		if enable_draw.tunnel then
@@ -569,23 +598,22 @@ function draw_road()
 		end
 
 		if i < sprite_draw_distance then
-			-- TODO: token optimizations - a lot of repeated stuff here
 			if sumct == road[1].length and enable_draw.bg_sprites then
-				add_sprite(sp, sumct, seg, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, seg, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, seg, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, seg, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, seg, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
 			end
 
-			local wl2 = section.wall_l + section.dwall_l * seg
-			local wr2 = section.wall_r + section.dwall_r * seg
+			local wl2 = section.wall_l + section.dwall_l * segment_idx
+			local wr2 = section.wall_r + section.dwall_r * segment_idx
 			assert(wl2 < 0 and wr2 > 0)
 
 			if enable_draw.bg_sprites then
-				add_sprite(sp, sumct, seg, section.bgl, -1, x2, y2, scale2, clp, wl2)
-				add_sprite(sp, sumct, seg, section.bgc,  0, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, seg, section.bgr,  1, x2, y2, scale2, clp, wr2)
+				add_sprite(sp, sumct, segment_idx, section.bgl, -1, x2, y2, scale2, clp, wl2)
+				add_sprite(sp, sumct, segment_idx, section.bgc,  0, x2, y2, scale2, clp)
+				add_sprite(sp, sumct, segment_idx, section.bgr,  1, x2, y2, scale2, clp, wr2)
 			end
 
 			-- Iterate in reverse order of car positions, in order to prevent Z-order problems
@@ -593,13 +621,13 @@ function draw_road()
 			-- FIXME: there still could be z-order problems if 1 car is lapped
 			for pos = #car_positions,1,-1 do
 				local car = cars[car_positions[pos]]
-				if car.section_idx == sect and car.segment_idx == seg and enable_draw.cars then
+				if car.section_idx == section_idx and car.segment_idx == segment_idx and enable_draw.cars then
 					-- TODO: figure out why 2x is necessary - seem to be confusing width & half-width somewhere
 					local car_x = x_prev + car.subseg * xd + 2*car.x
 					local car_y = y_prev + car.subseg * yd
 					local car_z = z_prev + car.subseg * zd
 					local this_car_screen_x, this_car_screen_y, this_car_scale = project(car_x, car_y, car_z)
-					add_car_sprite(sp, car, seg, this_car_screen_x, this_car_screen_y, this_car_scale, clp)
+					add_car_sprite(sp, car, segment_idx, this_car_screen_x, this_car_screen_y, this_car_scale, clp)
 				end
 			end
 		end
@@ -608,7 +636,7 @@ function draw_road()
 			-- TODO: I think there's an off by 1 error here
 			-- (Why do we have to use previous section's clip rectangle?)
 			-- Also visible at tunnel entrance/exit
-			add_wall(sp, section, seg, sumct, x2, y2, scale2, x1, y1, scale1, clp_prev, i < road_detail_draw_distance)
+			add_wall(sp, section, segment_idx, sumct, x2, y2, scale2, x1, y1, scale1, clp_prev, i < road_detail_draw_distance)
 		end
 
 		-- TODO: setting this before add_wall doesn't work - why?!
@@ -636,8 +664,8 @@ function draw_road()
 		-- Advance
 		xd += section.tu
 		yd -= section.dpitch
-		sect, seg = advance(sect, seg)
-		section = road[sect]
+		section_idx, segment_idx = advance(section_idx, segment_idx)
+		section = road[section_idx]
 		x1, y1, scale1 = x2, y2, scale2
 		ptnl = tnl
 	end
@@ -645,16 +673,16 @@ function draw_road()
 	-- Draw sprites
 
 	for i = #sp, 1, -1 do
-		draw_bg_sprite(sp[i])
+		draw_sprite(sp[i])
 	end
 
 	clip()
 
 	if enable_draw.debug_extra then
 
-		local playerx, player_subseg = player_car.x, player_car.subseg
+		local playerx, subseg = player_car.x, player_car.subseg
 
-		local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(segment_idx - 1))
+		local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(player_car.segment_idx - 1))
 
 		xd += sin(cam_angle_scale * player_car.track_angle)
 		zd *= cos(cam_angle_scale * player_car.track_angle)
@@ -683,19 +711,19 @@ function draw_road()
 		-- TODO: if there's slope, also draw that
 
 		local car_rear_x, car_rear_y, car_rear_scale = project(
-			x + player_subseg * xd + 2*playerx,
-			y + player_subseg * yd,
-			z + player_subseg * zd)
+			x + subseg * xd + 2*playerx,
+			y + subseg * yd,
+			z + subseg * zd)
 
 		local car_front_x, car_front_y, car_front_scale = project(
-			x + player_subseg * xd + 2*playerx,
-			y + (player_subseg + car_depth) * yd,
-			z + (player_subseg + car_depth) * zd)
+			x + subseg * xd + 2*playerx,
+			y + (subseg + car_depth) * yd,
+			z + (subseg + car_depth) * zd)
 
 		local car_front_x_level, car_front_y_level, car_front_scale_level = project(
-			x + player_subseg * xd + 2*playerx,
-			y + player_subseg * yd,
-			z + (player_subseg + car_depth) * zd)
+			x + subseg * xd + 2*playerx,
+			y + subseg * yd,
+			z + (subseg + car_depth) * zd)
 
 		local car_rear_left_x = car_rear_x - car_width*car_rear_scale
 		local car_rear_right_x = car_rear_x + car_width*car_rear_scale
@@ -732,9 +760,9 @@ function draw_road()
 		end
 		if front then
 			local front_x, front_y, front_scale = project(
-				x + (player_subseg + front.dz_ahead) * xd + 2*playerx,
-				y + (player_subseg + front.dz_ahead) * yd,
-				z + player_subseg + front.dz_ahead * zd)
+				x + (subseg + front.dz_ahead) * xd + 2*playerx,
+				y + (subseg + front.dz_ahead) * yd,
+				z + subseg + front.dz_ahead * zd)
 
 			line(
 				front_x - front_scale*car_width, front_y,
