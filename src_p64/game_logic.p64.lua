@@ -551,10 +551,15 @@ function tick_car_steering(car, section, steering_input, accel_brake_input)
 		-- If we're not steering, or steering away from the direction we're pointed, then add an extra push
 		if (sgn0(steering_input) ~= sgn0(track_angle)) track_angle = move_toward(track_angle, track_angle_extra_decr_rate)
 
+		-- TODO: vary incr_rate with tire grip
 		local target_angle = track_angle_target_accel_brake
-		if (accel_brake_input == 0) target_angle = track_angle_target_coast
+		local incr_rate = track_angle_incr_rate_accel_brake
+		if accel_brake_input == 0 then
+			target_angle = track_angle_target_coast
+			incr_rate = track_angle_incr_rate_coast
+		end
 
-		track_angle = move_toward(track_angle, track_angle_incr_rate, target_angle*sgn0(steering_input))
+		track_angle = move_toward(track_angle, incr_rate, target_angle*sgn0(steering_input))
 	else
 		-- On a corner
 		-- TODO: currently this uses same logic as straights, but probably want different logic! (see long comment above)
@@ -575,10 +580,16 @@ function tick_car_steering(car, section, steering_input, accel_brake_input)
 		-- If we're not steering, or steering away from the direction we're pointed, then add an extra push
 		if (sgn0(steering_input) ~= sgn0(track_angle)) track_angle = move_toward(track_angle, track_angle_extra_decr_rate)
 
-		local target_angle = track_angle_target_accel_brake + corner_angle_shift
-		if (accel_brake_input == 0) target_angle = track_angle_target_coast
+		-- TODO: vary incr_rate with tire grip
+		local target_angle = track_angle_target_accel_brake
+		local incr_rate = track_angle_incr_rate_accel_brake
+		if accel_brake_input == 0 then
+			target_angle = track_angle_target_coast
+			incr_rate = track_angle_incr_rate_coast
+		end
+		target_angle += corner_angle_shift
 
-		track_angle = move_toward(track_angle, track_angle_incr_rate, target_angle*sgn0(steering_input))
+		track_angle = move_toward(track_angle, incr_rate, target_angle*sgn0(steering_input))
 	end
 
 	-- TODO: clip track angle

@@ -33,8 +33,7 @@ Cornerning & physics improvements:
 	- Essentially base it on GG diagram
 	- Kind of already operates this way, but need to determine both together rather than one then other
 * Improve "push outside of turn" logic
-	- It was too strong before the new physics model
-	- Now it's not strong enough
+	- It was too strong before the new physics model, but it might not be strong enough now
 
 Hitbox collision logic improvements:
 

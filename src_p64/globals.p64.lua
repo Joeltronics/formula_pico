@@ -30,7 +30,8 @@ track_angle_max = 30/360
 track_angle_target_coast = 30/360
 track_angle_target_accel_brake = 15/360
 track_angle_pit_exit = track_angle_target_coast
-track_angle_incr_rate = track_angle_target_coast * 1/64
+track_angle_incr_rate_coast = track_angle_target_coast * 1/32
+track_angle_incr_rate_accel_brake = track_angle_target_coast * 1/64
 track_angle_extra_decr_rate = track_angle_target_coast * 1/16
 track_angle_sprite_turn_scale = 2 / track_angle_max
 
