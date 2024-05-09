@@ -31,7 +31,6 @@ function load_track(track_idx)
 
 	road.start_heading = road.start_heading or start_heading
 	road.track_width = road.track_width or track_width
-	road.track_width *= 1.5  -- TODO: bake this into data instead of doing it here
 	road.half_width = 0.5 * road.track_width
 
 	road.curb_x = road.half_width - shoulder_half_width - car_half_width

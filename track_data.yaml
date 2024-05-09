@@ -1,7 +1,7 @@
 
 
 start_heading: 0.25
-track_width: 3
+track_width: 4
 shoulder_half_width: 0.125
 
 # 1/32; so 8 steps is a right angle
@@ -340,7 +340,7 @@ tracks:
     # TODO: scale is accurate vs other tracks, but it feels too short - scale up a bit?
     length_km: 3.34
     length_scale: 1
-    track_width: 2.5
+    track_width: 3
     wall: 0
     lanes: 2
     city_bg: true
@@ -449,7 +449,7 @@ tracks:
     length_scale: 2
     length_km: 4
     city_bg: true
-    track_width: 6
+    track_width: 8
     wall: 0
     start_heading: 0.75
     sections:
@@ -475,7 +475,7 @@ tracks:
     length_scale: 2
     length_km: 0.847
     city_bg: true
-    track_width: 4
+    track_width: 6
     wall: 0
     lanes: 3
     sections:
@@ -545,7 +545,7 @@ tracks:
     - {length: 6, x: 1, speed: 100, angle: 0.25, lanes: 2, pit: 1}
 
   - name: "Dragstrip"
-    track_width: 4
+    track_width: 6
     lanes: 4
     city_bg: true
     gndcol1: 4
