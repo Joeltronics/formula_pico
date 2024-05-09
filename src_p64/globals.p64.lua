@@ -15,6 +15,8 @@ pi = 3.14159265359
 twopi = 6.28318530718
 
 racing_line_sine_interp = true
+racing_line_scale_thresh_1 = 5
+racing_line_scale_thresh_2 = 15
 
 speed_to_kph = 350
 speed_scale = 0.5
@@ -135,6 +137,7 @@ minimap_max_height = 64
 --
 
 minimap = {}
+minimap_spr = userdata("u8", minimap_max_width, minimap_max_height)
 
 --
 -- Debug stuff

@@ -98,7 +98,9 @@ function sort2(list, idx1, idx2)
 	if (item1[2] < item2[2]) then
 		list[idx1] = item2
 		list[idx2] = item1
+		return true
 	end
+	return false
 end
 
 function update_car_positions(full)
@@ -121,9 +123,11 @@ function update_car_positions(full)
 	if (full) num_loops = #cars
 
 	for loop_idx = 1,num_loops do
-		for idx = 1,#cars-1 do
-			sort2(car_scores, idx, idx+1)
+		local any_swapped = false
+		for idx = 1,#cars-loop_idx do
+			if (sort2(car_scores, idx, idx+1)) any_swapped = true
 		end
+		if (not any_swapped) break
 	end
 
 	car_positions = {}

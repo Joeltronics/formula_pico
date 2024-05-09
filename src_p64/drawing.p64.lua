@@ -229,7 +229,30 @@ function draw_segment(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale
 	if (racing_line_sine_interp) then
 		dx1, dx2 = sin(dx1), sin(dx2)
 	end
+
 	line(x1 + w1*dx1, y1, x2 + w2*dx2, y2, col)
+
+	if (not detail) return
+
+	if scale1 > racing_line_scale_thresh_1 then
+		if scale2 > racing_line_scale_thresh_1 then
+			line(x1 + w1*dx1 - 1, y1, x2 + w2*dx2 - 1, y2, col)
+			line(x1 + w1*dx1 + 1, y1, x2 + w2*dx2 + 1, y2, col)
+		else
+			line(x1 + w1*dx1 - 1, y1, x2 + w2*dx2, y2, col)
+			line(x1 + w1*dx1 + 1, y1, x2 + w2*dx2, y2, col)
+		end
+	end
+
+	if scale1 > racing_line_scale_thresh_2 then
+		if scale2 > racing_line_scale_thresh_2 then
+			line(x1 + w1*dx1 - 2, y1, x2 + w2*dx2 - 2, y2, col)
+			line(x1 + w1*dx1 + 2, y1, x2 + w2*dx2 + 2, y2, col)
+		else
+			line(x1 + w1*dx1 - 2, y1, x2 + w2*dx2 - 1, y2, col)
+			line(x1 + w1*dx1 + 2, y1, x2 + w2*dx2 + 1, y2, col)
+		end
+	end
 end
 
 function get_tunnel_rect(x, y, scale)
