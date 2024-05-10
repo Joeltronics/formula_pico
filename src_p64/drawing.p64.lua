@@ -701,100 +701,103 @@ function draw_road()
 
 	clip()
 
-	if enable_draw.debug_extra then
+	if (enable_draw.debug_extra) draw_debug_extra(camang)
+end
 
-		local playerx, subseg = player_car.x, player_car.subseg
+function draw_debug_extra(camang)
 
-		local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(player_car.segment_idx - 1))
+	local player_car = cars[1]
+	local section = road[player_car.section_idx]
+	local playerx, subseg = player_car.x, player_car.subseg
 
-		xd += sin(cam_angle_scale * player_car.track_angle)
-		zd *= cos(cam_angle_scale * player_car.track_angle)
+	local xd, zd, yd = -camang, 1, -(section.pitch + section.dpitch*(player_car.segment_idx - 1))
 
-		local cx, cy, cz = skew(0, 0, subseg, xd, yd)
-		local x, y, z = -cx - road.track_width*cam_x, -cy + cam_dy, -cz + cam_dz
-		local x1, y1, scale1 = project(x, y, z)
-		local x2, y2, scale2 = project(x + xd, y + yd, z + zd)
+	xd += sin(cam_angle_scale * player_car.track_angle)
+	zd *= cos(cam_angle_scale * player_car.track_angle)
 
-		-- TODO: these need skew to be applied differently
-		local x_rel_1, y_rel_1, scale1 = project(x + xd*subseg, y + yd*subseg, z + subseg)
-		local x_rel_2, y_rel_2, scale2 = project(x + xd*(1+subseg), y + yd*(1+subseg), z + zd + subseg)
+	local cx, cy, cz = skew(0, 0, subseg, xd, yd)
+	local x, y, z = -cx - road.track_width*cam_x, -cy + cam_dy, -cz + cam_dz
+	local x1, y1, scale1 = project(x, y, z)
+	local x2, y2, scale2 = project(x + xd, y + yd, z + zd)
 
-		-- On-track X Ruler
-		for n = -5, 5 do
-			local linecol = 15
-			if (n == 0) linecol = 14
-			line(
-				x_rel_1 - n*scale1, y_rel_1,
-				x_rel_2 - n*scale2, y_rel_2,
-				linecol)
-		end
+	-- TODO: these need skew to be applied differently
+	local x_rel_1, y_rel_1, scale1 = project(x + xd*subseg, y + yd*subseg, z + subseg)
+	local x_rel_2, y_rel_2, scale2 = project(x + xd*(1+subseg), y + yd*(1+subseg), z + zd + subseg)
 
-		-- Draw hitboxes/clipping info
-
-		-- TODO: if there's slope, also draw that
-
-		local car_rear_x, car_rear_y, car_rear_scale = project(
-			x + subseg * xd + 2*playerx,
-			y + subseg * yd,
-			z + subseg * zd)
-
-		local car_front_x, car_front_y, car_front_scale = project(
-			x + subseg * xd + 2*playerx,
-			y + (subseg + car_depth) * yd,
-			z + (subseg + car_depth) * zd)
-
-		local car_front_x_level, car_front_y_level, car_front_scale_level = project(
-			x + subseg * xd + 2*playerx,
-			y + subseg * yd,
-			z + (subseg + car_depth) * zd)
-
-		local car_rear_left_x = car_rear_x - car_width*car_rear_scale
-		local car_rear_right_x = car_rear_x + car_width*car_rear_scale
-		local car_front_left_x = car_front_x - car_width*car_front_scale
-		local car_front_right_x = car_front_x + car_width*car_front_scale
-		local car_front_left_x_level = car_front_x_level - car_width*car_front_scale_level
-		local car_front_right_x_level = car_front_x_level + car_width*car_front_scale_level
-
-		-- Hitbox if car was level
-		line(car_front_left_x_level, car_front_y_level, car_front_right_x_level, car_front_y_level, 15)
-		line(car_front_left_x_level, car_front_y_level, car_front_left_x, car_front_y, 15)
-		line(car_front_right_x_level, car_front_y_level, car_front_right_x, car_front_y, 15)
-		line(car_rear_left_x, car_rear_y, car_front_left_x_level, car_front_y_level, 15)
-		line(car_rear_right_x, car_rear_y, car_front_right_x_level, car_front_y_level, 15)
-
-		-- Hitbox on ground
-		line(car_rear_left_x, car_rear_y, car_rear_right_x, car_rear_y, 10)
-		line(car_front_left_x, car_front_y, car_front_right_x, car_front_y, 10)
-		line(car_rear_left_x, car_rear_y, car_front_left_x, car_front_y, 10)
-		line(car_rear_right_x, car_rear_y, car_front_right_x, car_front_y, 10)
-
-		local lx, rx, front = player_car.other_car_data.lx, player_car.other_car_data.rx, player_car.other_car_data.front
-		if lx then
-			line(
-				x1 + 2*(lx + car_half_width)*scale1, y1,
-				x2 + 2*(lx + car_half_width)*scale2, y2,
-				12)
-		end
-		if rx then
-			line(
-				x1 + 2*(rx - car_half_width)*scale1, y1,
-				x2 + 2*(rx - car_half_width)*scale2, y2,
-				8)
-		end
-		if front then
-			local front_x, front_y, front_scale = project(
-				x + (subseg + front.dz_ahead) * xd + 2*playerx,
-				y + (subseg + front.dz_ahead) * yd,
-				z + subseg + front.dz_ahead * zd)
-
-			line(
-				front_x - front_scale*car_width, front_y,
-				front_x + front_scale*car_width, front_y,
-				9
-			)
-		end
-		-- TODO: next car too
+	-- On-track X Ruler
+	for n = -5, 5 do
+		local linecol = 15
+		if (n == 0) linecol = 14
+		line(
+			x_rel_1 - n*scale1, y_rel_1,
+			x_rel_2 - n*scale2, y_rel_2,
+			linecol)
 	end
+
+	-- Draw hitboxes/clipping info
+
+	-- TODO: if there's slope, also draw that
+
+	local car_rear_x, car_rear_y, car_rear_scale = project(
+		x + subseg * xd + 2*playerx,
+		y + subseg * yd,
+		z + subseg * zd)
+
+	local car_front_x, car_front_y, car_front_scale = project(
+		x + subseg * xd + 2*playerx,
+		y + (subseg + car_depth) * yd,
+		z + (subseg + car_depth) * zd)
+
+	local car_front_x_level, car_front_y_level, car_front_scale_level = project(
+		x + subseg * xd + 2*playerx,
+		y + subseg * yd,
+		z + (subseg + car_depth) * zd)
+
+	local car_rear_left_x = car_rear_x - car_width*car_rear_scale
+	local car_rear_right_x = car_rear_x + car_width*car_rear_scale
+	local car_front_left_x = car_front_x - car_width*car_front_scale
+	local car_front_right_x = car_front_x + car_width*car_front_scale
+	local car_front_left_x_level = car_front_x_level - car_width*car_front_scale_level
+	local car_front_right_x_level = car_front_x_level + car_width*car_front_scale_level
+
+	-- Hitbox if car was level
+	line(car_front_left_x_level, car_front_y_level, car_front_right_x_level, car_front_y_level, 15)
+	line(car_front_left_x_level, car_front_y_level, car_front_left_x, car_front_y, 15)
+	line(car_front_right_x_level, car_front_y_level, car_front_right_x, car_front_y, 15)
+	line(car_rear_left_x, car_rear_y, car_front_left_x_level, car_front_y_level, 15)
+	line(car_rear_right_x, car_rear_y, car_front_right_x_level, car_front_y_level, 15)
+
+	-- Hitbox on ground
+	line(car_rear_left_x, car_rear_y, car_rear_right_x, car_rear_y, 10)
+	line(car_front_left_x, car_front_y, car_front_right_x, car_front_y, 10)
+	line(car_rear_left_x, car_rear_y, car_front_left_x, car_front_y, 10)
+	line(car_rear_right_x, car_rear_y, car_front_right_x, car_front_y, 10)
+
+	local left, right, front = player_car.other_car_data.left, player_car.other_car_data.right, player_car.other_car_data.front
+	if left then
+		line(
+			car_rear_x + 2*(left.dx + car_half_width)*car_rear_scale, car_rear_y,
+			car_front_x + 2*(left.dx + car_half_width)*car_front_scale, car_front_y,
+			12)
+	end
+	if right then
+		line(
+			car_rear_x + 2*(right.dx - car_half_width)*car_rear_scale, car_rear_y,
+			car_front_x + 2*(right.dx - car_half_width)*car_front_scale, car_front_y,
+			8)
+	end
+	if front then
+		local front_x, front_y, front_scale = project(
+			x + (subseg + front.dz_ahead) * xd + 2*playerx,
+			y + (subseg + front.dz_ahead) * yd,
+			z + subseg + front.dz_ahead * zd)
+		line(
+			front_x - front_scale*car_width, front_y,
+			front_x + front_scale*car_width, front_y,
+			9
+		)
+	end
+	-- TODO: next car too
 end
 
 function draw_bg()
@@ -858,7 +861,11 @@ function draw_ranking()
 
 		local car_idx = car_positions[pos_num]
 		local car = cars[car_idx]
-		local bgcol, fgcol = digit_to_hex_char(car.palette[8]), digit_to_hex_char(car.palette[14])
+
+		-- HACK: just mod 16 to wrap into valid range
+		-- FIXME: certain colors don't seem to work this way on Picotron (colors >= 10?)
+		local bgcol = digit_to_hex_char(car.palette[8] % 16)
+		local fgcol = digit_to_hex_char(car.palette[14] % 16)
 
 		-- For now, just use car index as car number
 		local text = '\#0\f7' .. pos_num .. '\-h\#' .. bgcol .. '\f' .. fgcol .. car_idx .. '\-h\#0\f7'
@@ -866,6 +873,7 @@ function draw_ranking()
 		-- TODO: figure out approx time delta and print it (instead of number of laps; "1 lap" or something if lapped)
 
 		if car.finished then
+			-- TODO: should be character 0x81 on Picotron
 			text = text .. '▒'
 		elseif car.in_pit then
 			text = text .. 'pit'
@@ -888,7 +896,7 @@ function draw_ranking()
 			spr(sprites.tire_small.bmp, x, y)
 
 			clip(0, y, 480, round(8 - 8 * car.tire_health))
-			pal(10, 0)
+			pal({[10]=0,[9]=0})
 			spr(sprites.tire_small.bmp, x, y)
 			clip()
 		end
@@ -935,15 +943,11 @@ function draw_hud()
 	palt(11, true)
 
 	pal({[10]=0,[9]=0})
-	-- spr(sprites.tire_large.bmp, 0, 270 - 16)
 	spr(sprites.tire_large.bmp, 0, 270 - 32)
 
-	-- Tire sprite is 16 tall, but colored band is 12 tall, so it starts at (y + 2) and ends at (y + 14)
-	-- FIXME: for larger sprite, 32 tall but band is 26
+	-- Tire sprite is 32 tall, but colored band is 26 tall
 	pal(tire_compounds[player_car.tire_compound_idx].pal)
-	-- clip(0, 270 - 16 + 14 - ceil(12 * player_car.tire_health), 480, 270)
 	clip(0, 270 - 32 + 29 - ceil(26 * player_car.tire_health), 480, 270)
-	-- spr(sprites.tire_large.bmp, 0, 270 - 16)
 	spr(sprites.tire_large.bmp, 0, 270 - 32)
 
 	clip()

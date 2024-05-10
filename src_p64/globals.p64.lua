@@ -177,6 +177,7 @@ total_segment_count = nil
 --
 
 frozen = false
+frozen_step = false
 noclip = false
 
 -- TODO: rename to "track"

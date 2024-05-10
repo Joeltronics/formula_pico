@@ -59,6 +59,9 @@ function tick_debug()
 		if (keyp('f')) frozen = not frozen
 		if (keyp('n')) noclip = not noclip
 	end
+	if shift and not ctrl then
+		if (keyp('f') and frozen) frozen_step = true
+	end
 
 	player_car.segment_plus_subseg = player_car.segment_idx + player_car.subseg
 end
@@ -72,7 +75,8 @@ function draw_debug_overlay()
 	local player = cars[1]
 	local section = road[player.section_idx]
 
-	cursor(225, 0, 8)
+	color(8)
+	cursor(225, 0)
 	if (frozen) print('Frozen')
 	if (noclip) print('Noclip')
 	if (player.in_pit) print('Pit')
@@ -86,7 +90,7 @@ function draw_debug_overlay()
 	if (not enable_draw.bg_sprites) print('BG objects hidden')
 	if (not enable_draw.cars) print('Cars hidden')
 
-	cursor(430, 0, 5)
+	cursor(430, 0)
 	print("cpu:" .. round(stat(1) * 100))
 	print(player.section_idx .. "," .. player.segment_idx .. ',' .. player.subseg)
 	print('carx:' .. player.x)

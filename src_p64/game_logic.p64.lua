@@ -143,7 +143,7 @@ function car_check_other_cars(car)
 
 	local car_track_distance = car.segment_total + car.subseg
 
-	-- TODO: don't need to iterate all cars - can look at car_positions and only check the closest few
+	-- TODO optimization: don't need to iterate all cars - can look at car_positions and only check the closest few
 
 	for other_car in all(cars) do
 		if (other_car.idx ~= car.idx and not other_car.in_pit) then
@@ -255,7 +255,7 @@ function clip_car_x(car, section)
 		-- TODO: if car is way off track, don't need to leave space
 
 		-- TODO: force update accumulator, like with walls
-		-- TODO: decay tires
+		-- TODO: decay tires extra when hitting other car
 
 		local left, right = car.other_car_data.left, car.other_car_data.right
 		if left then
@@ -670,18 +670,18 @@ function heal_car_section(car)
 	car.section_idx, car.segment_idx, car.subseg, car.segment_plus_subseg, car.segment_total = section_idx, segment_idx, subseg, segment_idx + subseg, road[section_idx].sumct + segment_idx
 end
 
+function tick_car_frozen(car)
+	if (collisions or car.ai) car_check_other_cars(car)
+	clip_car_x(car, road[car.section_idx])
+	heal_car_section(car)
+end
+
 function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
 
 	if (collisions or car.ai) car_check_other_cars(car)
 	-- TODO: also use other_car_data for AI logic
-
-	if (frozen) then
-		clip_car_x(car, section)
-		heal_car_section(car)
-		return
-	end
 
 	local speed, accel_brake_input_actual, engine_accel_brake = tick_car_speed(car, section, accel_brake_input)
 	local dspeed = car.speed - speed  -- TODO: this does not account for loss of speed from hitting another car!
@@ -706,7 +706,7 @@ function tick_race_start(accel_brake_input)
 
 	assert(not race_started)
 
-	if (not frozen) race_start_counter += 1
+	if (frozen_step or not frozen) race_start_counter += 1
 
 	if race_start_num_lights <= 0 then
 		-- No lights yet - 2 second delay
@@ -751,8 +751,13 @@ function game_tick()
 		-- TODO: tick all cars' AI, then tick all forward, then clip all
 		-- Right now, if 2 cars go for the same gap in the same frame, the first one gets priority
 		-- Iterate in order of who's ahead, for consistency
+		
 		for idx in all(car_positions) do
-			tick_car(cars[idx], accel_brake_input, steering_input)
+			if frozen and not frozen_step then
+				tick_car_frozen(cars[idx])
+			else
+				tick_car(cars[idx], accel_brake_input, steering_input)
+			end
 		end
 
 		-- TODO: don't do this on every update; only if there was an overtake
@@ -760,4 +765,6 @@ function game_tick()
 	else
 		tick_race_start(accel_brake_input)
 	end
+
+	frozen_step = false
 end
