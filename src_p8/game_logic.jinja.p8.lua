@@ -463,6 +463,8 @@ end
 
 function ai_steering(car, section, dz_estimate)
 
+	-- TODO: don't steer into other cars (see Picotron logic)
+
 	-- Look ahead by dz estimate
 	-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
 	local section_z_estimate = min(car.segment_idx + car.subseg + dz_estimate - 1, section.length)

@@ -8,6 +8,7 @@
 allow_debug = true
 enable_minimap = true
 enable_sound = true
+analog_steering = true
 
 -- Constants
 

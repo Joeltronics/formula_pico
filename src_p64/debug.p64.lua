@@ -122,4 +122,8 @@ function draw_debug_overlay()
 	-- if (player.other_car_data.rx) print('r:' .. (player.other_car_data.rx - player.x))
 	-- if (player.other_car_data.front) print('f:' .. player.other_car_data.front.dz)
 	-- if (player.other_car_data.next) print('n:' .. player.other_car_data.next.dz)
+
+	if (player.err_x) print('e_x: ' .. player.err_x)
+	if (player.err_dx) print('e_dx:' .. player.err_dx)
+	if (player.ai_steer) print('aist:' .. player.ai_steer)
 end

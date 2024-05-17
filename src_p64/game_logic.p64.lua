@@ -58,6 +58,9 @@ function init_cars(team_idx, ghost, num_other_cars, ai_only)
 			speed=0,
 			gear=1,
 			rpm=0,
+			dx=0,
+			dz=0,
+			braking_distance_relative=32767,
 			tire_compound_idx=tire_compound_idx,
 			tire_health=1,
 			grip=tire_compounds[tire_compound_idx].grip,
@@ -150,39 +153,49 @@ function car_check_other_cars(car)
 
 			local dz_ahead = (other_car.segment_total + other_car.subseg - car_track_distance) % road.total_segment_count
 			local dz_behind = road.total_segment_count - dz_ahead
-			assert(dz_behind > 0)
+			assert(dz_ahead >= 0 and dz_behind >= 0)
 
-			local dz = dz_ahead
-			if (dz_behind < dz_ahead) dz = -dz_behind
+			-- Ignore cars that are quite far away
+			if min(dz_ahead, dz_behind) < 50 then
 
-			-- TODO: should this factor in track curvature?
-			local dx = other_car.x - car_x
+				local dz = dz_ahead
+				if (dz_behind < dz_ahead) dz = -dz_behind
 
-			local car_info = {
-				car=other_car,
-				dz_ahead=dz_ahead,
-				dz=dz,
-				dx=dx,
-			}
+				-- TODO: should this factor in track curvature?
+				local dx = other_car.x - car_x
 
-			-- Side by side
-			if (dz_ahead < car_depth_padded) or (dz_behind < car_depth_padded) then
-				if dx < 0 then
-					if -dx <= (l_distance or -dx) then
-						l_distance = -dx
-						left = car_info
+				local car_info = {
+					car=other_car,
+					dz_ahead=dz_ahead,
+					dz=dz,
+					dx=dx,
+				}
+
+				-- Side by side
+				if (dz_ahead < car_depth_padded) or (dz_behind < car_depth_padded) then
+					if dx < 0 then
+						if -dx <= (l_distance or -dx) then
+							l_distance = -dx
+							left = car_info
+						end
+					elseif dx <= (r_distance or dx) then
+						r_distance = dx
+						right = car_info
 					end
-				elseif dx <= (r_distance or dx) then
-					r_distance = dx
-					right = car_info
+				end
+
+				if (dx > -car_width_padded + min(2*car.dx, 0)) and (dx < car_width_padded + max(2*car.dx, 0)) then
+					-- This car is directly in front
+					if (not front) or (dz_ahead < front.dz_ahead) then
+						front = car_info
+					end
+				end
+
+				-- Next car (whether directly in front or not)
+				if (not next) or (dz_ahead < next.dz_ahead) then
+					next = car_info
 				end
 			end
-
-			-- Next car directly in front
-			if (abs(dx) < car_width_padded and ((not front) or dz_ahead < front.dz_ahead)) front = car_info
-
-			-- Next car (whether directly in front or not)
-			if ((not next) or dz_ahead < next.dz_ahead) next = car_info
 		end
 	end
 
@@ -254,7 +267,7 @@ function clip_car_x(car, section)
 
 		-- TODO: if car is way off track, don't need to leave space
 
-		-- TODO: force update accumulator, like with walls
+		-- TODO: force update track angle, like with walls
 		-- TODO: decay tires extra when hitting other car
 
 		local left, right = car.other_car_data.left, car.other_car_data.right
@@ -265,12 +278,16 @@ function clip_car_x(car, section)
 			-- likely since clipping is applied before all other cars have moved
 			local w = car_width_padded
 			if (left.dz > 0) w += car_x_hitbox_padding
-			car_x = max(car_x, max(left.car.x + w, -road.half_width + w))
+			-- car_x = max(car_x, max(left.car.x + w, -road.half_width + w))
+			car_x = max(car_x, max(left.car.x + w, wall_clip_l))
+			-- car_x = max(car_x, left.car.x + w)
 		end
 		if right then
 			local w = car_width_padded
 			if (right.dz > 0) w += car_x_hitbox_padding
-			car_x = min(car_x, min(right.car.x - w, road.half_width - w))
+			-- car_x = min(car_x, min(right.car.x - w, road.half_width - w))
+			car_x = min(car_x, min(right.car.x - w, wall_clip_r))
+			-- car_x = min(car_x, right.car.x - w)
 		end
 	end
 
@@ -319,9 +336,21 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	-- TODO: less acceleration if turning (need to reconcile this with logic in tick_car_steering)
 
-	-- TODO: also factor in slope
+	-- TODO: also factor in slope?
 
-	-- TODO: if collisions, brake before hitting car.other_car_data.front
+	-- Brake if about to hit car in front
+	local front = car.other_car_data.front
+	if collisions and front then
+		assert(front.dz_ahead >= 0)
+		local dz = front.dz_ahead - car_depth
+		local d_speed = front.car.speed - car.speed
+
+		local dz_next = dz + d_speed * speed_scale
+
+		if dz_next < 0.25 then
+			accel_brake_input = -2
+		end
+	end
 
 	car.off_track, car.on_curb = false, false
 
@@ -397,7 +426,8 @@ function tick_car_speed(car, section, accel_brake_input)
 
 	-- TODO: use grip to limit acceleration
 	-- TODO: use grip to limit braking deceleration - will also need to update logic in braking_distance()
-	local bdr = braking_distance_relative(section, segment_plus_subseg, speed, grip)
+
+	local bdr = car.braking_distance_relative
 
 	-- If we're on wall or grass, limit speed
 	if (speed > limit_speed and limit_speed < 1) return max(speed - decel, min(limit_speed, section.braking_speed or 1)), -1, -1
@@ -444,42 +474,107 @@ function update_speed(car, speed, engine_accel_brake)
 	car.speed, car.gear, car.rpm, car.engine_accel_brake = speed, gear, rpm, engine_accel_brake
 end
 
-function ai_steering(car, section, dz_estimate)
+function ai_steering(car, section)
+
+	-- TODO: overtaking & defending logic
+
+	-- Do not steer if not moving
+	if (car.dz <= 0) return 0
+
+	-- Prevent steering into other cars
+	-- There's very similar logic outside this function, but it's a hard-clip; AI soft-clips
+	local steer_min, steer_max = -1, 1
+	local left, right = car.other_car_data.left, car.other_car_data.right
+	if collisions and left then
+		assert(left.dx <= 0.001)
+		local dl = -left.dx - 1.125 * car_width
+		steer_min = -clip_num(2 * dl, 0, 1)
+	end
+	if collisions and right then
+		assert(right.dx >= -0.001)
+		local dr = right.dx - 1.125 * car_width
+		steer_max = clip_num(2 * dr, 0, 1)
+	end
 
 	-- Look ahead by dz estimate
 	-- TODO: smarter clipping logic at end of segment (look ahead to next segment)
-	local section_z_estimate = min(car.segment_idx + car.subseg + dz_estimate - 1, section.length)
+	local section_z_estimate = min(car.segment_idx + car.subseg + car.dz - 1, section.length)
 
-	local target_x
+	local target_x, target_dxdz
 	if car.in_pit then
 		-- TODO: why is this 1/4 the pit lane width? Should be half. Must have an off by 1/2 error somewhere
 		target_x = sgn(section.pit) * (road.half_width + 0.25 * pit_lane_width)
+		target_dxdz = section.angle_per_seg
 	else
 		if (racing_line_sine_interp) then
 			target_x = road.half_width * sin(section.entrance_x + section_z_estimate*section.racing_line_dx)
+			target_dxdz = road.half_width * 256 * (
+				sin(clip_num(section.entrance_x + (section_z_estimate + 1/256)*section.racing_line_dx, -1, 1)) - 
+				sin(clip_num(section.entrance_x + section_z_estimate*section.racing_line_dx, -1, 1))
+			)
 		else
 			target_x = road.half_width * (section.entrance_x + section_z_estimate*section.racing_line_dx)
+			target_dxdz = section.racing_line_dx
 		end
 	end
 
-	-- TODO: don't need to prioritize steering when on straights; not sure the best way about this though
-	-- local brake_dist = distance_to_next_braking_point(section, car.segment_plus_subseg)
-	-- local steer_strength = 1
-	-- if (brake_dist > 31) steer_strength = 0.5
-	-- if (brake_dist > 63) steer_strength = 0.25
-	-- if (brake_dist > 127) steer_strength = 0.125
-	-- if (abs(target_x - car.x) > 2) steer_strength = 2
+	-- How far are we from racing line
+	-- TODO: compensate for the "push to the outside of the corner" effect
+	local err_x = car.x - target_x
 
-	if (target_x < car.x - 0.01) return -1
-	-- if (target_x < car.x - 0.01) return -steer_strength
+	-- How far is our angle from racing line angle
+	-- TODO: this should use angle, not dx
+	-- TODO: compensate for angle_per_seg (corner_angle_shift)
+	assert(car.dz > 0)
+	local dxdz = car.dx / car.dz
+	local err_dx = dxdz - target_dxdz
 
-	if (target_x > car.x + 0.01) return 1
-	-- if (target_x > car.x + 0.01) return steer_strength
+	local x_gain, dx_gain = 2.0, 8.0
 
-	-- HACK: logic doesn't take track angle into account, so we would overshoot
-	-- So Just reset the track angle when we're at target
-	car.track_angle = 0
-	return 0
+	if car.in_pit then
+		-- In pit
+		x_gain, dx_gain = 8.0, 0.0
+
+	elseif car.off_track then
+		-- Off track: Always steer towards track
+		x_gain = 1024.0
+
+	elseif (car.speed > section.max_speed * 1.05) then
+		-- Braking: Do not steer
+		-- x_gain, dx_gain = 0.0, 0.0
+
+	elseif (section.angle ~= 0) or (section.max_speed < 1.0) then
+		-- Cornering
+		-- Leave at defaults
+
+	else
+		-- Straight
+		-- x error is less important the further away we are from the next braking point
+
+		local steer_strength = 1
+
+		local bp_dist = distance_to_next_braking_point(section, car.segment_plus_subseg)
+		if (bp_dist > 31) steer_strength = 1/2
+		if (bp_dist > 63) steer_strength = 1/4
+		if (bp_dist > 91) steer_strength = 1/8
+		if (bp_dist > 127) steer_strength = 1/16
+
+		x_gain *= steer_strength
+		-- dx_gain *= steer_strength -- Not sure if we should reduce dx gain too?
+
+		-- dx error is less important further from the racing line
+		dx_gain /= max(1, 2 * abs(err_x))
+	end
+
+	local steer_val = x_gain * -err_x + dx_gain * -err_dx
+
+	steer_val = clip_num(steer_val, steer_min, steer_max)
+
+	car.err_x = err_x
+	car.err_dx = err_dx
+	car.ai_steer = steer_val
+
+	return steer_val
 end
 
 
@@ -491,22 +586,36 @@ function tick_car_steering(car, section, steering_input, accel_brake_input)
 		return 0
 	end
 
-	-- This will just be an estimate of dz - won't know true dz until after we've steered
-	local _, dz_estimate = calc_dx_dz(car, section)
-
 	-- TODO: if lx or rx, force leaving space for other cars
 	-- (This happens in clip_car_x too, but that should be last resort - we should handle this here)
+	-- (Also happens in ai_steering, but this only applies to AI)
 
-	if (car.in_pit or car.ai) steering_input = ai_steering(car, section, dz_estimate)
+	if (car.in_pit or car.ai) steering_input = ai_steering(car, section)
+
+	-- Prevent steering into other cars
+	local left, right = car.other_car_data.left, car.other_car_data.right
+	if collisions and left then
+		assert(left.dx <= 0.001)
+		local dl = -left.dx - car_width
+		if (dl < 0.1) steering_input = max(0, steering_input)
+	end
+	if collisions and right then
+		assert(right.dx >= -0.001)
+		local dr = right.dx - car_width
+		if (dr < 0.1) steering_input = min(0, steering_input)
+	end
+
+	if not analog_steering then
+		if (abs(steering_input) < 0.01) steering_input = 0
+		steering_input = sgn0(steering_input)
+	end
 
 	local track_angle = car.track_angle
 
 	-- Adjust angle for corner
 	local corner_angle_shift = 0
-	-- TODO: apply this to AI too!
-	-- (right now it can't handle it)
-	if not (car.in_pit or car.ai) then
-		corner_angle_shift = -section.angle_per_seg * dz_estimate
+	if not car.in_pit then
+		corner_angle_shift = -section.angle_per_seg * car.dz
 		track_angle += corner_angle_shift
 	end
 
@@ -551,7 +660,6 @@ function tick_car_steering(car, section, steering_input, accel_brake_input)
 		-- If we're not steering, or steering away from the direction we're pointed, then add an extra push
 		if (sgn0(steering_input) ~= sgn0(track_angle)) track_angle = move_toward(track_angle, track_angle_extra_decr_rate)
 
-		-- TODO: vary incr_rate with tire grip
 		local target_angle = track_angle_target_accel_brake
 		local incr_rate = track_angle_incr_rate_accel_brake
 		if accel_brake_input == 0 then
@@ -559,7 +667,12 @@ function tick_car_steering(car, section, steering_input, accel_brake_input)
 			incr_rate = track_angle_incr_rate_coast
 		end
 
-		track_angle = move_toward(track_angle, incr_rate, target_angle*sgn0(steering_input))
+		target_angle *= sgn0(steering_input)
+
+		-- TODO: vary incr_rate with tire grip
+		incr_rate *= abs(steering_input)
+
+		track_angle = move_toward(track_angle, incr_rate, target_angle)
 	else
 		-- On a corner
 		-- TODO: currently this uses same logic as straights, but probably want different logic! (see long comment above)
@@ -580,16 +693,20 @@ function tick_car_steering(car, section, steering_input, accel_brake_input)
 		-- If we're not steering, or steering away from the direction we're pointed, then add an extra push
 		if (sgn0(steering_input) ~= sgn0(track_angle)) track_angle = move_toward(track_angle, track_angle_extra_decr_rate)
 
-		-- TODO: vary incr_rate with tire grip
 		local target_angle = track_angle_target_accel_brake
 		local incr_rate = track_angle_incr_rate_accel_brake
 		if accel_brake_input == 0 then
 			target_angle = track_angle_target_coast
 			incr_rate = track_angle_incr_rate_coast
 		end
+
+		target_angle *= sgn0(steering_input)
 		target_angle += corner_angle_shift
 
-		track_angle = move_toward(track_angle, incr_rate, target_angle*sgn0(steering_input))
+		-- TODO: vary incr_rate with tire grip
+		-- incr_rate *= abs(steering_input)
+
+		track_angle = move_toward(track_angle, incr_rate, target_angle)
 	end
 
 	-- TODO: clip track angle
@@ -630,6 +747,8 @@ function tick_car_forward(car, section)
 	car.heading %= 1.0
 
 	heal_car_section(car)
+
+	car.dx, car.dz = dx, dz
 
 	return dz
 end
@@ -680,12 +799,19 @@ function tick_car(car, accel_brake_input, steering_input)
 
 	local section, car_x_prev = road[car.section_idx], car.x
 
+	-- Populate with initial estimate of dz (won't know true dz until after we've steered)
+	car.dx, car.dz = calc_dx_dz(car, section)
+
 	if (collisions or car.ai) car_check_other_cars(car)
 	-- TODO: also use other_car_data for AI logic
+
+	car.braking_distance_relative = braking_distance_relative(section, car.segment_plus_subseg, car.speed, car.grip)
 
 	local speed, accel_brake_input_actual, engine_accel_brake = tick_car_speed(car, section, accel_brake_input)
 	local dspeed = car.speed - speed  -- TODO: this does not account for loss of speed from hitting another car!
 	update_speed(car, speed, engine_accel_brake)
+
+	car.braking_distance_relative = braking_distance_relative(section, car.segment_plus_subseg, car.speed, car.grip)
 
 	local dsteer = tick_car_steering(car, section, steering_input, accel_brake_input_actual)
 
