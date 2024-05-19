@@ -27,6 +27,7 @@ function _update()
 	else
 		update_title_screen()
 	end
+	cpu_update = stat(1)
 end
 
 function _draw()

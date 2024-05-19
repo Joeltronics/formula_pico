@@ -7,8 +7,12 @@ function shallowcopy(tbl)
 	return out
 end
 
-function round(val)
-	return flr(val + 0.5)
+function round(val, multiple_of)
+	if (not multiple_of) return flr(val + 0.5)
+	val /= multiple_of
+	val = flr(val + 0.5)
+	val *= multiple_of
+	return val
 end
 
 function sgn0(val)

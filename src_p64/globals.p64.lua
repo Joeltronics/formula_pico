@@ -162,6 +162,7 @@ enable_draw = {
 
 	debug_extra = false,
 }
+cpu_update = 0
 
 --
 -- Runtime options

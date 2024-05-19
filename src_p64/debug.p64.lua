@@ -90,24 +90,27 @@ function draw_debug_overlay()
 	if (not enable_draw.bg_sprites) print('BG objects hidden')
 	if (not enable_draw.cars) print('Cars hidden')
 
-	cursor(430, 0)
-	print("cpu:" .. round(stat(1) * 100))
-	print(player.section_idx .. "," .. player.segment_idx .. ',' .. player.subseg)
-	print('carx:' .. player.x)
+	local cpu = stat(1)
+	local cpu_draw = cpu - cpu_update
+
+	cursor(410, 0)
+	print("cpu:" .. round(cpu * 100) .. '=' .. round(cpu_update * 100) .. '+' .. round(cpu_draw * 100))
+	print(player.section_idx .. "," .. player.segment_idx .. ',' .. round(player.subseg, 0.01))
+	print('carx:' .. round(player.x, 0.01))
 	-- print('hw:' .. road.half_width)
 	-- print('wall:' .. -section.wall_l .. ',' .. section.wall_r)
 
 	if cam_dy ~= 2 or cam_dz ~= 2 then
-		print('cam:' .. cam_x .. ',' .. cam_dy .. ',' .. cam_dz)
+		print('cam:' .. round(cam_x, 0.01) .. ',' .. round(cam_dy, 0.01) .. ',' .. round(cam_dz, 0.01))
 	else
-		print('cam:' .. cam_x)
+		print('cam:' .. round(cam_x, 0.01))
 	end
 
-	print('ang:' .. 360*player.track_angle)
+	print('ang:' .. round(360*player.track_angle, 0.1))
 
-	print('tire:' .. player.tire_health)
-	print('grip:' .. player.grip)
-	print('deg:' .. 6000*(_prev_tire - player.tire_health)) -- percent per second
+	print('tire:' .. round(player.tire_health * 100, 0.1))
+	print('grip:' .. round(player.grip, 0.1))
+	print('deg:' .. round(6000*(_prev_tire - player.tire_health), 0.001)) -- percent per second
 	_prev_tire = player.tire_health
 
 	-- local pitch = (section.pitch + section.dpitch*(segment_idx - 1))
@@ -123,7 +126,7 @@ function draw_debug_overlay()
 	-- if (player.other_car_data.front) print('f:' .. player.other_car_data.front.dz)
 	-- if (player.other_car_data.next) print('n:' .. player.other_car_data.next.dz)
 
-	if (player.err_x) print('e_x: ' .. player.err_x)
-	if (player.err_dx) print('e_dx:' .. player.err_dx)
-	if (player.ai_steer) print('aist:' .. player.ai_steer)
+	if (player.err_x) print('e_x: ' .. round(player.err_x, 0.001))
+	if (player.err_dx) print('e_dx:' .. round(player.err_dx, 0.001))
+	if (player.ai_steer) print('aist:' .. round(player.ai_steer, 0.001))
 end
