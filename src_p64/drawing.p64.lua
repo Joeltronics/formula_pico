@@ -345,9 +345,8 @@ end
 
 function add_sprite(sprite_list, sumct, segment_idx, bg, side, px, py, scale, clp, wall)
 
-	if (not bg) return
-
-	if (bg.building) return -- Already dealt with
+	-- Buildings were already dealt with
+	if ((not bg) or bg.building or #sprite_list >= max_num_sprites) return
 
 	if bg.spacing then
 		if bg.spacing == 0 then
@@ -620,7 +619,7 @@ function draw_road()
 			end
 		end
 
-		if i < sprite_draw_distance then
+		if i < sprite_draw_distance and #sp < max_num_sprites then
 			if sumct == road[1].length and enable_draw.bg_sprites then
 				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
 				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
@@ -655,7 +654,7 @@ function draw_road()
 			end
 		end
 
-		if i < wall_draw_distance and (not section.tnl) and enable_draw.walls then
+		if i < wall_draw_distance and (not section.tnl) and enable_draw.walls and #sp < max_num_sprites then
 			-- TODO: I think there's an off by 1 error here
 			-- (Why do we have to use previous section's clip rectangle?)
 			-- Also visible at tunnel entrance/exit
