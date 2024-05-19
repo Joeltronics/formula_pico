@@ -141,12 +141,18 @@ end
 
 function car_check_other_cars(car)
 
-	local car_x, segment_idx, subseg, segment_plus_subseg = car.x, car.segment_idx, car.subseg, car.segment_plus_subseg
+	if car.in_pit then
+		car.other_car_data = {}
+		return
+	end
+
 	local l_distance, r_distance, left, right, next, front
 
 	local car_track_distance = car.segment_total + car.subseg
 
 	-- TODO optimization: don't need to iterate all cars - can look at car_positions and only check the closest few
+	-- (This is a major source of CPU use!)
+	-- However, need to be careful about lapped cars
 
 	for other_car in all(cars) do
 		if (other_car.idx ~= car.idx and not other_car.in_pit) then
@@ -162,7 +168,7 @@ function car_check_other_cars(car)
 				if (dz_behind < dz_ahead) dz = -dz_behind
 
 				-- TODO: should this factor in track curvature?
-				local dx = other_car.x - car_x
+				local dx = other_car.x - car.x
 
 				local car_info = {
 					car=other_car,
@@ -734,6 +740,8 @@ function calc_dx_dz(car, section)
 end
 
 function tick_car_forward(car, section)
+
+	-- TODO: clip car X & Z in here rather than other places
 
 	local dx, dz = calc_dx_dz(car, section)
 
