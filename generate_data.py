@@ -925,7 +925,7 @@ def generate(
 	vprint(f'Data saved as {DATA_FILENAME_OUT_P8}')
 
 
-def main():
+def main(args=None):
 	parser = ArgumentParser()
 
 	parser.add_argument('--no-draw', dest='draw', action='store_false')
