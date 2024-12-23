@@ -86,7 +86,9 @@ function draw_ground(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2
 	local gndcol2 = section.gndcol2 or road.gndcol2 or 11
 
 	local gndcol, gndcol_l, gndcol_r = gndcol1, section.gndcol1l, section.gndcol1r
-	if ((sumct % 6) >= 3) gndcol, gndcol_l, gndcol_r = gndcol2, section.gndcol2l, section.gndcol2r
+	if (sumct % 6) >= 3 then
+		gndcol, gndcol_l, gndcol_r = gndcol2, section.gndcol2l, section.gndcol2r
+	end
 	rectfill(0, y1, 480, y2, gndcol)
 
 	local wl1, wl2, wr1, wr2 = get_wall_locs(section, segment_idx)
@@ -106,7 +108,7 @@ function draw_ground(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2
 	end
 end
 
-function draw_segment(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2, distance)
+function draw_segment_ground_and_track(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2, distance)
 
 	detail = (distance <= road_detail_draw_distance)
 
@@ -120,9 +122,11 @@ function draw_segment(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale
 			x1, y1, scale1, x2, y2, scale2)
 	end
 
-	if (y2 < y1 or distance > road_draw_distance) return
+	if y2 < y1 or distance > road_draw_distance then
+		return
+	end
 
-	-- Road
+	-- Track
 
 	local w1, w2 = road.track_width*scale1, road.track_width*scale2
 	local x1l, x1r, x2l, x2r = x1 - w1, x1 + w1, x2 - w2, x2 + w2
@@ -532,6 +536,55 @@ function draw_sprite(s)
 	if (s.palette) pal()
 end
 
+function add_finish_line_sprites(sprite_list, sumct, segment_idx, x2, y2, scale2, clp)
+	add_sprite(sprite_list, sumct, segment_idx, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
+	add_sprite(sprite_list, sumct, segment_idx, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
+	add_sprite(sprite_list, sumct, segment_idx, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
+	add_sprite(sprite_list, sumct, segment_idx, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
+	add_sprite(sprite_list, sumct, segment_idx, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
+end
+
+function add_section_bg_sprites(sprite_list, sumct, section, segment_idx, x2, y2, scale2, clp)
+	local wl2 = section.wall_l + section.dwall_l * segment_idx
+	local wr2 = section.wall_r + section.dwall_r * segment_idx
+	assert(wl2 < 0 and wr2 > 0)
+	add_sprite(sprite_list, sumct, segment_idx, section.bgl, -1, x2, y2, scale2, clp, wl2)
+	add_sprite(sprite_list, sumct, segment_idx, section.bgc,  0, x2, y2, scale2, clp)
+	add_sprite(sprite_list, sumct, segment_idx, section.bgr,  1, x2, y2, scale2, clp, wr2)
+end
+
+function add_section_car_sprites(sprite_list, section_idx, segment_idx, x_prev, y_prev, z_prev, xd, yd, zd, clp)
+	-- Iterate in reverse order of car positions, in order to prevent Z-order problems
+	-- TODO: optimize this, don't need to iterate all cars every segment
+	-- FIXME: there still could be z-order problems if 1 car is lapped
+	for pos = #car_positions,1,-1 do
+		local car = cars[car_positions[pos]]
+		if car.section_idx == section_idx and car.segment_idx == segment_idx and enable_draw.cars then
+			-- TODO: figure out why 2x is necessary - seem to be confusing width & half-width somewhere
+			local car_x = x_prev + car.subseg * xd + 2*car.x
+			local car_y = y_prev + car.subseg * yd
+			local car_z = z_prev + car.subseg * zd
+			local this_car_screen_x, this_car_screen_y, this_car_scale = project(car_x, car_y, car_z)
+			add_car_sprite(sprite_list, car, segment_idx, this_car_screen_x, this_car_screen_y, this_car_scale, clp)
+		end
+	end
+end
+
+function reduce_clip_region(clp, tnl, x2, y2, scale2, bld_l, bld_r)
+	if tnl then
+		clip_to_tunnel(x2, y2, scale2, clp)
+	else
+		if bld_l then
+			clp[1] = max(clp[1], bld_l)
+		end
+		if bld_r then
+			clp[3] = min(clp[3], bld_r)
+		end
+
+		clp[4] = min(clp[4], ceil(y2))
+	end
+end
+
 function draw_road()
 
 	local player_car = cars[1]
@@ -607,7 +660,7 @@ function draw_road()
 			setclip(clp)
 		end
 
-		draw_segment(section, segment_idx, sumct, x2, y2, scale2, x1, y1, scale1, i)
+		draw_segment_ground_and_track(section, segment_idx, sumct, x2, y2, scale2, x1, y1, scale1, i)
 
 		local bld_l, bld_r = nil, nil
 		if enable_draw.tunnel then
@@ -621,40 +674,17 @@ function draw_road()
 
 		if i < sprite_draw_distance and #sp < max_num_sprites then
 			if sumct == road[1].length and enable_draw.bg_sprites then
-				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_post'], -1, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_post'],  1, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_lr'],   -1, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_c'],     0, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, segment_idx, bg_objects['finishline_lr'],    1, x2, y2, scale2, clp)
+				add_finish_line_sprites(sp, sumct, segment_idx, x2, y2, scale2, clp)
 			end
-
-			local wl2 = section.wall_l + section.dwall_l * segment_idx
-			local wr2 = section.wall_r + section.dwall_r * segment_idx
-			assert(wl2 < 0 and wr2 > 0)
 
 			if enable_draw.bg_sprites then
-				add_sprite(sp, sumct, segment_idx, section.bgl, -1, x2, y2, scale2, clp, wl2)
-				add_sprite(sp, sumct, segment_idx, section.bgc,  0, x2, y2, scale2, clp)
-				add_sprite(sp, sumct, segment_idx, section.bgr,  1, x2, y2, scale2, clp, wr2)
+				add_section_bg_sprites(sp, sumct, section, segment_idx, x2, y2, scale2, clp, wl2, wr2)
 			end
 
-			-- Iterate in reverse order of car positions, in order to prevent Z-order problems
-			-- TODO: optimize this, don't need to iterate all cars every segment
-			-- FIXME: there still could be z-order problems if 1 car is lapped
-			for pos = #car_positions,1,-1 do
-				local car = cars[car_positions[pos]]
-				if car.section_idx == section_idx and car.segment_idx == segment_idx and enable_draw.cars then
-					-- TODO: figure out why 2x is necessary - seem to be confusing width & half-width somewhere
-					local car_x = x_prev + car.subseg * xd + 2*car.x
-					local car_y = y_prev + car.subseg * yd
-					local car_z = z_prev + car.subseg * zd
-					local this_car_screen_x, this_car_screen_y, this_car_scale = project(car_x, car_y, car_z)
-					add_car_sprite(sp, car, segment_idx, this_car_screen_x, this_car_screen_y, this_car_scale, clp)
-				end
-			end
+			add_section_car_sprites(sp, section_idx, segment_idx, x_prev, y_prev, z_prev, xd, yd, zd, clp)
 		end
 
-		if i < wall_draw_distance and (not section.tnl) and enable_draw.walls and #sp < max_num_sprites then
+		if i < wall_draw_distance and (not tnl) and enable_draw.walls and #sp < max_num_sprites then
 			-- TODO: I think there's an off by 1 error here
 			-- (Why do we have to use previous section's clip rectangle?)
 			-- Also visible at tunnel entrance/exit
@@ -664,19 +694,7 @@ function draw_road()
 		-- TODO: setting this before add_wall doesn't work - why?!
 		clp_prev = {clp[1], clp[2], clp[3], clp[4]}
 
-		-- Reduce clip region
-		if tnl then
-			clip_to_tunnel(x2, y2, scale2, clp)
-		else
-			if bld_l then
-				clp[1] = max(clp[1], bld_l)
-			end
-			if bld_r then
-				clp[3] = min(clp[3], bld_r)
-			end
-
-			clp[4] = min(clp[4], ceil(y2))
-		end
+		reduce_clip_region(clp, tnl, x2, y2, scale2, bld_l, bld_r)
 
 		-- Stop drawing if the clip window size is zero
 		if (clp[3] <= clp[1] or clp[4] <= clp[2]) break
@@ -700,7 +718,9 @@ function draw_road()
 
 	clip()
 
-	if (enable_draw.debug_extra) draw_debug_extra(camang)
+	if enable_draw.debug_extra then
+		draw_debug_extra(camang)
+	end
 end
 
 function draw_debug_extra(camang)

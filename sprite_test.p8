@@ -2,7 +2,7 @@ pico-8 cartridge // http://www.pico-8.com
 version 41
 __lua__
 
-#include utils.p8.lua
+#include build/utils.p8.lua
 
 sprite_turn = 0
 max_sprite_turn = 3

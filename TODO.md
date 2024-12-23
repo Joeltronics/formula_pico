@@ -1,6 +1,23 @@
-## Porting to Picotron
+## Code cleanups
 
 Pico-8 code was heavily optimized for tokens - there's a lot that could be done to improve the code for Picotron now that there's no token limit. Some code clean-ups, but also lots of potential logic changes, e.g. the use of globals & hard-coded numbers, as well as stuff like using 3D vectors instead of separate x/y/z vars
+
+There's also just a lot of stuff in general that could be cleaned up:
+* Variable names - including adding explicit `g_` before globals
+* Confusing units - a lot of places units need to be scaled by 2x
+* A lot of big functions should be refactored into smaller functions, e.g. the main `draw_road()` function
+
+## Pico-8 specific
+
+Load tracks from other carts
+
+Sound:
+* Doesn't seem to have a good way to make notes in between pitches, so have to use slides instead. This also eats up a lot of tokens! Maybe use PCM directly?
+* If not, then maybe at least use custom waves?
+
+## Picotron specific
+
+Add sound
 
 ## Gameplay features
 
@@ -61,6 +78,8 @@ Tire grip & wear
 
 ## Graphics
 
+Add a "top down view" (likely only for debugging)
+
 Better car sprites & animations
 * More car angles
 * Improve car sprite
@@ -83,6 +102,9 @@ Backgrounds besides just blue sky
 
 Better off-track sprites and other stuff
 
+Ground colors
+* To help with aliasing in the distance, don't just use 2 colors - also have "in between" colors, either using extra palette colors, or at least fillp()
+
 ## Other
 
 Tracks
@@ -97,8 +119,6 @@ Improve start screen
 * Add some art
 * Preview car palette & track layout
 * Tidy it up
-
-Sound improvements
 
 Optimization
 * Performance

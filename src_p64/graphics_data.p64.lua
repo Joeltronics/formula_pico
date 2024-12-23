@@ -8,7 +8,7 @@ bg_objects = {}
 function load_graphics()
 	spritesheet = fetch("gfx/0.gfx")
 
-	-- I would think you could get the sprite width & height from the sprite object, but it seems not?
+	-- TODO: use sprite:width() & sprite:height()
 	sprites = {
 		car_small = {
 			{bmp=spritesheet[8].bmp, width=24, height=16},
