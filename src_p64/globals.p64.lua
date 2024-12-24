@@ -107,6 +107,8 @@ cam_x_scale:
 cam_angle_scale:
 	At 0, the camera angle follows the track
 	At 1, the camera angle follows the car (car always appears pointed forward)
+
+Setting both to 1 gives a bit of a Mode-7-esque effect
 ]]
 -- cam_x_scale, cam_angle_scale = 0.75, 0.25
 cam_x_scale, cam_angle_scale = 0.75, 0
@@ -183,6 +185,9 @@ total_segment_count = nil
 frozen = false
 frozen_step = false
 noclip = false
+
+overhead_view = true -- DEBUG
+overhead_scale = 16
 
 -- TODO: rename to "track"
 road = nil

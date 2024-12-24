@@ -19,6 +19,7 @@ Colors:
 	15/0xF peach
 ]]
 
+-- TODO: move this into globals
 cam_x = 0
 
 function filltrapz(cx1, y1, w1, cx2, y2, w2, col, rotate90)
@@ -82,19 +83,15 @@ end
 
 function draw_ground(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2)
 
-	local gndcol1 = section.gndcol1 or road.gndcol1 or 3
-	local gndcol2 = section.gndcol2 or road.gndcol2 or 11
+	local gndcol, gndcol_l, gndcol_r = get_ground_colors(section, sumct)
 
-	local gndcol, gndcol_l, gndcol_r = gndcol1, section.gndcol1l, section.gndcol1r
-	if (sumct % 6) >= 3 then
-		gndcol, gndcol_l, gndcol_r = gndcol2, section.gndcol2l, section.gndcol2r
-	end
 	rectfill(0, y1, 480, y2, gndcol)
 
 	local wl1, wl2, wr1, wr2 = get_wall_locs(section, segment_idx)
 
 	if gndcol_l and (gndcol_l != gndcol) then
 		local x = min(
+			-- FIXME: 2x?
 			x1 + 2*scale1*wl1,
 			x2 + 2*scale2*wl2)
 		rectfill(0, y1, x, y2, gndcol_l)
@@ -102,6 +99,7 @@ function draw_ground(section, segment_idx, sumct, x1, y1, scale1, x2, y2, scale2
 
 	if gndcol_r and (gndcol_r != gndcol) then
 		local x = max(
+			-- FIXME: 2x?
 			x1 + 2*scale1*wr1,
 			x2 + 2*scale2*wr2)
 		rectfill(x, y1, 480, y2, gndcol_r)
@@ -201,7 +199,7 @@ function draw_segment_ground_and_track(section, segment_idx, sumct, x1, y1, scal
 		if (sumct % 4) == 0 then
 			for lane_idx = 1,lanes-1 do
 
-				local lx_rel = 2*lane_idx/lanes - 1
+				local lx_rel = 2*lane_idx/lanes - 1  -- Range [-1, 1]
 				local lx1, lx2 = x1 + w1*lx_rel, x2 + w2*lx_rel
 
 				if detail then
@@ -221,13 +219,9 @@ function draw_segment_ground_and_track(section, segment_idx, sumct, x1, y1, scal
 
 	if (not draw_racing_line) return
 
-	local speed = cars[1].speed
+	local col = get_racing_line_color(section, segment_idx, cars[1])
 
-	local col = 11
-	if (section.max_speed < 0.999 and speed > section.max_speed - 0.01) col = 10
-	if (need_to_brake(section, segment_idx, 0, speed, cars[1].grip)) col = 2
-	if (section.max_speed < 0.999 and speed > section.max_speed + 0.01) col = 8
-
+	-- FIXME: this is backwards, yet it works - something somehwere else must be backwards too
 	local dx1 = section.entrance_x + segment_idx*section.racing_line_dx
 	local dx2 = section.entrance_x + (segment_idx - 1)*section.racing_line_dx
 	if (racing_line_sine_interp) then
@@ -260,6 +254,7 @@ function draw_segment_ground_and_track(section, segment_idx, sumct, x1, y1, scal
 end
 
 function get_tunnel_rect(x, y, scale)
+	-- FIXME: 2x
 	local w, h = (2*road.track_width + 0.4)*scale, 4*scale
 	local x1, y1, x2, y2 = ceil(x - w/2), ceil(y - h), ceil(x + w/2), ceil(y)
 	return x1, y1, x2, y2
@@ -315,6 +310,7 @@ function draw_building(section, sumct, bg, side, px, py, scale, clp, wall)
 
 	px += 3*scale*side + pos[1]*scale*side
 
+	-- FIXME: 2x
 	if (wall) px += 2*scale*wall
 
 	local y0 = max(clp[2], py - height*scale)
@@ -370,6 +366,7 @@ function add_sprite(sprite_list, sumct, segment_idx, bg, side, px, py, scale, cl
 
 	local w, h = bg.siz[1]*scale, bg.siz[2]*scale
 
+	-- FIXME: 2x
 	if (wall) px += 2*scale*wall + 0.5*w*side
 
 	local bounds = {
@@ -439,6 +436,7 @@ function draw_wall(s)
 	local h1, h2 = s.scale1, s.scale2
 
 	for w in all(s.walls) do
+		-- FIXME: 2x
 		local x1, x2 = s.x1 + 2*s.scale1*w[1], s.x2 + 2*s.scale2*w[2]
 		if s.detail then
 			filltrapz(s.y1 - 0.5*h1, x1, 0.5*h1, s.y2 - 0.5*h2, x2, 0.5*h2, s.col, true) -- Fill
@@ -554,13 +552,16 @@ function add_section_bg_sprites(sprite_list, sumct, section, segment_idx, x2, y2
 end
 
 function add_section_car_sprites(sprite_list, section_idx, segment_idx, x_prev, y_prev, z_prev, xd, yd, zd, clp)
+
+	if (not enable_draw.cars) return
+
 	-- Iterate in reverse order of car positions, in order to prevent Z-order problems
 	-- TODO: optimize this, don't need to iterate all cars every segment
 	-- FIXME: there still could be z-order problems if 1 car is lapped
 	for pos = #car_positions,1,-1 do
 		local car = cars[car_positions[pos]]
-		if car.section_idx == section_idx and car.segment_idx == segment_idx and enable_draw.cars then
-			-- TODO: figure out why 2x is necessary - seem to be confusing width & half-width somewhere
+		if car.section_idx == section_idx and car.segment_idx == segment_idx then
+			-- FIXME: 2x
 			local car_x = x_prev + car.subseg * xd + 2*car.x
 			local car_y = y_prev + car.subseg * yd
 			local car_z = z_prev + car.subseg * zd
@@ -586,7 +587,14 @@ function reduce_clip_region(clp, tnl, x2, y2, scale2, bld_l, bld_r)
 end
 
 function draw_road()
+	if overhead_view then
+		draw_road_overhead()
+	else
+		draw_road_perspective()
+	end
+end
 
+function draw_road_perspective()
 	local player_car = cars[1]
 	local section = road[player_car.section_idx]
 
@@ -602,6 +610,7 @@ function draw_road()
 	-- Starting coords
 
 	-- TODO: if off track, move camera even further to make sure car is in frame
+	-- FIXME: 2x
 	cam_x = cam_x_scale * player_car.x * (2 / road.track_width)
 
 	-- TODO: figure out which is the better way to do this
@@ -628,7 +637,7 @@ function draw_road()
 	-- TODO: enable this - currently leads to lots of judder on corners (need to deal with skew?)
 	if false then
 		section_idx, segment_idx = reverse(section_idx, segment_idx - 1)
-		-- TODO: why is this 2x?
+		-- FIXME: 2x
 		x -= 2*xd
 		y -= 2*yd
 		z -= 2*zd
@@ -758,16 +767,19 @@ function draw_debug_extra(camang)
 	-- TODO: if there's slope, also draw that
 
 	local car_rear_x, car_rear_y, car_rear_scale = project(
+		-- FIXME: 2x
 		x + subseg * xd + 2*playerx,
 		y + subseg * yd,
 		z + subseg * zd)
 
 	local car_front_x, car_front_y, car_front_scale = project(
+		-- FIXME: 2x
 		x + subseg * xd + 2*playerx,
 		y + (subseg + car_depth) * yd,
 		z + (subseg + car_depth) * zd)
 
 	local car_front_x_level, car_front_y_level, car_front_scale_level = project(
+		-- FIXME: 2x
 		x + subseg * xd + 2*playerx,
 		y + subseg * yd,
 		z + (subseg + car_depth) * zd)
@@ -795,18 +807,21 @@ function draw_debug_extra(camang)
 	local left, right, front = player_car.other_car_data.left, player_car.other_car_data.right, player_car.other_car_data.front
 	if left then
 		line(
+			-- FIXME: 2x?
 			car_rear_x + 2*(left.dx + car_half_width)*car_rear_scale, car_rear_y,
 			car_front_x + 2*(left.dx + car_half_width)*car_front_scale, car_front_y,
 			12)
 	end
 	if right then
 		line(
+			-- FIXME: 2x?
 			car_rear_x + 2*(right.dx - car_half_width)*car_rear_scale, car_rear_y,
 			car_front_x + 2*(right.dx - car_half_width)*car_front_scale, car_front_y,
 			8)
 	end
 	if front then
 		local front_x, front_y, front_scale = project(
+			-- FIXME: 2x
 			x + (subseg + front.dz_ahead) * xd + 2*playerx,
 			y + (subseg + front.dz_ahead) * yd,
 			z + subseg + front.dz_ahead * zd)
@@ -821,7 +836,14 @@ end
 
 function draw_bg()
 	clip()
+	if overhead_view then
+		draw_bg_overhead()
+	else
+		draw_bg_perspective()
+	end
+end
 
+function draw_bg_perspective()
 	-- TODO: use the map for this, don't redraw every frame
 	-- TODO: draw some hills
 

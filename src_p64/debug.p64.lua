@@ -45,15 +45,28 @@ function tick_debug()
 		if (keyp('8')) enable_draw.bg_sprites = not enable_draw.bg_sprites
 		if (keyp('9')) enable_draw.cars = not enable_draw.cars
 		if (keyp('0')) enable_draw.debug_extra = not enable_draw.debug_extra
+
+		if (keyp('o')) overhead_view = not overhead_view
 	end
 
 	if not (ctrl or shift) then
-		if (keyp('7')) cam_x_scale = max(cam_x_scale - 0.25, 0)
-		if (keyp('8')) cam_x_scale = min(cam_x_scale + 0.25, 1)
-		if (keyp('9')) cam_dy = max(cam_dy - 0.25, 0.25)
-		if (keyp('0')) cam_dy += 0.25
-		if (keyp('-')) cam_dz = max(cam_dz - 0.25, 0.25)
-		if (keyp('=')) cam_dz += 0.25
+
+		if overhead_view then
+			if (keyp('-')) overhead_scale /= sqrt(2)
+			if (keyp('=')) overhead_scale *= sqrt(2)
+			-- overhead_scale = round(clip_num(overhead_scale, 1, 128))
+			local rounded = round(overhead_scale)
+			if (abs(overhead_scale - rounded) < 0.01) overhead_scale = rounded
+			overhead_scale = clip_num(overhead_scale, 1, 128)
+		else
+			if (keyp('7')) cam_x_scale = max(cam_x_scale - 0.25, 0)
+			if (keyp('8')) cam_x_scale = min(cam_x_scale + 0.25, 1)
+			if (keyp('9')) cam_dy = max(cam_dy - 0.25, 0.25)
+			if (keyp('0')) cam_dy += 0.25
+			if (keyp('-')) cam_dz = max(cam_dz - 0.25, 0.25)
+			if (keyp('=')) cam_dz += 0.25
+		end
+		
 		if (keyp('<')) player_car.heading -= 1/256
 		if (keyp('>')) player_car.heading += 1/256
 		if (keyp('f')) frozen = not frozen

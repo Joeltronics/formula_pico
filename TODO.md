@@ -4,7 +4,7 @@ Pico-8 code was heavily optimized for tokens - there's a lot that could be done 
 
 There's also just a lot of stuff in general that could be cleaned up:
 * Variable names - including adding explicit `g_` before globals
-* Confusing units - a lot of places units need to be scaled by 2x
+* Confusing units - a lot of places units need to be scaled by 2x. I think this is even leading to some minor bugs - the car ends up sliding horizontally at twice the rate that it's supposed to for its angle. Most of these spots are labelled "FIXME: 2x"
 * A lot of big functions should be refactored into smaller functions, e.g. the main `draw_road()` function
 
 ## Pico-8 specific
